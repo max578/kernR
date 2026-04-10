@@ -11,8 +11,8 @@ Kernel-based hypothesis tests for causal inference and distributional treatment 
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/your-org/kernR}
-  \item Report bugs at \url{https://github.com/your-org/kernR/issues}
+  \item \url{https://github.com/AAGI-AUS/kernR}
+  \item Report bugs at \url{https://github.com/AAGI-AUS/kernR/issues}
 }
 
 }

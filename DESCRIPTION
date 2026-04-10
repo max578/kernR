@@ -17,8 +17,8 @@ Description: Kernel-based hypothesis tests for causal inference and
     treatments, hierarchical/nested data structures, and scales to large
     datasets via Nystrom approximation and random Fourier features.
 License: MIT + file LICENSE
-URL: https://github.com/your-org/kernR
-BugReports: https://github.com/your-org/kernR/issues
+URL: https://github.com/AAGI-AUS/kernR
+BugReports: https://github.com/AAGI-AUS/kernR/issues
 Depends:
     R (>= 4.1.0)
 Imports:
