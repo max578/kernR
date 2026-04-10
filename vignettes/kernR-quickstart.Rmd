@@ -1,0 +1,132 @@
+---
+title: "Getting Started with kernR"
+author: "Max Moldovan and Dino Sejdinovic"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with kernR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4,
+  dpi = 150
+)
+```
+
+## What is kernR?
+
+**kernR** provides kernel-based statistical tests for causal inference and
+distributional comparison. It implements:
+- **HSIC test**: independence testing via the Hilbert-Schmidt Independence Criterion
+- **MMD test**: two-sample testing via Maximum Mean Discrepancy
+- **bd-HSIC test**: causal association testing with backdoor adjustment
+- **DR-DATE / DR-DETT**: doubly robust distributional treatment effect tests
+
+This vignette covers the basics: kernels, MMD, and HSIC.
+
+## Kernel Basics
+
+A *kernel* is a function that measures similarity between observations. kernR
+supports RBF (Gaussian), Matern, linear, and polynomial kernels.
+
+```{r kernel-spec}
+library(kernR)
+
+# Default: RBF kernel with automatic bandwidth (median heuristic)
+k <- kernel_spec()
+k
+
+# Fixed bandwidth
+k_fixed <- kernel_spec("rbf", bandwidth = 1.5)
+k_fixed
+
+# Linear kernel
+k_lin <- kernel_spec("linear")
+k_lin
+```
+
+## Computing Kernel Matrices
+
+```{r kernel-matrix}
+set.seed(42)
+x <- matrix(rnorm(200), 100, 2)
+
+# Compute the 100 x 100 kernel (Gram) matrix
+K <- kernel_matrix(x)
+dim(K)
+
+# Visualise a corner
+K[1:5, 1:5]
+```
+
+## Two-Sample Testing with MMD
+
+The MMD test asks: *do two samples come from the same distribution?*
+
+```{r mmd-same}
+set.seed(123)
+
+# Two samples from the same distribution
+x <- matrix(rnorm(200), 100, 2)
+y <- matrix(rnorm(200), 100, 2)
+
+result <- mmd_test(x, y, seed = 1)
+result
+```
+
+The p-value is large — no evidence of different distributions. Now with a
+mean shift:
+```{r mmd-different}
+y_shifted <- matrix(rnorm(200, mean = 0.5), 100, 2)
+result <- mmd_test(x, y_shifted, seed = 1)
+result
+```
+
+The small p-value correctly detects the distributional difference.
+
+## Independence Testing with HSIC
+
+HSIC tests whether two variables are independent — including non-linear
+dependencies that correlation would miss.
+
+```{r hsic-nonlinear}
+set.seed(456)
+n <- 300
+x <- rnorm(n)
+
+# Non-linear dependence: Y = X^2 + noise
+# Note: cor(x, y) is approximately 0 (no linear correlation)
+y <- x^2 + rnorm(n, sd = 0.3)
+cat("Pearson correlation:", round(cor(x, y), 3), "\n")
+
+# HSIC detects the non-linear dependence
+result <- hsic_test(x, y, seed = 1)
+result
+```
+
+HSIC successfully detects the quadratic relationship even though the
+Pearson correlation is near zero.
+
+## Visualising Results
+
+Every test result can be plotted to see where the observed statistic
+falls relative to the permutation null distribution:
+
+```{r plot-result, fig.cap = "HSIC permutation null distribution with observed statistic (dashed red line)."}
+plot(result)
+```
+
+## Next Steps
+- `vignette("kernR-bdhsic")` — Causal association testing with bd-HSIC
+- `vignette("kernR-drtest")` — Distributional treatment effect tests
+- `vignette("kernR-hierarchical")` — Tests for hierarchical/nested data
+
+```{r session-info}
+sessionInfo()
+```

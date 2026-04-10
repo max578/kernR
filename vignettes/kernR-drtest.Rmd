@@ -1,0 +1,144 @@
+---
+title: "Distributional Treatment Effect Tests (DR-DATE / DR-DETT)"
+author: "Max Moldovan and Dino Sejdinovic"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Distributional Treatment Effect Tests (DR-DATE / DR-DETT)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4,
+  dpi = 150
+)
+```
+
+## Beyond Mean Effects
+
+Standard causal inference methods (Double ML, TMLE) test whether treatment
+shifts the *mean* outcome. But many real treatment effects are
+**distributional** -- they change variance, shape, or modality without
+necessarily changing the mean.
+
+**DR-DATE** and **DR-DETT** (Fawkes, Hu, Evans & Sejdinovic, 2024) test
+for *any* distributional difference between Y(1) and Y(0), using doubly
+robust kernel embeddings.
+
+## Key Concepts
+
+- **DR-DATE** (Distributional Average Treatment Effect): Tests whether
+  P(Y(1)) = P(Y(0)) over the entire population.
+- **DR-DETT** (Distributional Effect on the Treated): Tests whether
+  P(Y(1)|T=1) = P(Y(0)|T=1), focusing on the treated subgroup. Requires
+  only one-sided overlap.
+- **Double robustness**: Consistent if either the propensity model or
+  the outcome model is correctly specified.
+
+## Example: Mean Shift (Detectable by All Methods)
+
+```{r mean-shift}
+library(kernR)
+set.seed(42)
+
+n <- 300
+x <- matrix(rnorm(n * 2), n, 2)
+logit_p <- 0.3 * x[, 1] - 0.2 * x[, 2]
+t <- rbinom(n, 1, plogis(logit_p))
+y <- t * 1.0 + 0.5 * x[, 1] + rnorm(n, sd = 0.5) # Mean shift of 1.0
+
+result <- dr_date_test(y, t, x,
+  n_permutations = 200,
+  seed = 1
+)
+result
+```
+
+## Example: Variance Effect Only (Invisible to Mean-Based Tests)
+
+This is where DR-DATE shines. The treatment changes the *variance* of
+the outcome but not the mean -- DML and TMLE would have zero power here.
+
+```{r variance-effect}
+set.seed(42)
+n <- 400
+x <- matrix(rnorm(n * 2), n, 2)
+t <- rbinom(n, 1, plogis(0.3 * x[, 1]))
+
+# Treatment doubles the variance but does NOT shift the mean
+y <- (1 - t) * rnorm(n, sd = 1) + t * rnorm(n, sd = 2.5) + 0.5 * x[, 1]
+
+cat("Mean difference:", mean(y[t == 1]) - mean(y[t == 0]), "\n")
+cat("SD treated:", sd(y[t == 1]), "  SD control:", sd(y[t == 0]), "\n")
+
+result_var <- dr_date_test(y, t, x,
+  n_permutations = 200,
+  outcome_model = "zero",
+  seed = 1
+)
+result_var
+```
+
+## DR-DETT: Effect on the Treated
+
+When overlap is imperfect (some covariate regions have nearly all
+treated or all control units), DR-DETT is more robust because it
+requires only one-sided overlap.
+
+```{r dett}
+set.seed(42)
+n <- 300
+x <- matrix(rnorm(n * 2), n, 2)
+t <- rbinom(n, 1, plogis(0.5 * x[, 1]))
+y <- t * rnorm(n, mean = 0.5, sd = 1.5) + (1 - t) * rnorm(n) + x[, 1]
+
+result_dett <- dr_dett_test(y, t, x,
+  n_permutations = 200,
+  seed = 1
+)
+result_dett
+```
+
+## Comparing the Tests
+
+```{r comparison}
+cat("DR-DATE p-value:", result_var$p_value, "\n")
+cat("DR-DETT p-value:", result_dett$p_value, "\n")
+```
+
+## Using the Formula Interface
+
+```{r formula}
+dat <- data.frame(y = y, treatment = t, x1 = x[, 1], x2 = x[, 2])
+result_f <- kernel_causal_test(
+  y ~ treatment | x1 + x2,
+  data = dat,
+  method = "dr-date",
+  n_permutations = 100,
+  seed = 1
+)
+result_f
+```
+
+## When to Use Which Test
+
+| Test | Detects | Overlap Requirement | Best For |
+|------|---------|---------------------|----------|
+| **DR-DATE** | Any distributional difference | Both sides | Population-level effects |
+| **DR-DETT** | Distributional effect on treated | One-sided only | Imperfect overlap; policy questions about treated |
+| **DML/TMLE** | Mean shifts only | Both sides | When only mean effects matter |
+
+## References
+
+- Fawkes, J., Hu, R., Evans, R. J., & Sejdinovic, D. (2024). Doubly
+  robust kernel statistics for testing distributional treatment effects.
+  *Transactions on Machine Learning Research*.
+
+```{r session-info}
+sessionInfo()
+```

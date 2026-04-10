@@ -1,0 +1,140 @@
+---
+title: "Causal Association Testing with bd-HSIC"
+author: "Max Moldovan and Dino Sejdinovic"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Causal Association Testing with bd-HSIC}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4,
+  dpi = 150
+)
+```
+
+## The Problem
+
+Standard independence tests cannot distinguish *causal* association from
+*confounded* association. If treatment X and outcome Y share a common
+cause Z, they will appear dependent even if X has no causal effect on Y.
+
+The **bd-HSIC** test (Hu, Sejdinovic & Evans, 2024) solves this by testing
+the *do-null* hypothesis:
+
+> H_0: p(y | do(x)) = p*(y) for all x
+
+This uses Pearl's do-operator: after intervening on X, is Y still
+associated with X?
+
+## How It Works
+
+1. **Density ratio estimation**: Estimate w(x, z) = p*(x) / p(x|z)
+   to reweight observational samples to the interventional distribution.
+2. **Weighted HSIC**: Compute HSIC between X and Y under the reweighted
+   (interventional) distribution.
+3. **Cluster-based permutation**: Obtain p-values by permuting Y within
+   clusters of similar conditional densities p(x|z).
+
+## Example: Linear Causal Effect
+
+```{r linear-effect}
+library(kernR)
+set.seed(42)
+
+n <- 300
+z <- matrix(rnorm(n * 2), n, 2)
+x <- 0.5 * z[, 1] + rnorm(n)           # X depends on confounder Z
+y <- 0.8 * x + 0.5 * z[, 2] + rnorm(n) # Y depends causally on X and on Z
+
+result <- bd_hsic_test(x, y, z,
+  n_permutations = 200,
+  seed = 1
+)
+result
+```
+
+The test detects the causal association between X and Y.
+
+## Example: No Causal Effect (Confounding Only)
+
+```{r no-effect}
+set.seed(42)
+n <- 300
+z <- matrix(rnorm(n * 2), n, 2)
+x <- 0.5 * z[, 1] + rnorm(n)
+y <- 0.5 * z[, 1] + z[, 2] + rnorm(n) # Y depends on Z, not on X
+
+result_null <- bd_hsic_test(x, y, z,
+  n_permutations = 200,
+  seed = 1
+)
+result_null
+```
+
+The large p-value correctly indicates no causal effect.
+
+## Example: Non-Linear Causal Effect
+
+A key advantage of bd-HSIC is detecting non-linear effects that
+linear methods (PDS, Double ML) completely miss:
+
+```{r nonlinear-effect}
+set.seed(42)
+n <- 400
+z <- matrix(rnorm(n * 2), n, 2)
+x <- z[, 1] + rnorm(n)
+y <- x^2 + z[, 2] + rnorm(n, sd = 0.5) # Quadratic causal effect
+
+result_nl <- bd_hsic_test(x, y, z,
+  n_permutations = 200,
+  seed = 1
+)
+result_nl
+```
+
+## Diagnostic: Null Distribution
+
+```{r plot-null, fig.cap = "bd-HSIC permutation null distribution."}
+plot(result)
+```
+
+## Using the Formula Interface
+
+```{r formula}
+dat <- data.frame(y = y, x = x, z1 = z[, 1], z2 = z[, 2])
+result_f <- kernel_causal_test(
+  y ~ x | z1 + z2,
+  data = dat,
+  method = "bd-hsic",
+  n_permutations = 100,
+  seed = 1
+)
+result_f
+```
+
+## When to Use bd-HSIC
+
+| Scenario | Use bd-HSIC? |
+|----------|-------------|
+| Testing if X causally affects Y (adjusting for Z) | Yes |
+| Non-linear or non-monotone causal effects | Yes -- key advantage |
+| Continuous, binary, or mixed treatments | Yes |
+| Very high-dimensional confounders | Consider using `density_ratio = "ranger"` |
+| Extremely strong confounding | Caution: density ratio estimation may fail |
+
+## References
+
+- Hu, R., Sejdinovic, D., & Evans, R. J. (2024). A kernel test for
+  causal association via noise contrastive backdoor adjustment. *JMLR*,
+  25(160), 1-56.
+
+```{r session-info}
+sessionInfo()
+```

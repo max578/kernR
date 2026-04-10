@@ -1,0 +1,128 @@
+---
+title: "Hierarchical and Nested Data"
+author: "Max Moldovan and Dino Sejdinovic"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Hierarchical and Nested Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4,
+  dpi = 150
+)
+```
+
+## Why Hierarchy Matters
+
+Many real-world datasets have nested structure:
+
+- Patients within hospitals
+- Students within schools
+- Plots within farms
+- Repeated measures within subjects
+
+Standard kernel tests assume independent observations. When observations
+are clustered, **within-cluster correlation inflates type I error**.
+`hierarchical_test()` accounts for this by decomposing the test
+statistic and permuting within clusters.
+
+## Example: Agriculture Trial
+
+Imagine a randomised fertiliser trial across 20 farms, each with
+30 plots.
+
+```{r agri-example}
+library(kernR)
+set.seed(42)
+
+n_farms <- 20
+n_plots <- 30
+n <- n_farms * n_plots
+farm_id <- rep(1:n_farms, each = n_plots)
+
+# Farm-level random effects
+farm_effect <- rnorm(n_farms, sd = 2)[farm_id]
+soil <- matrix(rnorm(n * 2), n, 2)
+
+# Treatment assignment (partially confounded by soil)
+treatment <- rbinom(n, 1, plogis(0.3 * soil[, 1]))
+
+# Yield: treatment has a real effect + farm random effect
+yield <- 0.8 * treatment + farm_effect + 0.5 * soil[, 1] + rnorm(n)
+
+result <- hierarchical_test(
+  y = yield,
+  treatment = treatment,
+  covariates = soil,
+  cluster_id = farm_id,
+  method = "dr-date",
+  n_permutations = 100,
+  weight_method = "icc",
+  seed = 1
+)
+result
+```
+
+The test detects the treatment effect while correctly accounting for
+the farm-level clustering.
+
+## Decomposition: Within vs Between
+
+The test provides both components:
+
+```{r decomposition}
+cat("Within-cluster average statistic:",
+  mean(result$hierarchical$within_stats, na.rm = TRUE), "\n")
+cat("Between-cluster statistic:",
+  result$hierarchical$between_stat, "\n")
+cat("Combined statistic:",
+  result$statistic, "\n")
+cat("Weight method:", result$hierarchical$weight_method, "\n")
+```
+
+## Weight Methods
+
+| Method | Behaviour |
+|--------|-----------|
+| `"equal"` | Equal weight to within and between components |
+| `"icc"` | Weight by ICC (more between-weight when clusters differ) |
+| `"within_only"` | Ignore between-cluster variation |
+
+## Example: No Treatment Effect
+
+```{r null-hierarchical}
+set.seed(42)
+yield_null <- farm_effect + 0.5 * soil[, 1] + rnorm(n) # No treatment effect
+
+result_null <- hierarchical_test(
+  y = yield_null,
+  treatment = treatment,
+  covariates = soil,
+  cluster_id = farm_id,
+  method = "dr-date",
+  n_permutations = 100,
+  seed = 1
+)
+cat("P-value under null:", result_null$p_value, "\n")
+```
+
+## When to Use Hierarchical Tests
+
+| Scenario | Recommendation |
+|----------|---------------|
+| Independent observations | Use standard `dr_date_test()` / `bd_hsic_test()` |
+| Clustered data (known groups) | Use `hierarchical_test()` with `cluster_id` |
+| Few large clusters | `weight_method = "icc"` |
+| Many small clusters | `weight_method = "equal"` |
+| Unsure about between-cluster effects | `weight_method = "within_only"` (conservative) |
+
+```{r session-info}
+sessionInfo()
+```
