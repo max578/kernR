@@ -1,13 +1,10 @@
 Package: kernR
 Title: Kernel-Based Causal Distributional Testing
-Version: 0.0.0.9000
+Version: 0.0.0.9015
 Authors@R: c(
-    person("Max", "Moldovan", , "maksim.pashkevich@adelaide.edu.au",
-           role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0001-9680-8474")),
-    person("Dino", "Sejdinovic", , "dino.sejdinovic@adelaide.edu.au",
-           role = "aut",
-           comment = c(ORCID = "0000-0002-1568-7521"))
+    person("Max", "Moldovan", , "max.moldovan@adelaide.edu.au",
+           role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0000-0001-9680-8474"))
     )
 Description: Kernel-based hypothesis tests for causal inference and
     distributional treatment effects. Implements backdoor-adjusted HSIC
@@ -23,8 +20,10 @@ Depends:
     R (>= 4.1.0)
 Imports:
     data.table,
+    methods,
     Rcpp,
-    stats
+    stats,
+    PESTO (>= 0.3.0)
 LinkingTo:
     Rcpp,
     RcppArmadillo
@@ -33,6 +32,7 @@ Suggests:
     future.apply,
     ggplot2,
     knitr,
+    proxymix (>= 0.3.0),
     ranger,
     rmarkdown,
     testthat (>= 3.0.0),

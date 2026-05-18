@@ -10,13 +10,16 @@ bd_hsic_test(
   z,
   kernel_x = kernel_spec(),
   kernel_y = kernel_spec(),
-  density_ratio = c("logistic", "ranger", "xgboost", "rulsif"),
+  density_ratio = c("logistic", "ranger", "xgboost", "proxymix", "rulsif"),
   n_permutations = 500L,
   n_clusters = "auto",
   split_ratio = 0.5,
   alpha = 0.05,
   seed = NULL,
-  verbose = FALSE
+  verbose = FALSE,
+  cluster_id = NULL,
+  permutation = c("auto", "within_cluster", "naive"),
+  min_ess_fraction = 0.1
 )
 }
 \arguments{
@@ -33,13 +36,19 @@ RBF with median heuristic.}
 RBF with median heuristic.}
 
 \item{density_ratio}{Character. Method for density ratio estimation:
-\code{"logistic"} (default), \code{"ranger"}, \code{"xgboost"}, or \code{"rulsif"}.}
+\code{"logistic"} (default), \code{"ranger"}, \code{"xgboost"}, \code{"proxymix"}, or
+\code{"rulsif"}. The \code{"proxymix"} backend fits Gaussian-mixture proxies
+to the joint and product-of-marginals sample clouds via
+classical EM (Hoek & Elliott, 2024), giving a parametric
+alternative to NCE-based classifiers; useful for multimodal
+densities or when classifier calibration is unreliable. Requires
+the \code{proxymix} package (\verb{>= 0.3.0}).}
 
 \item{n_permutations}{Integer. Number of permutations for the null
 distribution. Default is 500.}
 
-\item{n_clusters}{Integer or \code{"auto"}. Number of clusters for valid
-permutation. Default is \code{"auto"}.}
+\item{n_clusters}{Integer or \code{"auto"}. Number of \emph{propensity} clusters
+for valid permutation when \code{cluster_id = NULL}. Default is \code{"auto"}.}
 
 \item{split_ratio}{Numeric in (0, 1). Proportion of data for training
 the density ratio estimator. Default is 0.5.}
@@ -49,9 +58,45 @@ the density ratio estimator. Default is 0.5.}
 \item{seed}{Integer or \code{NULL}. Random seed for reproducibility.}
 
 \item{verbose}{Logical. Print progress. Default is \code{FALSE}.}
+
+\item{cluster_id}{Optional vector of length \code{nrow(x)} identifying
+external clusters (e.g. site, season, paddock, farm). When supplied,
+the permutation null is built by within-cluster reshuffling of \code{y},
+which preserves cluster-level effects in the null. Coerced to
+factor; the test split inherits the cluster assignment. The result
+then carries a per-cluster stratified bd-HSIC alongside the pooled
+statistic.}
+
+\item{permutation}{Character. Permutation scheme:
+\itemize{
+\item \code{"auto"} (default) -- when \code{cluster_id} is supplied, equivalent to
+\code{"within_cluster"}; otherwise falls back to k-means clustering on
+propensity weights (the original Hu/Sejdinovic/Evans scheme).
+\item \code{"within_cluster"} -- requires \code{cluster_id}. Permutes \code{y} indices
+only within clusters; preserves cluster-level effects.
+\item \code{"naive"} -- unrestricted permutation across all observations.
+Use only when independence within clusters is plausible (rarely
+true in ag-systems data).
+}}
+
+\item{min_ess_fraction}{Numeric in \verb{(0, 1)} or \code{0} / non-finite to
+disable. ESS-floor reliability gate (added 0.0.0.9013): if the
+weighted-HSIC effective sample size is below
+\code{min_ess_fraction * n_test}, a warning is emitted and
+\code{result$ess_warning} is \code{TRUE}. The default \code{0.1} (10\%) is a
+conservative floor; tighten it for studies with strict reliability
+requirements.}
 }
 \value{
-An object of class \code{"kernel_test_result"}.
+An object of class \code{"kernel_test_result"}. When \code{cluster_id}
+is supplied, the result additionally carries:
+\describe{
+\item{permutation_scheme}{Character: which scheme was used.}
+\item{cluster_id}{Integer cluster assignment on the test split.}
+\item{cluster_levels}{Character cluster labels.}
+\item{per_cluster_statistic}{Per-cluster weighted HSIC (stratified
+contributions); \code{NA} for clusters with \verb{< 2} test observations.}
+}
 }
 \description{
 Tests the do-null hypothesis H_0: p(y | do(x)) = p*(y) using a
@@ -69,14 +114,40 @@ The test works by:
 \item Estimating density ratios w(x, z) = p*(x) / p(x|z) to reweight
 observational samples to the interventional distribution.
 \item Computing a weighted HSIC statistic between X and Y.
-\item Obtaining p-values via permutation of Y within clusters of
-similar conditional densities p(x|z).
+\item Obtaining p-values via permutation of Y within exchangeability
+clusters -- propensity-similarity clusters by default, or external
+design clusters (site / season / paddock) when \code{cluster_id} is
+supplied.
 }
+
+\strong{Hierarchical extension.} When the design is naturally clustered
+(multi-site agricultural trials, paddock x season factorial designs,
+patient x hospital data), supplying \code{cluster_id} activates
+within-cluster permutation: indices of \code{y} are reshuffled only within
+each cluster, preserving cluster-level effects in the null. This is
+the safer default for clustered data; naive permutation across
+clusters can inflate Type I error when cluster effects exist.
 
 Unlike PDS or Double ML, bd-HSIC can detect non-linear causal effects
 (e.g., U-shaped relationships) where the treatment affects higher
 moments of the outcome but not necessarily the mean.
 }
+\section{Train/test split (0.0.0.9014)}{
+
+The density-ratio estimator is now \strong{fit on the train split and
+predicted on the held-out test split} via \code{\link[=fit_density_ratio]{fit_density_ratio()}} +
+\code{\link[=predict_density_ratio]{predict_density_ratio()}}. The documented \code{split_ratio} is honoured
+end-to-end for all four classifier / proxymix backends. The 0.0.0.9013
+sample-split leak warning is therefore retired. RuLSIF, the
+kernel-based closed-form backend, still uses \code{\link[=estimate_rulsif]{estimate_rulsif()}} on
+the train/test split natively.
+
+The fitted density-ratio model is preserved on
+\code{result$density_ratio_fit} for callers that want backend
+diagnostics (see \code{?fit_density_ratio} Value; proxymix exposes BIC,
+AIC, log-likelihood, convergence per GMM).
+}
+
 \examples{
 set.seed(42)
 n <- 300

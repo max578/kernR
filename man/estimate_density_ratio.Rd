@@ -2,42 +2,50 @@
 % Please edit documentation in R/density-ratio.R
 \name{estimate_density_ratio}
 \alias{estimate_density_ratio}
-\title{Estimate Density Ratios via Logistic NCE}
+\title{Estimate Density Ratios (backwards-compatible wrapper)}
 \usage{
 estimate_density_ratio(
   x,
   z,
-  method = c("logistic", "ranger", "xgboost"),
+  method = c("logistic", "ranger", "xgboost", "proxymix"),
   n_noise = 1L,
+  proxymix_components = 2L,
   seed = NULL
 )
 }
 \arguments{
-\item{x}{Numeric vector or matrix. Treatment variable.}
+\item{x}{Numeric vector or matrix. Treatment variable (training).}
 
-\item{z}{Numeric matrix or data.frame. Confounders.}
+\item{z}{Numeric matrix or data.frame. Confounders (training).}
 
-\item{method}{Character. Classification method: \code{"logistic"} (default),
-\code{"ranger"}, or \code{"xgboost"}.}
+\item{method}{Character. Backend: \code{"logistic"} (default),
+\code{"ranger"}, \code{"xgboost"}, or \code{"proxymix"}.}
 
-\item{n_noise}{Integer. Number of noise samples per real sample.
-Default is 1.}
+\item{n_noise}{Integer. Noise samples per real sample for
+classifier backends. Default \code{1L}.}
+
+\item{proxymix_components}{Integer. Mixture components per density
+when \code{method = "proxymix"}. Default \code{2L}.}
 
 \item{seed}{Integer or \code{NULL}. Random seed.}
 }
 \value{
-A list of class \code{"density_ratio_fit"} with components:
-\describe{
-\item{weights}{Estimated density ratios for each observation.}
-\item{ess}{Effective sample size.}
-\item{method}{Method used.}
-}
+A list of class \code{density_ratio_fit_estimate} with components
+\code{weights}, \code{ratios}, \code{ess}, \code{method}, \code{n}, and \code{fit} (the
+underlying \code{density_ratio_fit} for callers that want diagnostics).
 }
 \description{
-Estimates the density ratio p*(x) / p(x|z) using Noise Contrastive
-Estimation. Trains a classifier to distinguish joint samples (x, z)
-from product-of-marginals samples (x_perm, z), where x_perm is drawn
-from the reference distribution p*(x).
+Wraps \code{\link[=fit_density_ratio]{fit_density_ratio()}} + \code{\link[=predict_density_ratio]{predict_density_ratio()}} on the same
+data. Preserved for backwards compatibility with kernR 0.0.0.901x
+callers; new code should prefer the explicit fit/predict pair so
+train/test splits are honoured.
+}
+\details{
+The return shape (\code{weights}, \code{ratios}, \code{ess}, \code{method}, \code{n}) is
+unchanged from previous versions. Internally, ratios are now
+computed in log-space (which fixes pathological tail behaviour
+that the classifier-based 0.0.0.9012 implementation occasionally
+showed under extreme imbalance).
 }
 \examples{
 set.seed(42)
@@ -46,5 +54,7 @@ z <- matrix(rnorm(n * 2), n, 2)
 x <- z[, 1] + rnorm(n)
 dr <- estimate_density_ratio(x, z)
 dr$ess
-
+}
+\seealso{
+\code{\link[=fit_density_ratio]{fit_density_ratio()}} for the fit/predict surface.
 }

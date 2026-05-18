@@ -1,0 +1,150 @@
+---
+title: "Pre-IES Identifiability Screening with HSIC"
+author: "Max Moldovan"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Pre-IES Identifiability Screening with HSIC}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4,
+  dpi = 150
+)
+set.seed(1)
+```
+
+## Why screen before calibrating?
+
+Iterative Ensemble-Smoother (IES) calibration of a mechanistic
+agricultural model such as APSIM is expensive: each ensemble member is
+a full simulator run. Spending realisations on parameters that have no
+detectable effect on the outputs of interest is wasted budget.
+
+A pre-IES screen answers a sharper question than variance-based Sobol
+analysis: *does this parameter influence the distribution of any output
+at all?* HSIC -- the Hilbert-Schmidt Independence Criterion -- detects
+both linear and non-linear, mean-shift and tail-shift effects, including
+those Sobol misses when variance is preserved.
+
+The workflow is three lines:
+
+1. Build a Latin-hypercube design across plausible parameter ranges.
+2. Run the simulator on the design.
+3. Pass the design + outputs to `hsic_identifiability()`.
+
+## A stubbed APSIM archetype
+
+Real APSIM workflows are heavy, so this vignette uses a small simulator
+stub with four parameters -- two genuinely identifiable, one weakly
+nonlinear, and one inert -- and two outputs (yield and biomass).
+
+```{r stub-simulator}
+library(kernR)
+
+stub_apsim <- function(theta) {
+  # theta: n x 4 matrix with columns slope, curvature, weak, inert
+  yield   <- 1.5 * theta[, "slope"] +
+             0.3 * stats::rnorm(nrow(theta), sd = 0.1)
+  biomass <- theta[, "curvature"]^2 +
+             0.4 * theta[, "weak"] +
+             stats::rnorm(nrow(theta), sd = 0.1)
+  cbind(yield = yield, biomass = biomass)
+}
+```
+
+## Latin-hypercube design
+
+```{r design}
+bounds <- rbind(
+  slope     = c(0.0, 2.0),   # active, linear in yield
+  curvature = c(-1.0, 1.0),  # active, quadratic in biomass
+  weak     = c(0.0, 1.0),    # weak linear effect on biomass
+  inert    = c(0.0, 1.0)     # no effect
+)
+design <- lhs_design(n = 80L, bounds = bounds, seed = 11L)
+head(design)
+```
+
+## Simulate and screen
+
+```{r screen}
+outputs <- stub_apsim(design)
+fit <- hsic_identifiability(
+  theta          = design,
+  y              = outputs,
+  alpha          = 0.05,
+  p_adjust       = "BH",
+  n_permutations = 299L,
+  seed           = 11L
+)
+fit
+```
+
+The print method ranks parameters by their maximum HSIC across outputs.
+`slope` and `curvature` should be flagged identifiable with small
+p-values; `weak` may or may not survive depending on noise; `inert`
+should fall below the threshold.
+
+## Visual diagnostic
+
+```{r plot}
+plot(fit)
+```
+
+## Handing off to PESTO
+
+The identifiable subset is precisely the set you would forward to
+`pesto_ies()` (PESTO's IES wrapper) as the parameter prior. In pseudo-R:
+
+    identifiable_params <- names(fit$identifiable)[fit$identifiable]
+    pesto::pesto_ies(..., params = identifiable_params, ...)
+
+For the cross-package workflow specification (kernR -> PESTO -> APSIM
+ensemble loop), see the architecture document
+`uq_ag_stack_design_v0.md`.
+
+## Tabular form
+
+For downstream reporting (or to feed into a manuscript table), call
+`as.data.frame()`:
+
+```{r as-df}
+df <- as.data.frame(fit)
+head(df)
+```
+
+## Notes on practice
+
+- **Design size.** `n` should comfortably exceed the number of
+  parameters; we recommend `n >= 10p` as a starting point for
+  ag-systems-scale designs.
+- **Permutations.** 199-499 permutations is usually sufficient; the
+  minimum achievable p-value at `n_permutations` is
+  `1 / (n_permutations + 1)`, so `n_permutations >= 199` is the floor
+  for testing at `alpha = 0.05`.
+- **Multiple testing.** With many parameters and several outputs,
+  unadjusted p-values will produce spurious "identifiable" flags. The
+  default Benjamini-Hochberg adjustment controls the false discovery
+  rate across the `p x q` grid.
+- **Cost.** Kernel matrices are reused across the grid, so cost scales
+  as `O((p + q) n^2)` for kernel construction plus
+  `O(p q B n^2)` for the permutation null, where `B = n_permutations`.
+
+## References
+
+- Hu, Z., Sejdinovic, D., & Evans, R. J. (2024).
+  *A kernel-based statistical test for causal inference with backdoor
+  adjustment.* Journal of Machine Learning Research, 25.
+- Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Schölkopf, B., &
+  Smola, A. J. (2008). A kernel statistical test of independence.
+  *NeurIPS*, 20.
+- Da Veiga, S. (2015). Global sensitivity analysis with dependence
+  measures. *Journal of Statistical Computation and Simulation*,
+  85(7), 1283-1305.

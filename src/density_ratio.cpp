@@ -5,7 +5,8 @@ using namespace arma;
 
 //' RuLSIF kernel density ratio estimation (core solver)
 //'
-//' Solves the RuLSIF optimisation: theta = (H + lambda*I)^{-1} h
+//' Solves the RuLSIF optimisation
+//' \deqn{\theta = (H + \lambda I)^{-1} h}{theta = (H + lambda*I)^(-1) h}
 //' with non-negativity constraint (clamp negatives to 0).
 //'
 //' @param H Gram matrix (n_basis x n_basis).

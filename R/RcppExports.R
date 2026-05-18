@@ -3,7 +3,8 @@
 
 #' RuLSIF kernel density ratio estimation (core solver)
 #'
-#' Solves the RuLSIF optimisation: theta = (H + lambda*I)^{-1} h
+#' Solves the RuLSIF optimisation
+#' \deqn{\theta = (H + \lambda I)^{-1} h}{theta = (H + lambda*I)^(-1) h}
 #' with non-negativity constraint (clamp negatives to 0).
 #'
 #' @param H Gram matrix (n_basis x n_basis).
@@ -30,7 +31,9 @@ hsic_stat_cpp <- function(Kx, Ky) {
 
 #' Compute the weighted HSIC statistic (for bd-HSIC)
 #'
-#' Weighted version: sum_{i,j} w_i * w_j * Kxc_{ij} * Kyc_{ij}
+#' Weighted version
+#' \deqn{\sum_{i,j} w_i w_j (K_x^c)_{ij} (K_y^c)_{ij}}{
+#'       sum_(i,j) w_i * w_j * Kxc(i,j) * Kyc(i,j)}.
 #'
 #' @param Kx n x n kernel matrix for X.
 #' @param Ky n x n kernel matrix for Y.
@@ -106,9 +109,12 @@ polynomial_kernel_matrix_cpp <- function(x, y, degree, offset) {
 #' Compute the unbiased MMD^2 statistic
 #'
 #' Unbiased estimator of MMD^2:
-#'   1/(n(n-1)) sum_{i!=j} K_xx(i,j)
-#' + 1/(m(m-1)) sum_{i!=j} K_yy(i,j)
-#' - 2/(nm) sum_{i,j} K_xy(i,j)
+#' \deqn{\frac{1}{n(n-1)} \sum_{i \ne j} K_{xx}(i,j) +
+#'       \frac{1}{m(m-1)} \sum_{i \ne j} K_{yy}(i,j) -
+#'       \frac{2}{nm} \sum_{i,j} K_{xy}(i,j)}{
+#'       1/(n(n-1)) sum_(i!=j) K_xx(i,j) +
+#'       1/(m(m-1)) sum_(i!=j) K_yy(i,j) -
+#'       2/(nm) sum_(i,j) K_xy(i,j)}
 #'
 #' @param Kxx n x n kernel matrix for sample X.
 #' @param Kyy m x m kernel matrix for sample Y.

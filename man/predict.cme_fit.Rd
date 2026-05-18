@@ -2,7 +2,7 @@
 % Please edit documentation in R/embeddings.R
 \name{predict.cme_fit}
 \alias{predict.cme_fit}
-\title{Predict Conditional Mean Embedding at New Points}
+\title{Predict Conditional Mean Embedding Weights at New Points}
 \usage{
 \method{predict}{cme_fit}(object, x_new, ...)
 }
@@ -14,10 +14,16 @@
 \item{...}{Currently ignored.}
 }
 \value{
-An n_new x n_train matrix of embedding weights. Each row
-gives the weights to combine training Y kernel values.
+An n_new x n_train matrix of embedding weights.
 }
 \description{
-Predict Conditional Mean Embedding at New Points
+Returns the row weights \eqn{\alpha(x^*) = k(x^*, X_{\mathrm{train}})
+W} from a fitted \code{\link[=fit_cme]{fit_cme()}} object. Each row of the result is the
+weight vector for combining training-\code{y} quantities (kernel values
+or values themselves) to produce a CME prediction at \code{x_new}.
 }
-\keyword{internal}
+\details{
+For a typical "predict Y at new X" workflow use \code{\link[=kernel_downscale]{kernel_downscale()}},
+which combines this with the training Y matrix to return predictions
+directly.
+}

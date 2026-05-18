@@ -17,7 +17,8 @@ rulsif_solve_cpp(H, h, lambda)
 Coefficient vector theta.
 }
 \description{
-Solves the RuLSIF optimisation: theta = (H + lambda*I)^{-1} h
+Solves the RuLSIF optimisation
+\deqn{\theta = (H + \lambda I)^{-1} h}{theta = (H + lambda*I)^(-1) h}
 with non-negativity constraint (clamp negatives to 0).
 }
 \keyword{internal}

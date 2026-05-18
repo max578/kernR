@@ -40,7 +40,9 @@ double hsic_stat_cpp(const arma::mat& Kx, const arma::mat& Ky) {
 
 //' Compute the weighted HSIC statistic (for bd-HSIC)
 //'
-//' Weighted version: sum_{i,j} w_i * w_j * Kxc_{ij} * Kyc_{ij}
+//' Weighted version
+//' \deqn{\sum_{i,j} w_i w_j (K_x^c)_{ij} (K_y^c)_{ij}}{
+//'       sum_(i,j) w_i * w_j * Kxc(i,j) * Kyc(i,j)}.
 //'
 //' @param Kx n x n kernel matrix for X.
 //' @param Ky n x n kernel matrix for Y.

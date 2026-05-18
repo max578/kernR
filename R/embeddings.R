@@ -1,7 +1,15 @@
 #' Estimate Conditional Mean Embedding via Kernel Ridge Regression
 #'
-#' Estimates the conditional mean embedding mu(Y|X=x) in the RKHS
-#' using kernel ridge regression (Muandet et al., 2017).
+#' Estimates the conditional mean embedding \eqn{\mu_{Y|X=x}} in the
+#' RKHS using kernel ridge regression (Park, Muandet, Fukumizu &
+#' Sejdinovic, 2013; Muandet et al., 2017).
+#'
+#' This is the lower-level building block used by [kernel_downscale()].
+#' Most users should call `kernel_downscale()`; use `fit_cme()` directly
+#' when you need access to the trained operator (the weight matrix `W`)
+#' for custom downstream computations -- e.g. constructing a kernel
+#' Bayes' rule update, plugging into a manuscript figure pipeline, or
+#' composing with other RKHS operators.
 #'
 #' @param x Numeric matrix of conditioning variables (n x d_x).
 #' @param y Numeric matrix of target variables (n x d_y).
@@ -12,15 +20,25 @@
 #'
 #' @return A list of class `"cme_fit"` with components:
 #'   \describe{
-#'     \item{alpha}{Weight matrix (n x n) for the embedding.}
+#'     \item{W}{Operator matrix `(K_x + n lambda I)^{-1}` (n x n).}
 #'     \item{Ky}{Kernel matrix of `y`.}
 #'     \item{x_train}{Training `x` data.}
-#'     \item{kernel_x}{Resolved kernel specification.}
-#'     \item{kernel_y}{Resolved kernel specification.}
+#'     \item{kernel_x, kernel_y}{Resolved kernel specifications.}
 #'     \item{lambda}{Regularisation parameter used.}
 #'   }
 #'
-#' @keywords internal
+#' @references
+#' Park, J., Muandet, K., Fukumizu, K., & Sejdinovic, D. (2013).
+#' *Kernel embeddings of conditional distributions: A unified kernel
+#' framework for nonparametric inference in graphical models.*
+#' IEEE Signal Processing Magazine.
+#'
+#' Muandet, K., Fukumizu, K., Sriperumbudur, B., & Scholkopf, B.
+#' (2017). *Kernel mean embedding of distributions: A review and
+#' beyond.* Foundations and Trends in Machine Learning, 10(1-2).
+#'
+#' @seealso [predict.cme_fit()], [kernel_downscale()]
+#' @export
 fit_cme <- function(x, y,
                     kernel_x = kernel_spec(),
                     kernel_y = kernel_spec(),
@@ -58,18 +76,25 @@ fit_cme <- function(x, y,
   )
 }
 
-#' Predict Conditional Mean Embedding at New Points
+#' Predict Conditional Mean Embedding Weights at New Points
+#'
+#' Returns the row weights \eqn{\alpha(x^*) = k(x^*, X_{\mathrm{train}})
+#' W} from a fitted [fit_cme()] object. Each row of the result is the
+#' weight vector for combining training-`y` quantities (kernel values
+#' or values themselves) to produce a CME prediction at `x_new`.
+#'
+#' For a typical "predict Y at new X" workflow use [kernel_downscale()],
+#' which combines this with the training Y matrix to return predictions
+#' directly.
 #'
 #' @param object A `cme_fit` object.
 #' @param x_new Numeric matrix of new conditioning points.
 #' @param ... Currently ignored.
 #'
-#' @return An n_new x n_train matrix of embedding weights. Each row
-#'   gives the weights to combine training Y kernel values.
-#' @keywords internal
+#' @return An n_new x n_train matrix of embedding weights.
+#' @export
 predict.cme_fit <- function(object, x_new, ...) {
   x_new <- as.matrix(x_new)
-  # k(x_new, x_train) %*% W
   Kxs <- kernel_matrix(x_new, object$x_train, kernel = object$kernel_x)
   Kxs %*% object$W
 }

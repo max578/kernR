@@ -27,16 +27,36 @@ by leave-one-out cross-validation. Default is \code{"cv"}.}
 \value{
 A list of class \code{"cme_fit"} with components:
 \describe{
-\item{alpha}{Weight matrix (n x n) for the embedding.}
+\item{W}{Operator matrix \verb{(K_x + n lambda I)^\{-1\}} (n x n).}
 \item{Ky}{Kernel matrix of \code{y}.}
 \item{x_train}{Training \code{x} data.}
-\item{kernel_x}{Resolved kernel specification.}
-\item{kernel_y}{Resolved kernel specification.}
+\item{kernel_x, kernel_y}{Resolved kernel specifications.}
 \item{lambda}{Regularisation parameter used.}
 }
 }
 \description{
-Estimates the conditional mean embedding mu(Y|X=x) in the RKHS
-using kernel ridge regression (Muandet et al., 2017).
+Estimates the conditional mean embedding \eqn{\mu_{Y|X=x}} in the
+RKHS using kernel ridge regression (Park, Muandet, Fukumizu &
+Sejdinovic, 2013; Muandet et al., 2017).
 }
-\keyword{internal}
+\details{
+This is the lower-level building block used by \code{\link[=kernel_downscale]{kernel_downscale()}}.
+Most users should call \code{kernel_downscale()}; use \code{fit_cme()} directly
+when you need access to the trained operator (the weight matrix \code{W})
+for custom downstream computations -- e.g. constructing a kernel
+Bayes' rule update, plugging into a manuscript figure pipeline, or
+composing with other RKHS operators.
+}
+\references{
+Park, J., Muandet, K., Fukumizu, K., & Sejdinovic, D. (2013).
+\emph{Kernel embeddings of conditional distributions: A unified kernel
+framework for nonparametric inference in graphical models.}
+IEEE Signal Processing Magazine.
+
+Muandet, K., Fukumizu, K., Sriperumbudur, B., & Scholkopf, B.
+(2017). \emph{Kernel mean embedding of distributions: A review and
+beyond.} Foundations and Trends in Machine Learning, 10(1-2).
+}
+\seealso{
+\code{\link[=predict.cme_fit]{predict.cme_fit()}}, \code{\link[=kernel_downscale]{kernel_downscale()}}
+}

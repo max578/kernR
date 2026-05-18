@@ -1,6 +1,6 @@
 ---
 title: "Distributional Treatment Effect Tests (DR-DATE / DR-DETT)"
-author: "Max Moldovan and Dino Sejdinovic"
+author: "Max Moldovan"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >

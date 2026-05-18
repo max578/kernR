@@ -1,0 +1,231 @@
+---
+title: "DR-DATE for APSIM Scenario Counterfactuals"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{DR-DATE for APSIM Scenario Counterfactuals}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+                      fig.width = 6, fig.height = 4)
+set.seed(20260516)
+```
+
+## The ag-scenario question
+
+Given an APSIM model calibrated on observational data, we want to ask:
+*does an intervention (e.g. stubble retention) shift the distribution
+of simulated outputs?* The canonical setup is **one PESTO posterior,
+forward-simulated under two scenarios** — baseline management and the
+intervention. With identical parameter posteriors, the question reduces
+to a balanced two-sample distributional comparison on outputs.
+
+`dr_date_scenario()` runs the DR-DATE statistic of Fawkes-Hu-Evans-
+Sejdinovic (2024) over a pair of PESTO 0.3.0 `pesto_ensemble_manifest`
+objects. With identical parameter columns, the doubly-robust
+correction collapses to a balanced MMD on the outputs; with different
+parameter posteriors, the DR adjustment absorbs the covariate shift
+(provided positivity holds).
+
+```{r}
+library(kernR)
+library(PESTO)
+```
+
+## One calibration, two scenarios
+
+We use a synthetic linear-Gaussian forward model in place of APSIM so
+the vignette runs without an APSIM install. Replace `forward` with
+`PESTO::apsim_callback(...)` to drive a real APSIM ensemble.
+
+```{r}
+npar  <- 2L
+nobs  <- 4L
+nreal <- 60L
+sigma <- 0.05
+
+G <- matrix(rnorm(nobs * npar), nobs, npar)
+y_obs <- as.numeric(G %*% c(1.0, -0.5)) + rnorm(nobs, sd = sigma)
+names(y_obs) <- paste0("o", seq_len(nobs))
+
+prior <- matrix(rnorm(nreal * npar), nreal, npar,
+                dimnames = list(NULL, c("p1", "p2")))
+forward <- function(theta) theta %*% t(G)
+```
+
+Calibrate **once** with PESTO's in-process IES driver:
+
+```{r}
+fit <- pesto_ies_callback(
+  forward_model  = forward,
+  prior_ensemble = prior,
+  obs            = y_obs,
+  obs_sd         = sigma,
+  noptmax        = 3L,
+  verbose        = FALSE
+)
+```
+
+Now forward-simulate that posterior under two scenarios. The
+intervention here is a deterministic shift on the outputs — in a real
+ag application this would be e.g. a stubble-retention management rule
+that changes APSIM's predicted yield trajectory.
+
+```{r}
+par_post   <- as.matrix(fit$par_ensemble[, c("p1", "p2"), with = FALSE])
+out_base   <- par_post %*% t(G)
+out_intv   <- out_base + 0.6                       # the intervention
+colnames(out_base) <- colnames(out_intv) <- names(y_obs)
+```
+
+Wrap each scenario as a manifest. **The two manifests share the same
+parameter posterior** — that's the canonical structure.
+
+```{r}
+real_names <- fit$par_ensemble$real_name
+
+m_baseline <- pesto_ensemble_manifest(
+  run_id          = "wagga_baseline_2026",
+  params          = data.frame(real_name = real_names, par_post,
+                               check.names = FALSE),
+  outputs         = data.frame(real_name = real_names, out_base,
+                               check.names = FALSE),
+  weights         = setNames(rep(1 / sigma, nobs), names(y_obs)),
+  obs_target      = setNames(y_obs, names(y_obs)),
+  data_hash       = "sha256:vignette_baseline",
+  pesto_version   = as.character(packageVersion("PESTO")),
+  timestamp       = Sys.time(),
+  method          = "ies_callback",
+  noptmax         = 3L,
+  lambda_schedule = 1
+)
+
+m_intervention <- pesto_ensemble_manifest(
+  run_id          = "wagga_stubble_2026",
+  params          = data.frame(real_name = real_names, par_post,
+                               check.names = FALSE),     # SAME params
+  outputs         = data.frame(real_name = real_names, out_intv,
+                               check.names = FALSE),
+  weights         = setNames(rep(1 / sigma, nobs), names(y_obs)),
+  obs_target      = setNames(y_obs, names(y_obs)),
+  data_hash       = "sha256:vignette_intervention",
+  pesto_version   = as.character(packageVersion("PESTO")),
+  timestamp       = Sys.time(),
+  method          = "ies_callback",
+  noptmax         = 3L,
+  lambda_schedule = 1
+)
+m_baseline
+```
+
+In production you would build these manifests via `as_manifest()` on
+two separate IES runs *only when the scenarios genuinely produced
+different calibration data*. For the "did the intervention shift the
+forward outputs?" question, the same-posterior construction above is
+the right one.
+
+## Run the DR-DATE scenario test
+
+```{r}
+res <- dr_date_scenario(
+  baseline       = m_baseline,
+  intervention   = m_intervention,
+  n_permutations = 299L,
+  seed           = 1L
+)
+print(res)
+```
+
+With a clear distributional shift, the test should reject and return
+a low `p_value`. The `Verdict` line gives the directly actionable
+read.
+
+## Null case — same outputs
+
+If the intervention has no effect (shift = 0), the two output
+distributions are identical and the test should fail to reject:
+
+```{r}
+out_null <- out_base                       # no intervention effect
+m_null <- pesto_ensemble_manifest(
+  run_id          = "wagga_baseline_replicate",
+  params          = data.frame(real_name = real_names, par_post,
+                               check.names = FALSE),
+  outputs         = data.frame(real_name = real_names, out_null,
+                               check.names = FALSE),
+  weights         = setNames(rep(1 / sigma, nobs), names(y_obs)),
+  obs_target      = setNames(y_obs, names(y_obs)),
+  data_hash       = "sha256:vignette_null",
+  pesto_version   = as.character(packageVersion("PESTO")),
+  timestamp       = Sys.time(),
+  method          = "ies_callback",
+  noptmax         = 3L,
+  lambda_schedule = 1
+)
+res_null <- dr_date_scenario(
+  baseline       = m_baseline,
+  intervention   = m_null,
+  n_permutations = 299L,
+  seed           = 2L
+)
+res_null$p_value
+```
+
+## What gets validated
+
+`dr_date_scenario()` hard-stops if the two manifests don't agree on:
+
+- parameter column names (you can't compare incompatible priors),
+- observation column names (you can't compare different outputs),
+- PESTO major.minor version (forward / backward incompatibility safety).
+
+This is by design — silent comparison of incompatible scenarios is a
+worse failure mode than a noisy abort.
+
+## Output sub-selection
+
+For ensembles with many output columns, focus the test on the outputs
+of scientific interest with `output =`:
+
+```{r}
+dr_date_scenario(
+  m_baseline, m_intervention,
+  output         = c("o1", "o3"),     # subset
+  n_permutations = 99L, seed = 3L
+)$outputs_tested
+```
+
+## When parameter posteriors genuinely differ
+
+If the two scenarios came from *different calibration data* (so the
+two PESTO runs produced different posteriors), then `params` will
+differ between the two manifests. DR-DATE will then run its full
+doubly-robust correction, with one important caveat: it assumes
+**positivity** — every parameter region with non-zero baseline
+density also has non-zero intervention density (and vice versa). If
+the two posteriors are completely separated in parameter space, the
+test will see "perfect separation" in the propensity-model fit and
+become uninformative (`p_value ~ 1`). For that regime, use
+`PESTO::pesto_ies_callback()` with a shared prior + overlapping
+calibration data, or restrict to outputs whose causal pathway is
+independent of the separating parameters.
+
+## Where the cross-package plumbing lives
+
+- Forward-model run: `PESTO::pesto_ies_callback()` (in-process R
+  callback) or `PESTO::apsim_callback()` (apsimx adapter).
+- Run capture: `PESTO::as_manifest()` → `pesto_ensemble_manifest`.
+- Persistence: `PESTO::write_manifest()` /
+  `PESTO::read_manifest()` / `PESTO::verify_manifest()`.
+- Distributional verdict: this function.
+- (Future) proxymix density-ratio backend plug-in: tracked under §C1
+  of the roadmap; will become a fourth propensity-model option once
+  it lands.
+
+## Reproducibility
+
+```{r}
+sessionInfo()
+```

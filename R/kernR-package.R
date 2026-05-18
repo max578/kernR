@@ -6,6 +6,8 @@
 #' @useDynLib kernR, .registration = TRUE
 #' @importFrom data.table data.table setDT as.data.table .SD
 #' @importFrom graphics hist abline legend
-#' @importFrom stats glm binomial predict median quantile var sd pnorm
+#' @importFrom stats glm binomial predict median quantile var sd pnorm weighted.mean
+#' @importFrom methods slot
+#' @importFrom PESTO pesto_ensemble_manifest as_manifest
 ## usethis namespace: end
 NULL

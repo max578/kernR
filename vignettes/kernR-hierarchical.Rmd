@@ -1,6 +1,6 @@
 ---
 title: "Hierarchical and Nested Data"
-author: "Max Moldovan and Dino Sejdinovic"
+author: "Max Moldovan"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
