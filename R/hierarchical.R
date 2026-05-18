@@ -36,6 +36,7 @@
 #' preserve the hierarchical structure.
 #'
 #' @examples
+#' \donttest{
 #' set.seed(42)
 #' n_clusters <- 20
 #' n_per <- 30
@@ -54,6 +55,7 @@
 #'   seed = 1
 #' )
 #' print(result)
+#' }
 #'
 #' @export
 hierarchical_test <- function(y, treatment, covariates, cluster_id,

@@ -9,3 +9,17 @@
 ^PROJECT_LOG\.md$
 ^CLAUDE\.md$
 ^plan_.*\.md$
+^\.DS_Store$
+^.*\.DS_Store$
+^cran-comments\.md$
+^CRAN-SUBMISSION$
+^revdep$
+^codecov\.yml$
+^API_STABILITY\.md$
+^CODE_OF_CONDUCT\.md$
+^CONTRIBUTING\.md$
+^CITATION\.cff$
+^\.zenodo\.json$
+^critical_review_.*\.md$
+^check_.*\.log$
+^Rplots\.pdf$

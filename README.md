@@ -20,10 +20,25 @@ kernR implements kernel-based hypothesis tests for causal inference and distribu
 
 ## Installation
 
+From GitHub (development version):
+
 ```r
-# Install from GitHub
-remotes::install_github("AAGI-AUS/kernR")
+# install.packages("pak")
+pak::pak("AAGI-AUS/kernR")
 ```
+
+Once the AAGI r-universe registry is live, pre-built binaries will
+be available (and will resolve the PESTO cross-package dependency
+automatically):
+
+```r
+install.packages("kernR", repos = c(
+  "https://aagi-aus.r-universe.dev",
+  "https://cloud.r-project.org"
+))
+```
+
+CRAN submission is in preparation.
 
 ## Quick Start
 

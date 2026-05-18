@@ -1,0 +1,114 @@
+url: https://AAGI-AUS.github.io/kernR/
+
+template:
+  bootstrap: 5
+
+reference:
+- title: Kernel primitives
+  desc: Kernel specifications, Gram matrices, and bandwidth selection.
+  contents:
+  - kernel_spec
+  - kernel_matrix
+  - select_bandwidth
+
+- title: Independence and two-sample tests
+  desc: HSIC independence test and MMD two-sample test, with low-rank acceleration.
+  contents:
+  - hsic_test
+  - mmd_test
+  - hsic_test_nystrom
+
+- title: Causal association (bd-HSIC)
+  desc: Backdoor-adjusted HSIC for testing causal association after confounder adjustment.
+  contents:
+  - bd_hsic_test
+
+- title: Distributional treatment effects
+  desc: Doubly robust kernel tests for distributional treatment effects, including a PESTO-scenario convenience.
+  contents:
+  - dr_date_test
+  - dr_dett_test
+  - dr_date_scenario
+  - kernel_causal_test
+
+- title: Hierarchical and clustered designs
+  desc: Within-cluster permutation for nested data (farms, hospitals, schools).
+  contents:
+  - hierarchical_test
+
+- title: Sensitivity and identifiability
+  desc: First- and total-order kernel sensitivity; pre-IES identifiability screening.
+  contents:
+  - hsic_identifiability
+  - hsic_sensitivity
+
+- title: Density-ratio and propensity
+  desc: Plug-in density-ratio estimation with four backends; propensity-score diagnostics.
+  contents:
+  - fit_density_ratio
+  - predict_density_ratio
+  - estimate_density_ratio
+  - estimate_propensity
+  - assess_overlap
+  - plot_weights
+  - effective_sample_size
+
+- title: Low-rank acceleration
+  desc: Nyström and Random Fourier Feature factorisations for large-n kernels.
+  contents:
+  - nystrom_factor
+  - rff_features
+
+- title: Kernel downscaling and distribution regression
+  desc: Conditional mean embedding, distribution regression, and aggregate downscaling.
+  contents:
+  - kernel_downscale
+  - fit_cme
+  - dist_regression
+  - aggregate_downscale
+  - posterior_sample_aggregate
+
+- title: Posterior-predictive check
+  desc: MMD-based posterior-predictive check; consumes the PESTO cross-package contract.
+  contents:
+  - mmd_ppc
+  - pesto_ensemble
+
+- title: Design
+  desc: Latin-hypercube design helper.
+  contents:
+  - lhs_design
+
+articles:
+- title: Get started
+  navbar: ~
+  contents:
+  - kernR-quickstart
+  - kernR-bdhsic
+  - kernR-drtest
+  - kernR-hierarchical
+
+- title: Sensitivity and identifiability
+  contents:
+  - kernR-identifiability
+  - kernR-sensitivity
+
+- title: Acceleration and scaling
+  contents:
+  - kernR-nystrom
+
+- title: Downscaling
+  contents:
+  - kernR-downscaling
+
+- title: Cross-package integration with PESTO and proxymix
+  contents:
+  - kernR-ppc
+  - kernR-drdate-scenario
+  - kernR-hierarchical-bdhsic
+  - kernR-proxymix-binding
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [github]

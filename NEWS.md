@@ -1,4 +1,73 @@
-# kernR (development version)
+# kernR 0.2.0
+
+First publish of the local development line to AAGI-AUS. Lands the
+0.0.0.9001 → 0.0.0.9015 cycle on top of the existing AAGI v0.1.x
+lineage; subsequent 0.0.0.x history below is retained as the
+per-feature changelog. The version-number jump (origin v0.1.1 →
+v0.2.0) signals the substantial new public surface arriving in this
+release.
+
+## Public surface (31 exports)
+
+- **Kernel primitives**: `kernel_spec()`, `kernel_matrix()`,
+  `select_bandwidth()`.
+- **Independence and two-sample tests**: `hsic_test()`,
+  `mmd_test()`, `hsic_test_nystrom()`.
+- **Causal association**: `bd_hsic_test()` (backdoor-adjusted HSIC;
+  Hu, Sejdinovic & Evans, JMLR 2024).
+- **Distributional treatment effects**: `dr_date_test()`,
+  `dr_dett_test()`, `dr_date_scenario()`, `kernel_causal_test()`
+  (Fawkes, Hu, Evans & Sejdinovic, TMLR 2024).
+- **Hierarchical / clustered designs**: `hierarchical_test()` with
+  within-cluster permutation.
+- **Sensitivity and identifiability**: `hsic_identifiability()`,
+  `hsic_sensitivity()` (Da Veiga 2015; conditional-permutation null
+  for total-order significance).
+- **Density-ratio and propensity**: `fit_density_ratio()`,
+  `predict_density_ratio()`, `estimate_density_ratio()` (logistic /
+  ranger / xgboost / proxymix backends); `estimate_propensity()`,
+  `assess_overlap()`, `plot_weights()`, `effective_sample_size()`.
+- **Low-rank acceleration**: `nystrom_factor()` (Williams & Seeger
+  2001), `rff_features()` (Rahimi & Recht 2007).
+- **Kernel downscaling and distribution regression**:
+  `kernel_downscale()` (Park, Muandet, Fukumizu & Sejdinovic 2013),
+  `fit_cme()`, `dist_regression()` (Szabó, Sriperumbudur, Póczos &
+  Gretton 2016), `aggregate_downscale()`,
+  `posterior_sample_aggregate()`.
+- **Posterior-predictive check + PESTO contract**: `mmd_ppc()`
+  (consumes `PESTO::pesto_ensemble_manifest` via S3 dispatch).
+- **Design**: `lhs_design()` Latin-hypercube helper.
+
+## Cross-package contracts
+
+- Imports `PESTO (>= 0.3.0)` for the `pesto_ensemble_manifest` S7
+  class.
+- Optional `proxymix (>= 0.3.0)` in `Suggests` as a density-ratio
+  backend (`requireNamespace()`-guarded).
+
+## Documentation
+
+- 12 vignettes covering: quick start, bd-HSIC tutorial, DR-DATE/
+  DETT tutorial, hierarchical data, HSIC identifiability, HSIC
+  sensitivity, MMD posterior-predictive check, DR-DATE scenario
+  via PESTO manifest, hierarchical bd-HSIC, Nyström acceleration,
+  proxymix binding, kernel downscaling.
+
+## R CMD check posture
+
+`R CMD check --as-cran` on the AAGI / CI Linux environment is
+expected to report 0 errors / 0 warnings / a small number of
+environmental NOTEs (new-submission boilerplate, HTML Tidy version
+on macOS). Two Apple-clang-21 toolchain WARNINGs surface only on
+the maintainer's local machine (R's own `R_ext/Boolean.h` and a
+personal `~/.R/Makevars`); both are absent on CRAN's build farm
+and on standard GitHub Actions runners.
+
+## Historical development log
+
+All historical entries below are retained for full traceability
+(0.0.0.9001 sole-authorship consolidation → 0.0.0.9015 third
+downscaling method).
 
 ## kernR 0.0.0.9015
 
