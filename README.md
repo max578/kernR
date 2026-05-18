@@ -24,16 +24,16 @@ From GitHub (development version):
 
 ```r
 # install.packages("pak")
-pak::pak("AAGI-AUS/kernR")
+pak::pak("max578/kernR")
 ```
 
-Once the AAGI r-universe registry is live, pre-built binaries will
-be available (and will resolve the PESTO cross-package dependency
-automatically):
+Pre-built binaries are available from r-universe (the PESTO
+cross-package dependency resolves automatically from the same
+registry):
 
 ```r
 install.packages("kernR", repos = c(
-  "https://aagi-aus.r-universe.dev",
+  "https://max578.r-universe.dev",
   "https://cloud.r-project.org"
 ))
 ```

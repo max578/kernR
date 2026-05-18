@@ -1,6 +1,6 @@
 # pkgdown workflow for kernR.
 # Site publishes to gh-pages and is served at
-# https://AAGI-AUS.github.io/kernR/.
+# https://max578.github.io/kernR/.
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true
-          extra-repositories: https://aagi-aus.r-universe.dev
+          extra-repositories: https://max578.r-universe.dev
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:

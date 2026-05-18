@@ -1,7 +1,7 @@
 # R-CMD-check workflow for kernR.
 # Source: r-lib/actions check-standard template.
 # Runs R CMD check across the standard matrix on every push to main
-# and every PR. PESTO is resolved from AAGI's r-universe repo as a
+# and every PR. PESTO is resolved from max578's r-universe repo as a
 # package source.
 
 on:
@@ -44,7 +44,7 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
-          extra-repositories: https://aagi-aus.r-universe.dev
+          extra-repositories: https://max578.r-universe.dev
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
