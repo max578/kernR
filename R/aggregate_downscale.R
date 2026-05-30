@@ -77,13 +77,12 @@
 #'     floor (IS path only).
 #'   * `n_components`, `sigma_y`, `n_samples_per_component`, `call`.
 #'
-#' @references
-#' Sejdinovic, D. (talk; 2025). *Kernel downsizing and aggregate
-#' likelihoods.* Companion talk to Hoek-Elliott (2024) for the
-#' aggregate-likelihood / GMM-proxy direction. The companion proxymix
-#' Tier-2 stub `proxymix::from_aggregate_likelihood()` targets the
-#' same problem from the prior-fitting side; this function targets it
-#' from the consumption side (inversion given a fitted prior).
+#' @details
+#' The aggregate-likelihood / GMM-proxy direction is shared with the
+#' companion proxymix Tier-2 stub `proxymix::from_aggregate_likelihood()`,
+#' which targets the same problem from the prior-fitting side; this
+#' function targets it from the consumption side (inversion given a
+#' fitted prior).
 #'
 #' @seealso [kernel_downscale()], [dist_regression()].
 #' @examples
@@ -393,6 +392,19 @@ print.aggregate_downscale <- function(x, digits = 3L, ...) {
 #' @param n Integer. Number of posterior samples. Default `1000L`.
 #' @param seed Integer or `NULL`. Random seed.
 #' @return An `n x dim_x` numeric matrix.
+#' @examples
+#' set.seed(1L)
+#' A <- matrix(c(0.5, 0.5), nrow = 1L)
+#' prior <- list(
+#'   means = list(c(0, 0), c(2, 2)),
+#'   covariances = list(diag(2L), diag(2L)),
+#'   weights = c(0.5, 0.5)
+#' )
+#' fit <- aggregate_downscale(y = 1.0, aggregator = A,
+#'                            latent_prior = prior, sigma_y = 0.2)
+#' draws <- posterior_sample_aggregate(fit, n = 500L, seed = 1L)
+#' colMeans(draws)
+#'
 #' @export
 posterior_sample_aggregate <- function(object, n = 1000L,
                                        seed = NULL) {

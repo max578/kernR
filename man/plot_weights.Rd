@@ -18,3 +18,9 @@ Invisibly returns \code{weights}.
 Plots the distribution of importance weights with effective sample
 size annotation.
 }
+\examples{
+set.seed(1L)
+weights <- rgamma(200L, shape = 2, rate = 2)
+plot_weights(weights)
+
+}

@@ -10,7 +10,8 @@ estimate_propensity(
   method = c("logistic", "ranger", "xgboost"),
   cross_fit = TRUE,
   n_folds = 5L,
-  trim = 0.01
+  trim = 0.01,
+  seed = NULL
 )
 }
 \arguments{
@@ -28,6 +29,9 @@ produce out-of-sample propensity estimates. Default is \code{TRUE}.}
 
 \item{trim}{Numeric. Trim extreme propensity scores to \verb{[trim, 1-trim]}.
 Default is 0.01.}
+
+\item{seed}{Integer or \code{NULL}. Random seed for the cross-fitting fold
+assignment, so a fixed \code{seed} makes cross-fitted scores reproducible.}
 }
 \value{
 A list of class \code{"propensity_fit"} with components:

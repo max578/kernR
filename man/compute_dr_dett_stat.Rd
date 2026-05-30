@@ -2,9 +2,9 @@
 % Please edit documentation in R/test-drdett.R
 \name{compute_dr_dett_stat}
 \alias{compute_dr_dett_stat}
-\title{Compute DR-DETT Test Statistic}
+\title{Compute DR-DETT Test Statistic (augmented IPW, effect on the treated)}
 \usage{
-compute_dr_dett_stat(Ky, treatment, e_hat)
+compute_dr_dett_stat(Ky, treatment, e_hat, C0)
 }
 \arguments{
 \item{Ky}{n x n outcome kernel matrix.}
@@ -12,11 +12,14 @@ compute_dr_dett_stat(Ky, treatment, e_hat)
 \item{treatment}{Binary treatment vector.}
 
 \item{e_hat}{Propensity scores.}
+
+\item{C0}{n x n control-arm conditional-mean-embedding coefficient
+matrix (zero matrix gives the inverse-probability-weighted statistic).}
 }
 \value{
 Scalar test statistic.
 }
 \description{
-Compute DR-DETT Test Statistic
+Compute DR-DETT Test Statistic (augmented IPW, effect on the treated)
 }
 \keyword{internal}

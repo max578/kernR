@@ -19,7 +19,13 @@
 ^CODE_OF_CONDUCT\.md$
 ^CONTRIBUTING\.md$
 ^CITATION\.cff$
+^codemeta\.json$
+^SECURITY\.md$
+^air\.toml$
 ^\.zenodo\.json$
 ^critical_review_.*\.md$
 ^check_.*\.log$
 ^Rplots\.pdf$
+^\.claude$
+^\.positai$
+^\.cursor$

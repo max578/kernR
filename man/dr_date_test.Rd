@@ -11,9 +11,12 @@ dr_date_test(
   kernel_y = kernel_spec(),
   propensity_model = c("logistic", "ranger", "xgboost"),
   outcome_model = c("krr", "zero"),
+  cross_fit = TRUE,
+  n_folds = 5L,
   n_permutations = 500L,
   n_bins = 10L,
   regularisation = "cv",
+  min_ess_fraction = 0.1,
   alpha = 0.05,
   seed = NULL,
   verbose = FALSE
@@ -32,8 +35,18 @@ dr_date_test(
 \code{"logistic"} (default), \code{"ranger"}, or \code{"xgboost"}.}
 
 \item{outcome_model}{Character. \code{"krr"} (kernel ridge regression,
-default) for the conditional mean embedding, or \code{"zero"} to use
-only inverse probability weighting (no outcome regression).}
+default) fits a conditional mean embedding for each arm and forms
+the doubly robust statistic; \code{"zero"} drops the outcome model and
+returns the inverse-probability-weighted (singly robust) statistic.}
+
+\item{cross_fit}{Logical. If \code{TRUE} (default), both nuisances -- the
+propensity score and the conditional mean embedding -- are estimated
+by \code{n_folds}-fold cross-fitting and evaluated out-of-fold, as the
+doubly robust theory requires under flexible nuisance estimators. If
+\code{FALSE}, both are fit in-sample (faster, but the test can be
+anti-conservative).}
+
+\item{n_folds}{Integer. Number of cross-fitting folds. Default is 5.}
 
 \item{n_permutations}{Integer. Number of permutations. Default is 500.}
 
@@ -43,14 +56,21 @@ Default is 10.}
 \item{regularisation}{Numeric or \code{"cv"}. Ridge parameter for the CME.
 Default is \code{"cv"}.}
 
+\item{min_ess_fraction}{Numeric in (0, 1). If the effective sample
+size of either arm's inverse-probability weights falls below this
+fraction of \code{n}, a reliability \code{warning()} is emitted. Default 0.1.}
+
 \item{alpha}{Numeric. Significance level. Default is 0.05.}
 
-\item{seed}{Integer or \code{NULL}. Random seed.}
+\item{seed}{Integer or \code{NULL}. Random seed. Permutations are drawn
+through R's RNG, so a fixed \code{seed} makes the test fully reproducible.}
 
 \item{verbose}{Logical. Print progress. Default is \code{FALSE}.}
 }
 \value{
-An object of class \code{"kernel_test_result"}.
+An object of class \code{"kernel_test_result"}. The \code{ess} element
+holds the smaller of the two per-arm effective sample sizes and
+\code{ess_warning} records whether the reliability floor was hit.
 }
 \description{
 Tests whether the distributions of potential outcomes Y(1) and Y(0)
@@ -59,17 +79,32 @@ distributional effects (variance, shape) that mean-based tests miss.
 }
 \details{
 The DR-DATE test (Fawkes, Hu, Evans & Sejdinovic, 2024) constructs
-doubly robust estimators for the counterfactual mean embeddings of
-Y(1) and Y(0) in a reproducing kernel Hilbert space. The test
-statistic is the MMD^2 between these embeddings.
+doubly robust (augmented inverse-probability-weighted) estimators for
+the counterfactual mean embeddings of Y(1) and Y(0) in a reproducing
+kernel Hilbert space. For arm \eqn{a} the augmented embedding is
+\deqn{\hat\mu_a = \frac{1}{n}\sum_i \tilde w_{a,i}
+  \bigl(k(y_i,\cdot) - \hat m_a(x_i)\bigr) + \hat m_a(x_i),}
+where \eqn{\hat m_a} is the conditional mean embedding fitted on arm
+\eqn{a} and \eqn{\tilde w_{a,i}} are stabilised inverse-probability
+weights. The statistic is \eqn{\|\hat\mu_1 - \hat\mu_0\|^2} in the
+RKHS. Setting \code{outcome_model = "zero"} sets \eqn{\hat m_a \equiv 0}
+and recovers the inverse-probability-weighted statistic.
 
-\strong{Double robustness}: The test is consistent if \emph{either} the
-propensity score model \emph{or} the outcome regression model is correctly
-specified (not necessarily both).
+\strong{Double robustness}: the test is consistent if \emph{either} the
+propensity model \emph{or} the outcome (CME) model is correctly specified.
+Cross-fitting (\code{cross_fit = TRUE}) makes this hold under flexible
+machine-learning nuisances by removing own-observation overfitting
+bias (Chernozhukov et al., 2018).
 
-\strong{Key advantage}: Unlike DML or TMLE which test only for mean shifts,
-DR-DATE detects \emph{any} distributional difference including changes in
-variance, skewness, or shape.
+\strong{Permutation null}: the reference distribution permutes treatment
+labels \emph{within} propensity-score bins, holding the fitted nuisances
+fixed. This is valid under within-bin exchangeability of treatment
+given the (binned) propensity score; calibration degrades as the bins
+coarsen relative to the propensity variation inside them.
+
+\strong{Key advantage}: unlike DML or TMLE which test only for mean
+shifts, DR-DATE detects \emph{any} distributional difference including
+changes in variance, skewness, or shape.
 }
 \examples{
 set.seed(42)
@@ -87,4 +122,9 @@ print(result)
 Fawkes, J., Hu, R., Evans, R. J., & Sejdinovic, D. (2024). Doubly
 robust kernel statistics for testing distributional treatment effects.
 \emph{Transactions on Machine Learning Research}.
+
+Chernozhukov, V., Chetverikov, D., Demirer, M., Duflo, E., Hansen, C.,
+Newey, W., & Robins, J. (2018). Double/debiased machine learning for
+treatment and structural parameters. \emph{The Econometrics Journal},
+21(1), C1-C68.
 }

@@ -15,7 +15,10 @@
 #'   `"equal"` (default), `"icc"` (variance decomposition), or `"within_only"`.
 #' @param seed Integer or `NULL`.
 #' @param verbose Logical.
-#' @param ... Additional arguments passed to the underlying test.
+#' @param ... Additional arguments passed to the underlying test. Do not
+#'   pass `cross_fit` or `n_folds`: within-cluster sub-tests are always
+#'   fit in-sample, as the top-level within-cluster permutation supplies
+#'   the calibration.
 #'
 #' @return An object of class `"kernel_test_result"` with additional
 #'   `hierarchical` component containing within/between statistics.
@@ -85,16 +88,24 @@ hierarchical_test <- function(y, treatment, covariates, cluster_id,
 
   kernel_y <- resolve_bandwidth(kernel_y, y)
 
-  # Within-cluster statistics
-  within_stats <- numeric(n_clust)
+  # Within-cluster statistics. Sub-tests run in-sample (cross_fit = FALSE);
+  # the top-level within-cluster permutation supplies the calibration.
+  # DR sub-tests need at least 30 observations per cluster (the standalone
+  # `dr_*_test` minimum); smaller clusters are skipped, not silently
+  # zeroed. `within_stats` stays NA for skipped or failed clusters so they
+  # are excluded from the within-cluster average.
+  min_cluster_n <- if (method == "bd-hsic") 10L else 30L
+  within_stats <- rep(NA_real_, n_clust)
   within_n <- integer(n_clust)
+  n_within_failed <- 0L
+  first_within_err <- NULL
 
   for (j in seq_along(clusters)) {
     idx <- which(cluster_id == clusters[j])
     nj <- length(idx)
     within_n[j] <- nj
 
-    if (nj < 10) next  # Skip tiny clusters
+    if (nj < min_cluster_n) next  # too small for the within-cluster sub-test
 
     tryCatch(
       {
@@ -115,15 +126,46 @@ hierarchical_test <- function(y, treatment, covariates, cluster_id,
             covariates = covariates[idx, , drop = FALSE],
             kernel_y = kernel_y,
             n_permutations = 0L,
+            cross_fit = FALSE,
             ...
           )
         }
         within_stats[j] <- res_j$statistic
       },
       error = function(e) {
-        within_stats[j] <<- NA_real_
+        n_within_failed <<- n_within_failed + 1L
+        if (is.null(first_within_err)) {
+          first_within_err <<- conditionMessage(e)
+        }
       }
     )
+  }
+
+  # Surface skipped / failed within-cluster sub-tests rather than silently
+  # dropping them.
+  n_eligible <- sum(within_n >= min_cluster_n)
+  if (n_eligible == 0L) {
+    warning(sprintf(
+      paste0(
+        "No cluster met the minimum size (%d) for within-cluster %s ",
+        "sub-tests; using the between-cluster component only."
+      ),
+      min_cluster_n, method
+    ), call. = FALSE)
+  } else if (n_within_failed > 0L) {
+    if (n_within_failed >= n_eligible) {
+      stop(sprintf(
+        "All %d eligible clusters failed the within-cluster %s test (first error: %s).",
+        n_eligible, method, first_within_err
+      ), call. = FALSE)
+    }
+    warning(sprintf(
+      paste0(
+        "%d of %d within-cluster %s tests failed and were dropped from ",
+        "the within-cluster average (first error: %s)."
+      ),
+      n_within_failed, n_eligible, method, first_within_err
+    ), call. = FALSE)
   }
 
   # Between-cluster statistic: cluster-level mean embeddings
@@ -190,11 +232,11 @@ hierarchical_test <- function(y, treatment, covariates, cluster_id,
     }
 
     # Recompute within stats
-    perm_within <- numeric(n_clust)
+    perm_within <- rep(NA_real_, n_clust)
     for (j in seq_along(clusters)) {
       idx <- which(cluster_id == clusters[j])
       nj <- length(idx)
-      if (nj < 10) next
+      if (nj < min_cluster_n) next
 
       tryCatch(
         {
@@ -215,6 +257,7 @@ hierarchical_test <- function(y, treatment, covariates, cluster_id,
               covariates = covariates[idx, , drop = FALSE],
               kernel_y = kernel_y,
               n_permutations = 0L,
+              cross_fit = FALSE,
               ...
             )
           }

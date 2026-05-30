@@ -79,7 +79,7 @@ mmd_test <- function(x, y,
   # Permutation null distribution
   null_dist <- permutation_mmd_cpp(K_pool, nx, ny, n_permutations)
 
-  # p-value
+  # One-sided (upper-tail) permutation p-value with +1 correction
   p_value <- (1 + sum(null_dist >= stat_obs)) / (1 + n_permutations)
 
   structure(

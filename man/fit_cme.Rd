@@ -47,6 +47,14 @@ for custom downstream computations -- e.g. constructing a kernel
 Bayes' rule update, plugging into a manuscript figure pipeline, or
 composing with other RKHS operators.
 }
+\examples{
+set.seed(1L)
+x <- matrix(rnorm(60L), ncol = 2L)
+y <- matrix(x[, 1L] + rnorm(30L, sd = 0.2), ncol = 1L)
+fit <- fit_cme(x, y, lambda = 1e-2)
+dim(fit$W)
+
+}
 \references{
 Park, J., Muandet, K., Fukumizu, K., & Sejdinovic, D. (2013).
 \emph{Kernel embeddings of conditional distributions: A unified kernel

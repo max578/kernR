@@ -34,6 +34,17 @@ to new \verb{(x, z)} rows. All four backends compute ratios in log-space
 internally for numerical stability; \code{type} controls the returned
 representation.
 }
+\examples{
+set.seed(1L)
+n <- 200L
+z <- matrix(rnorm(n * 2L), n, 2L)
+x <- z[, 1L] + rnorm(n)
+fit <- fit_density_ratio(x, z, method = "logistic", seed = 1L)
+weights <- predict_density_ratio(fit, new_x = x, new_z = z,
+                                 type = "weight")
+summary(weights)
+
+}
 \seealso{
 \code{\link[=fit_density_ratio]{fit_density_ratio()}}.
 }

@@ -23,8 +23,10 @@ test_that("hierarchical test runs with DR-DATE", {
 
 test_that("hierarchical test respects weight methods", {
   set.seed(42)
-  n <- 200
-  cluster_id <- rep(1:10, each = 20)
+  n_clusters <- 10
+  n_per <- 30 # DR within-cluster sub-tests need >= 30 obs per cluster
+  n <- n_clusters * n_per
+  cluster_id <- rep(seq_len(n_clusters), each = n_per)
   x <- matrix(rnorm(n * 2), n, 2)
   t <- rbinom(n, 1, 0.5)
   y <- rnorm(n)
@@ -42,6 +44,9 @@ test_that("hierarchical test respects weight methods", {
 
   expect_s3_class(r1, "kernel_test_result")
   expect_s3_class(r2, "kernel_test_result")
+  # The within-cluster component is actually computed -- guards against the
+  # masked-failure bug where every within sub-test silently NA'd out.
+  expect_false(all(is.na(r1$hierarchical$within_stats)))
 })
 
 test_that("hierarchical test rejects with too few clusters", {

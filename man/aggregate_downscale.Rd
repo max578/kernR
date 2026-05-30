@@ -104,6 +104,12 @@ mixture weights from the importance-weighted samples. Reports
 per-component effective sample size; warns when below a stated
 floor.
 }
+
+The aggregate-likelihood / GMM-proxy direction is shared with the
+companion proxymix Tier-2 stub \code{proxymix::from_aggregate_likelihood()},
+which targets the same problem from the prior-fitting side; this
+function targets it from the consumption side (inversion given a
+fitted prior).
 }
 \examples{
 set.seed(1L)
@@ -124,14 +130,6 @@ fit2 <- aggregate_downscale(y = 0.5, aggregator = agg_fn,
                             latent_prior = prior, sigma_y = 0.1,
                             n_samples_per_component = 300L, seed = 1L)
 fit2$posterior_mean
-}
-\references{
-Sejdinovic, D. (talk; 2025). \emph{Kernel downsizing and aggregate
-likelihoods.} Companion talk to Hoek-Elliott (2024) for the
-aggregate-likelihood / GMM-proxy direction. The companion proxymix
-Tier-2 stub \code{proxymix::from_aggregate_likelihood()} targets the
-same problem from the prior-fitting side; this function targets it
-from the consumption side (inversion given a fitted prior).
 }
 \seealso{
 \code{\link[=kernel_downscale]{kernel_downscale()}}, \code{\link[=dist_regression]{dist_regression()}}.

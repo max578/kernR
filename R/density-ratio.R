@@ -43,6 +43,14 @@
 #'   `n_train`, `ncol_x`, `ncol_z`, `seed`.
 #' @seealso [predict_density_ratio()], [estimate_density_ratio()],
 #'   [bd_hsic_test()].
+#' @examples
+#' set.seed(1L)
+#' n <- 200L
+#' z <- matrix(rnorm(n * 2L), n, 2L)
+#' x <- z[, 1L] + rnorm(n)
+#' fit <- fit_density_ratio(x, z, method = "logistic", seed = 1L)
+#' fit$diagnostics
+#'
 #' @export
 fit_density_ratio <- function(x, z,
                               method = c("logistic", "ranger",
@@ -187,6 +195,16 @@ fit_density_ratio <- function(x, z,
 #'
 #' @return Numeric vector of length `nrow(new_x)`.
 #' @seealso [fit_density_ratio()].
+#' @examples
+#' set.seed(1L)
+#' n <- 200L
+#' z <- matrix(rnorm(n * 2L), n, 2L)
+#' x <- z[, 1L] + rnorm(n)
+#' fit <- fit_density_ratio(x, z, method = "logistic", seed = 1L)
+#' weights <- predict_density_ratio(fit, new_x = x, new_z = z,
+#'                                  type = "weight")
+#' summary(weights)
+#'
 #' @export
 predict_density_ratio <- function(object, new_x, new_z,
                                   type = c("log_ratio", "weight",

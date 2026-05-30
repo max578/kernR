@@ -38,6 +38,13 @@
 #' beyond.* Foundations and Trends in Machine Learning, 10(1-2).
 #'
 #' @seealso [predict.cme_fit()], [kernel_downscale()]
+#' @examples
+#' set.seed(1L)
+#' x <- matrix(rnorm(60L), ncol = 2L)
+#' y <- matrix(x[, 1L] + rnorm(30L, sd = 0.2), ncol = 1L)
+#' fit <- fit_cme(x, y, lambda = 1e-2)
+#' dim(fit$W)
+#'
 #' @export
 fit_cme <- function(x, y,
                     kernel_x = kernel_spec(),
@@ -115,7 +122,7 @@ cv_ridge_lambda <- function(Kx, Ky) {
 
   # LOO error via the hat matrix: H = K(K + n*lam*I)^{-1}
   # LOO residual for obs i: (Ky - H %*% Ky)[i,] / (1 - H[i,i])
-  # We approximate with trace of squared residuals
+  # Exact LOO-CV mean squared error via the hat-matrix shortcut
   errors <- vapply(lambdas, function(lam) {
     reg <- Kx + n * lam * diag(n)
     H <- Kx %*% solve(reg)

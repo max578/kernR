@@ -2,9 +2,9 @@
 % Please edit documentation in R/test-drdate.R
 \name{compute_dr_date_stat}
 \alias{compute_dr_date_stat}
-\title{Compute DR-DATE Test Statistic}
+\title{Compute DR-DATE Test Statistic (augmented IPW)}
 \usage{
-compute_dr_date_stat(Ky, treatment, e_hat, mu_hat_1, mu_hat_0)
+compute_dr_date_stat(Ky, treatment, e_hat, C1, C0)
 }
 \arguments{
 \item{Ky}{n x n outcome kernel matrix.}
@@ -13,14 +13,15 @@ compute_dr_date_stat(Ky, treatment, e_hat, mu_hat_1, mu_hat_0)
 
 \item{e_hat}{Propensity scores.}
 
-\item{mu_hat_1}{CME predictions for treated (n x n matrix).}
-
-\item{mu_hat_0}{CME predictions for control (n x n matrix).}
+\item{C1, C0}{n x n conditional-mean-embedding coefficient matrices for
+the treated and control arms. Row \code{i} holds the coefficients of
+\eqn{\hat m_a(x_i)} over the n outcome embeddings; zero matrices give
+the inverse-probability-weighted statistic.}
 }
 \value{
 Scalar test statistic.
 }
 \description{
-Compute DR-DATE Test Statistic
+Compute DR-DATE Test Statistic (augmented IPW)
 }
 \keyword{internal}

@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use kernR in your research, please cite it as below."
+title: "kernR: Kernel-Based Causal Distributional Testing"
+version: 0.3.0
+date-released: "2026-05-30"
+authors:
+  - family-names: Moldovan
+    given-names: Max
+    orcid: "https://orcid.org/0000-0001-9680-8474"
+repository-code: "https://github.com/max578/kernR"
+url: "https://max578.github.io/kernR"
+abstract: >-
+  Kernel-based hypothesis tests for causal inference and distributional
+  treatment effects: backdoor-adjusted HSIC for causal association and
+  doubly robust kernel statistics (DR-DATE, DR-DETT) for distributional
+  treatment effects beyond mean shifts, with hierarchical designs,
+  HSIC-based sensitivity, conditional mean embedding downscaling, and
+  Nystrom / random Fourier feature acceleration.
+keywords:
+  - kernel methods
+  - causal inference
+  - distributional treatment effects
+  - HSIC
+  - maximum mean discrepancy
+  - R
+license: MIT
+type: software

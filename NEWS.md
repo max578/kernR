@@ -1,3 +1,55 @@
+# kernR 0.3.0
+
+## Correctness
+
+* **DR-DATE and DR-DETT are now genuinely doubly robust.** `dr_date_test()`
+  previously fitted a conditional mean embedding outcome model and then
+  discarded it, returning an inverse-probability-weighted statistic
+  regardless of `outcome_model` -- so `outcome_model = "krr"` and `"zero"`
+  gave identical results despite the documented double-robustness claim.
+  The statistic now forms the augmented (AIPW) counterfactual mean
+  embeddings, consistent if *either* the propensity or the outcome model
+  is correctly specified (Fawkes, Hu, Evans & Sejdinovic, 2024).
+* **DR-DETT control reweighting corrected.** The effect-on-the-treated
+  control counterfactual was reweighting controls by the inverted
+  treatment odds `(1 - e) / e`; it now uses the correct treatment odds
+  `e / (1 - e)` with an augmented outcome-model correction on the control
+  arm.
+* **`seed=` now makes permutation tests reproducible.** The C++ permutation
+  routines drew from Armadillo's internal RNG, which ignores `set.seed()`;
+  they now draw through R's RNG, so a fixed `seed` reproduces the null
+  distribution and p-value of `hsic_test()`, `mmd_test()`,
+  `bd_hsic_test()`, `dr_date_test()`, `dr_dett_test()` and the
+  permutation-based sensitivity paths exactly.
+* **`hierarchical_test()` no longer silently swallows within-cluster
+  failures.** Failed within-cluster sub-tests are counted and surfaced via
+  a warning (or an error if every eligible cluster fails). Clusters too
+  small for the chosen sub-test (DR sub-tests need at least 30
+  observations) are now skipped with a clear message and *excluded* from
+  the within-cluster average, rather than silently contributing zero.
+* Integer-overflow hardening in the C++ HSIC normaliser
+  (`(double)(n * n)` to `(double)n * n`).
+
+## Features
+
+* `dr_date_test()` and `dr_dett_test()` gain `cross_fit` (default `TRUE`)
+  and `n_folds` arguments: both nuisances are cross-fitted and evaluated
+  out-of-fold, as the doubly robust theory requires under flexible
+  nuisance estimators (Chernozhukov et al., 2018).
+* `dr_date_test()` and `dr_dett_test()` gain `min_ess_fraction` and now
+  report the per-arm effective sample size (`ess`, `ess_warning`),
+  warning when the inverse-probability weights collapse.
+* `estimate_propensity()` gains a `seed` argument for reproducible
+  cross-fitting folds.
+
+## Documentation and packaging
+
+* Dropped unused `Suggests` (`future`, `future.apply`, `ggplot2`,
+  `viridisLite`); raised the `PESTO` floor to the tested `>= 0.4.1`.
+* Removed an unpublishable talk citation from `aggregate_downscale()`.
+* Corrected a mislabelled "two-sided" comment on the (correct, one-sided
+  upper-tail) HSIC permutation p-value.
+
 # kernR 0.2.0
 
 First publish of the local development line to AAGI-AUS. Lands the

@@ -1,7 +1,27 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
+#include <cmath>
 using namespace Rcpp;
 using namespace arma;
+
+// Fisher-Yates permutation of 0..n-1 driven by R's RNG, so callers honour
+// set.seed(). Rcpp wraps every exported entry point in an RNGScope
+// (rng = true by default), syncing R's RNG state, so R::unif_rand() here
+// advances the same stream set.seed() controls. Replaces arma::randperm,
+// whose internal Mersenne-Twister ignores set.seed() and silently broke
+// the package's documented `seed=` reproducibility contract.
+arma::uvec r_randperm(int n) {
+  arma::uvec idx(n);
+  for (int i = 0; i < n; i++) idx(i) = (arma::uword) i;
+  for (int i = n - 1; i > 0; i--) {
+    int j = (int) std::floor(R::unif_rand() * (i + 1));
+    if (j > i) j = i;  // guard the unif_rand() == 1.0 edge
+    arma::uword tmp = idx(i);
+    idx(i) = idx(j);
+    idx(j) = tmp;
+  }
+  return idx;
+}
 
 //' Permutation HSIC: compute HSIC for many Y permutations
 //'
@@ -21,12 +41,12 @@ arma::vec permutation_hsic_cpp(const arma::mat& Kx,
   arma::vec results(n_perm);
 
   for (int p = 0; p < n_perm; p++) {
-    arma::uvec perm = arma::randperm(n);
+    arma::uvec perm = r_randperm(n);
     arma::mat Ky_perm = Ky(perm, perm);
     results(p) = 0.0;
 
     // Centred HSIC inline
-    double n2 = (double)(n * n);
+    double n2 = (double)n * n;
     arma::vec ones_n = arma::ones<arma::vec>(n);
     arma::vec Kx_rm = Kx * ones_n / n;
     arma::vec Ky_rm = Ky_perm * ones_n / n;
@@ -65,7 +85,7 @@ arma::vec permutation_mmd_cpp(const arma::mat& K_pool,
   arma::vec results(n_perm);
 
   for (int p = 0; p < n_perm; p++) {
-    arma::uvec perm = arma::randperm(N);
+    arma::uvec perm = r_randperm(N);
     arma::uvec idx_x = perm.head(n);
     arma::uvec idx_y = perm.tail(m);
 
@@ -110,7 +130,7 @@ arma::uvec stratified_permute_cpp(const arma::ivec& bins, int n_bins) {
 
   for (int b = 1; b <= n_bins; b++) {
     arma::uvec idx = arma::find(bins == b);
-    arma::uvec perm = arma::randperm(idx.n_elem);
+    arma::uvec perm = r_randperm((int) idx.n_elem);
     for (unsigned int k = 0; k < idx.n_elem; k++) {
       result(idx(k)) = idx(perm(k));
     }

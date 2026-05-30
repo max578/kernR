@@ -11,9 +11,12 @@ dr_dett_test(
   kernel_y = kernel_spec(),
   propensity_model = c("logistic", "ranger", "xgboost"),
   outcome_model = c("krr", "zero"),
+  cross_fit = TRUE,
+  n_folds = 5L,
   n_permutations = 500L,
   n_bins = 10L,
   regularisation = "cv",
+  min_ess_fraction = 0.1,
   alpha = 0.05,
   seed = NULL,
   verbose = FALSE
@@ -32,8 +35,18 @@ dr_dett_test(
 \code{"logistic"} (default), \code{"ranger"}, or \code{"xgboost"}.}
 
 \item{outcome_model}{Character. \code{"krr"} (kernel ridge regression,
-default) for the conditional mean embedding, or \code{"zero"} to use
-only inverse probability weighting (no outcome regression).}
+default) fits a conditional mean embedding for each arm and forms
+the doubly robust statistic; \code{"zero"} drops the outcome model and
+returns the inverse-probability-weighted (singly robust) statistic.}
+
+\item{cross_fit}{Logical. If \code{TRUE} (default), both nuisances -- the
+propensity score and the conditional mean embedding -- are estimated
+by \code{n_folds}-fold cross-fitting and evaluated out-of-fold, as the
+doubly robust theory requires under flexible nuisance estimators. If
+\code{FALSE}, both are fit in-sample (faster, but the test can be
+anti-conservative).}
+
+\item{n_folds}{Integer. Number of cross-fitting folds. Default is 5.}
 
 \item{n_permutations}{Integer. Number of permutations. Default is 500.}
 
@@ -43,14 +56,22 @@ Default is 10.}
 \item{regularisation}{Numeric or \code{"cv"}. Ridge parameter for the CME.
 Default is \code{"cv"}.}
 
+\item{min_ess_fraction}{Numeric in (0, 1). If the effective sample
+size of either arm's inverse-probability weights falls below this
+fraction of \code{n}, a reliability \code{warning()} is emitted. Default 0.1.}
+
 \item{alpha}{Numeric. Significance level. Default is 0.05.}
 
-\item{seed}{Integer or \code{NULL}. Random seed.}
+\item{seed}{Integer or \code{NULL}. Random seed. Permutations are drawn
+through R's RNG, so a fixed \code{seed} makes the test fully reproducible.}
 
 \item{verbose}{Logical. Print progress. Default is \code{FALSE}.}
 }
 \value{
-An object of class \code{"kernel_test_result"}.
+An object of class \code{"kernel_test_result"}. The \code{ess} element
+holds the effective sample size of the control reconstruction
+weights and \code{ess_warning} records whether the reliability floor was
+hit.
 }
 \description{
 Tests whether the distribution of the treated potential outcome Y(1)
@@ -59,10 +80,18 @@ subpopulation. Requires only one-sided overlap.
 }
 \details{
 DR-DETT is analogous to DR-DATE but focuses on the \strong{effect on the
-treated} (ETT) rather than the average treatment effect (ATE). It
-requires only one-sided overlap: P(T=1|X) > epsilon (not bounded away
-from 1), making it applicable in settings where positivity is
-violated for the control group.
+treated} (ETT) rather than the average treatment effect. The treated
+counterfactual Y(1) | T = 1 is observed directly, so only the
+\emph{control} arm needs an outcome model. The control counterfactual
+Y(0) | T = 1 is reconstructed by augmented inverse-probability
+weighting, reweighting controls by the treatment odds
+\eqn{e(x) / (1 - e(x))} so that their covariate distribution matches
+the treated. With \code{outcome_model = "krr"} the control conditional mean
+embedding \eqn{\hat m_0} supplies the doubly robust augmentation;
+\code{outcome_model = "zero"} returns the inverse-probability-weighted
+statistic. It requires only one-sided overlap: P(T = 1 | X) bounded
+away from 0 (not necessarily from 1), so it applies where positivity
+fails for the control group.
 }
 \examples{
 set.seed(42)

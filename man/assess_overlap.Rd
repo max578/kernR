@@ -24,3 +24,11 @@ A list of class \code{"overlap_diagnostic"} with:
 Diagnoses overlap (positivity) between treated and control groups
 by summarising the propensity score distributions.
 }
+\examples{
+set.seed(1L)
+n <- 200L
+treatment <- rbinom(n, 1L, 0.5)
+scores <- plogis(rnorm(n) + 0.6 * treatment)
+assess_overlap(scores, treatment)
+
+}

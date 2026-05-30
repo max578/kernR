@@ -6,13 +6,14 @@
 \alias{kernR-package}
 \title{kernR: Kernel-Based Causal Distributional Testing}
 \description{
-Kernel-based hypothesis tests for causal inference and distributional treatment effects. Implements backdoor-adjusted HSIC (bd-HSIC) for testing causal association, and doubly robust kernel statistics (DR-DATE, DR-DETT) for testing distributional treatment effects beyond mean shifts. Supports binary, continuous, and mixed treatments, hierarchical/nested data structures, and scales to large datasets via Nystrom approximation and random Fourier features.
+Kernel-based hypothesis tests for causal inference and distributional treatment effects. Implements backdoor-adjusted HSIC (bd-HSIC) for testing causal association, and doubly robust kernel statistics (DR-DATE, DR-DETT) for testing distributional treatment effects beyond mean shifts. Supports binary, continuous, and mixed treatments, hierarchical/nested data structures, and scales to large datasets via Nystrom approximation and random Fourier features. This package depends on 'PESTO' (GPL (>= 3)); kernR's own sources are released under the MIT licence, but the installed combination with 'PESTO' is a combined work subject to the terms of the GPL (>= 3).
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/AAGI-AUS/kernR}
-  \item Report bugs at \url{https://github.com/AAGI-AUS/kernR/issues}
+  \item \url{https://github.com/max578/kernR}
+  \item \url{https://max578.github.io/kernR}
+  \item Report bugs at \url{https://github.com/max578/kernR/issues}
 }
 
 }

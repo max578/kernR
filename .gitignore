@@ -19,6 +19,11 @@ src/Makevars.bak
 .vscode/
 .idea/
 
+# AI / agent tooling scratch
+.claude/
+.positai/
+.cursor/
+
 # macOS
 .DS_Store
 

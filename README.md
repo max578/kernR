@@ -98,4 +98,11 @@ A Python translation is available as [**kernP**](https://github.com/AAGI-AUS/ker
 
 ## Licence
 
-MIT
+kernR is released under the MIT licence (sole copyright holder: Max Moldovan).
+
+kernR has a hard dependency on **PESTO**, which is licensed under the GPL
+(>= 3). kernR's own source files are MIT-licensed, but because PESTO is
+required at run time, the installed combination of kernR and PESTO is a
+combined work and is therefore subject to the terms of the GPL (>= 3).
+Users who require a purely permissive (MIT-only) stack should be aware of
+this boundary.

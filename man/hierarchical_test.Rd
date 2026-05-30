@@ -40,7 +40,10 @@ hierarchical_test(
 
 \item{verbose}{Logical.}
 
-\item{...}{Additional arguments passed to the underlying test.}
+\item{...}{Additional arguments passed to the underlying test. Do not
+pass \code{cross_fit} or \code{n_folds}: within-cluster sub-tests are always
+fit in-sample, as the top-level within-cluster permutation supplies
+the calibration.}
 }
 \value{
 An object of class \code{"kernel_test_result"} with additional

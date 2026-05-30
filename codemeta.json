@@ -1,0 +1,45 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "identifier": "kernR",
+  "name": "kernR: Kernel-Based Causal Distributional Testing",
+  "version": "0.3.0",
+  "dateModified": "2026-05-30",
+  "description": "Kernel-based hypothesis tests for causal inference and distributional treatment effects, including backdoor-adjusted HSIC and doubly robust kernel statistics (DR-DATE, DR-DETT).",
+  "license": "https://spdx.org/licenses/MIT",
+  "codeRepository": "https://github.com/max578/kernR",
+  "issueTracker": "https://github.com/max578/kernR/issues",
+  "url": "https://max578.github.io/kernR",
+  "programmingLanguage": {
+    "@type": "ComputerLanguage",
+    "name": "R",
+    "url": "https://r-project.org"
+  },
+  "runtimePlatform": "R",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Max",
+      "familyName": "Moldovan",
+      "@id": "https://orcid.org/0000-0001-9680-8474",
+      "email": "max.moldovan@adelaide.edu.au"
+    }
+  ],
+  "maintainer": [
+    {
+      "@type": "Person",
+      "givenName": "Max",
+      "familyName": "Moldovan",
+      "@id": "https://orcid.org/0000-0001-9680-8474",
+      "email": "max.moldovan@adelaide.edu.au"
+    }
+  ],
+  "copyrightHolder": [
+    {
+      "@type": "Person",
+      "givenName": "Max",
+      "familyName": "Moldovan",
+      "@id": "https://orcid.org/0000-0001-9680-8474"
+    }
+  ]
+}

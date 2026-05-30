@@ -12,6 +12,8 @@
 #' @param n_folds Integer. Number of cross-fitting folds. Default is 5.
 #' @param trim Numeric. Trim extreme propensity scores to `[trim, 1-trim]`.
 #'   Default is 0.01.
+#' @param seed Integer or `NULL`. Random seed for the cross-fitting fold
+#'   assignment, so a fixed `seed` makes cross-fitted scores reproducible.
 #'
 #' @return A list of class `"propensity_fit"` with components:
 #'   \describe{
@@ -36,7 +38,8 @@ estimate_propensity <- function(treatment,
                                 method = c("logistic", "ranger", "xgboost"),
                                 cross_fit = TRUE,
                                 n_folds = 5L,
-                                trim = 0.01) {
+                                trim = 0.01,
+                                seed = NULL) {
   method <- match.arg(method)
   treatment <- as.integer(treatment)
   covariates <- as.matrix(covariates)
@@ -50,6 +53,8 @@ estimate_propensity <- function(treatment,
   if (!all(treatment %in% c(0L, 1L))) {
     stop("`treatment` must be binary (0/1).", call. = FALSE)
   }
+
+  if (!is.null(seed)) set.seed(seed)
 
   if (cross_fit && n >= n_folds * 5) {
     scores <- cross_fit_propensity(treatment, covariates, method, n_folds)
@@ -84,10 +89,10 @@ estimate_propensity <- function(treatment,
 #' @keywords internal
 cross_fit_propensity <- function(treatment, covariates, method, n_folds) {
   n <- length(treatment)
-  folds <- sample(rep(1:n_folds, length.out = n))
+  folds <- sample(rep(seq_len(n_folds), length.out = n))
   scores <- numeric(n)
 
-  for (k in 1:n_folds) {
+  for (k in seq_len(n_folds)) {
     train_idx <- which(folds != k)
     test_idx <- which(folds == k)
 

@@ -64,6 +64,15 @@ unimplemented sample-split gap in \code{\link[=bd_hsic_test]{bd_hsic_test()}} (s
 \code{\link[=estimate_density_ratio]{estimate_density_ratio()}} is now a thin backwards-compatible
 wrapper that fits and predicts on the same data.
 }
+\examples{
+set.seed(1L)
+n <- 200L
+z <- matrix(rnorm(n * 2L), n, 2L)
+x <- z[, 1L] + rnorm(n)
+fit <- fit_density_ratio(x, z, method = "logistic", seed = 1L)
+fit$diagnostics
+
+}
 \seealso{
 \code{\link[=predict_density_ratio]{predict_density_ratio()}}, \code{\link[=estimate_density_ratio]{estimate_density_ratio()}},
 \code{\link[=bd_hsic_test]{bd_hsic_test()}}.

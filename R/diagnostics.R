@@ -14,6 +14,13 @@
 #'     \item{overlap_warning}{Logical. TRUE if overlap is poor.}
 #'   }
 #'
+#' @examples
+#' set.seed(1L)
+#' n <- 200L
+#' treatment <- rbinom(n, 1L, 0.5)
+#' scores <- plogis(rnorm(n) + 0.6 * treatment)
+#' assess_overlap(scores, treatment)
+#'
 #' @export
 assess_overlap <- function(propensity, treatment = NULL) {
   if (inherits(propensity, "propensity_fit")) {
@@ -85,6 +92,11 @@ print.overlap_diagnostic <- function(x, ...) {
 #' @param main Title. Default is "Weight Distribution".
 #'
 #' @return Invisibly returns `weights`.
+#' @examples
+#' set.seed(1L)
+#' weights <- rgamma(200L, shape = 2, rate = 2)
+#' plot_weights(weights)
+#'
 #' @export
 plot_weights <- function(weights, main = "Weight Distribution") {
   ess <- effective_sample_size(weights)
