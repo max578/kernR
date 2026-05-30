@@ -1,0 +1,20 @@
+pandoc: 3.8.3
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  kernR-bdhsic: kernR-bdhsic.html
+  kernR-downscaling: kernR-downscaling.html
+  kernR-drdate-scenario: kernR-drdate-scenario.html
+  kernR-drtest: kernR-drtest.html
+  kernR-hierarchical-bdhsic: kernR-hierarchical-bdhsic.html
+  kernR-hierarchical: kernR-hierarchical.html
+  kernR-identifiability: kernR-identifiability.html
+  kernR-nystrom: kernR-nystrom.html
+  kernR-ppc: kernR-ppc.html
+  kernR-proxymix-binding: kernR-proxymix-binding.html
+  kernR-quickstart: kernR-quickstart.html
+  kernR-sensitivity: kernR-sensitivity.html
+last_built: 2026-05-30T03:42Z
+urls:
+  reference: https://max578.github.io/kernR/reference
+  article: https://max578.github.io/kernR/articles
