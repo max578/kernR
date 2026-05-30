@@ -17,6 +17,7 @@ reference:
   - hsic_test
   - mmd_test
   - hsic_test_nystrom
+  - plot.kernel_test_result
 
 - title: Causal association (bd-HSIC)
   desc: Backdoor-adjusted HSIC for testing causal association after confounder adjustment.
@@ -41,6 +42,8 @@ reference:
   contents:
   - hsic_identifiability
   - hsic_sensitivity
+  - plot.hsic_identifiability
+  - plot.hsic_sensitivity
 
 - title: Density-ratio and propensity
   desc: Plug-in density-ratio estimation with four backends; propensity-score diagnostics.
@@ -67,6 +70,8 @@ reference:
   - dist_regression
   - aggregate_downscale
   - posterior_sample_aggregate
+  - predict.cme_fit
+  - predict.dist_regression
 
 - title: Posterior-predictive check
   desc: MMD-based posterior-predictive check; consumes the PESTO cross-package contract.
