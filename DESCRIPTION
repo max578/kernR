@@ -20,6 +20,8 @@ License: MIT + file LICENSE
 URL: https://github.com/max578/kernR,
     https://max578.github.io/kernR
 BugReports: https://github.com/max578/kernR/issues
+Remotes:
+    github::max578/PESTO
 Depends:
     R (>= 4.1.0)
 Imports:
