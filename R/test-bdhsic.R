@@ -118,6 +118,7 @@
 #' result <- bd_hsic_test(x, y, z, n_permutations = 200, seed = 1)
 #' print(result)
 #'
+#' @family causal association tests
 #' @export
 bd_hsic_test <- function(x, y, z,
                          kernel_x = kernel_spec(),

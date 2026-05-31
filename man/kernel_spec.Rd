@@ -49,3 +49,9 @@ k <- kernel_spec("matern", nu = 1.5)
 k <- kernel_spec("linear")
 
 }
+\seealso{
+Other kernel primitives: 
+\code{\link{kernel_matrix}()},
+\code{\link{select_bandwidth}()}
+}
+\concept{kernel primitives}

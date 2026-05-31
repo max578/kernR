@@ -86,6 +86,7 @@
 #' head(fit$prediction)
 #' }
 #'
+#' @family downscaling and embeddings
 #' @export
 kernel_downscale <- function(coarse, fine, new_coarse,
                              kernel_coarse = kernel_spec(),

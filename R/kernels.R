@@ -29,6 +29,7 @@
 #' # Linear kernel (no bandwidth needed)
 #' k <- kernel_spec("linear")
 #'
+#' @family kernel primitives
 #' @export
 kernel_spec <- function(type = c("rbf", "matern", "linear", "polynomial"),
                         bandwidth = "median",

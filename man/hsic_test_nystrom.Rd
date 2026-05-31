@@ -91,4 +91,9 @@ Measuring statistical dependence with Hilbert-Schmidt norms.
 }
 \seealso{
 \code{\link[=hsic_test]{hsic_test()}}, \code{\link[=nystrom_factor]{nystrom_factor()}}, \code{\link[=rff_features]{rff_features()}}
+
+Other low-rank acceleration: 
+\code{\link{nystrom_factor}()},
+\code{\link{rff_features}()}
 }
+\concept{low-rank acceleration}

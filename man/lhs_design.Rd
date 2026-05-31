@@ -50,4 +50,9 @@ output from a computer code. \emph{Technometrics}, 21(2), 239-245.
 }
 \seealso{
 \code{\link[=hsic_identifiability]{hsic_identifiability()}}
+
+Other sensitivity and identifiability: 
+\code{\link{hsic_identifiability}()},
+\code{\link{hsic_sensitivity}()}
 }
+\concept{sensitivity and identifiability}

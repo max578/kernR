@@ -15,6 +15,7 @@
 #' K <- kernel_matrix(x)
 #' dim(K)  # 50 x 50
 #'
+#' @family kernel primitives
 #' @export
 kernel_matrix <- function(x, y = NULL, kernel = kernel_spec()) {
   x <- as.matrix(x)

@@ -32,6 +32,7 @@
 #' ps <- estimate_propensity(t, x)
 #' summary(ps$scores)
 #'
+#' @family density ratio and propensity
 #' @export
 estimate_propensity <- function(treatment,
                                 covariates,

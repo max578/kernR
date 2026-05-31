@@ -54,4 +54,9 @@ kernel machines. \emph{NeurIPS}, 20.
 }
 \seealso{
 \code{\link[=nystrom_factor]{nystrom_factor()}}, \code{\link[=hsic_test_nystrom]{hsic_test_nystrom()}}
+
+Other low-rank acceleration: 
+\code{\link{hsic_test_nystrom}()},
+\code{\link{nystrom_factor}()}
 }
+\concept{low-rank acceleration}

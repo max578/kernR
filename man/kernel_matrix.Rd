@@ -27,3 +27,9 @@ K <- kernel_matrix(x)
 dim(K)  # 50 x 50
 
 }
+\seealso{
+Other kernel primitives: 
+\code{\link{kernel_spec}()},
+\code{\link{select_bandwidth}()}
+}
+\concept{kernel primitives}

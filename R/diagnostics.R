@@ -21,6 +21,7 @@
 #' scores <- plogis(rnorm(n) + 0.6 * treatment)
 #' assess_overlap(scores, treatment)
 #'
+#' @family density ratio and propensity
 #' @export
 assess_overlap <- function(propensity, treatment = NULL) {
   if (inherits(propensity, "propensity_fit")) {
@@ -97,6 +98,7 @@ print.overlap_diagnostic <- function(x, ...) {
 #' weights <- rgamma(200L, shape = 2, rate = 2)
 #' plot_weights(weights)
 #'
+#' @family density ratio and propensity
 #' @export
 plot_weights <- function(weights, main = "Weight Distribution") {
   ess <- effective_sample_size(weights)

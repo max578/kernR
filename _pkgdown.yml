@@ -71,6 +71,7 @@ reference:
   - aggregate_downscale
   - posterior_sample_aggregate
   - predict.cme_fit
+  - print.cme_fit
   - predict.dist_regression
 
 - title: Posterior-predictive check

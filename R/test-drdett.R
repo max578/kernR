@@ -41,6 +41,7 @@
 #' result <- dr_dett_test(y, t, x, n_permutations = 200, seed = 1)
 #' print(result)
 #'
+#' @family distributional treatment effects
 #' @export
 dr_dett_test <- function(y, treatment, covariates,
                          kernel_y = kernel_spec(),

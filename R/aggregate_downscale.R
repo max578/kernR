@@ -104,6 +104,7 @@
 #'                             latent_prior = prior, sigma_y = 0.1,
 #'                             n_samples_per_component = 300L, seed = 1L)
 #' fit2$posterior_mean
+#' @family downscaling and embeddings
 #' @export
 aggregate_downscale <- function(y, aggregator, latent_prior,
                                 sigma_y = 0.1,
@@ -405,6 +406,7 @@ print.aggregate_downscale <- function(x, digits = 3L, ...) {
 #' draws <- posterior_sample_aggregate(fit, n = 500L, seed = 1L)
 #' colMeans(draws)
 #'
+#' @family downscaling and embeddings
 #' @export
 posterior_sample_aggregate <- function(object, n = 1000L,
                                        seed = NULL) {

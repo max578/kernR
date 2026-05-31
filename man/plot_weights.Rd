@@ -24,3 +24,13 @@ weights <- rgamma(200L, shape = 2, rate = 2)
 plot_weights(weights)
 
 }
+\seealso{
+Other density ratio and propensity: 
+\code{\link{assess_overlap}()},
+\code{\link{effective_sample_size}()},
+\code{\link{estimate_density_ratio}()},
+\code{\link{estimate_propensity}()},
+\code{\link{fit_density_ratio}()},
+\code{\link{predict_density_ratio}()}
+}
+\concept{density ratio and propensity}

@@ -110,4 +110,11 @@ beyond.} Foundations and Trends in Machine Learning, 10(1-2).
 \code{\link[=fit_cme]{fit_cme()}}, \code{\link[=dist_regression]{dist_regression()}} (for downscaling when
 each coarse "input" is a bag of points rather than a single
 vector).
+
+Other downscaling and embeddings: 
+\code{\link{aggregate_downscale}()},
+\code{\link{dist_regression}()},
+\code{\link{fit_cme}()},
+\code{\link{posterior_sample_aggregate}()}
 }
+\concept{downscaling and embeddings}

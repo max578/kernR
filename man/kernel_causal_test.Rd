@@ -46,3 +46,9 @@ result <- kernel_causal_test(y ~ treatment | x1 + x2,
 print(result)
 
 }
+\seealso{
+Other causal association tests: 
+\code{\link{bd_hsic_test}()},
+\code{\link{hierarchical_test}()}
+}
+\concept{causal association tests}

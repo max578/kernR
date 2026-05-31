@@ -28,6 +28,7 @@
 #' )
 #' print(result)
 #'
+#' @family causal association tests
 #' @export
 kernel_causal_test <- function(formula, data,
                                method = c("dr-date", "dr-dett", "bd-hsic"),

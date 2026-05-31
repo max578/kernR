@@ -20,6 +20,7 @@
 #' x <- matrix(rnorm(200), 100, 2)
 #' select_bandwidth(x, "median")
 #'
+#' @family kernel primitives
 #' @export
 select_bandwidth <- function(x, method = "median") {
   x <- as.matrix(x)

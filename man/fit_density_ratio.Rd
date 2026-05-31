@@ -76,4 +76,13 @@ fit$diagnostics
 \seealso{
 \code{\link[=predict_density_ratio]{predict_density_ratio()}}, \code{\link[=estimate_density_ratio]{estimate_density_ratio()}},
 \code{\link[=bd_hsic_test]{bd_hsic_test()}}.
+
+Other density ratio and propensity: 
+\code{\link{assess_overlap}()},
+\code{\link{effective_sample_size}()},
+\code{\link{estimate_density_ratio}()},
+\code{\link{estimate_propensity}()},
+\code{\link{plot_weights}()},
+\code{\link{predict_density_ratio}()}
 }
+\concept{density ratio and propensity}

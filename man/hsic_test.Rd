@@ -71,3 +71,8 @@ Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
 Smola, A. J. (2008). A kernel statistical test of independence.
 \emph{NeurIPS}, 20.
 }
+\seealso{
+Other independence and two-sample tests: 
+\code{\link{mmd_test}()}
+}
+\concept{independence and two-sample tests}

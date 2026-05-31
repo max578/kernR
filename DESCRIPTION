@@ -1,6 +1,6 @@
 Package: kernR
 Title: Kernel-Based Causal Distributional Testing
-Version: 0.3.0
+Version: 0.3.1
 Authors@R: c(
     person("Max", "Moldovan", , "max.moldovan@adelaide.edu.au",
            role = c("aut", "cre", "cph"),
@@ -20,8 +20,6 @@ License: MIT + file LICENSE
 URL: https://github.com/max578/kernR,
     https://max578.github.io/kernR
 BugReports: https://github.com/max578/kernR/issues
-Remotes:
-    github::max578/PESTO
 Depends:
     R (>= 4.1.0)
 Imports:

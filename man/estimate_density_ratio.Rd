@@ -57,4 +57,13 @@ dr$ess
 }
 \seealso{
 \code{\link[=fit_density_ratio]{fit_density_ratio()}} for the fit/predict surface.
+
+Other density ratio and propensity: 
+\code{\link{assess_overlap}()},
+\code{\link{effective_sample_size}()},
+\code{\link{estimate_propensity}()},
+\code{\link{fit_density_ratio}()},
+\code{\link{plot_weights}()},
+\code{\link{predict_density_ratio}()}
 }
+\concept{density ratio and propensity}

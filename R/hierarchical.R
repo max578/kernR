@@ -60,6 +60,7 @@
 #' print(result)
 #' }
 #'
+#' @family causal association tests
 #' @export
 hierarchical_test <- function(y, treatment, covariates, cluster_id,
                               method = c("dr-date", "dr-dett", "bd-hsic"),

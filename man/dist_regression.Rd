@@ -109,4 +109,11 @@ beyond.} Foundations and Trends in Machine Learning, 10(1-2).
 }
 \seealso{
 \code{\link[=predict.dist_regression]{predict.dist_regression()}}, \code{\link[=kernel_downscale]{kernel_downscale()}}
+
+Other downscaling and embeddings: 
+\code{\link{aggregate_downscale}()},
+\code{\link{fit_cme}()},
+\code{\link{kernel_downscale}()},
+\code{\link{posterior_sample_aggregate}()}
 }
+\concept{downscaling and embeddings}

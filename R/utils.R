@@ -57,6 +57,7 @@ validate_input <- function(x, name = "x", min_n = 1L, min_d = 1L) {
 #' w <- runif(100, 0.5, 2)
 #' effective_sample_size(w)
 #'
+#' @family density ratio and propensity
 #' @export
 effective_sample_size <- function(w) {
   if (any(w < 0)) stop("Weights must be non-negative.", call. = FALSE)

@@ -67,8 +67,8 @@
 #'   [`PESTO::pesto_ies_callback()`] for producing the ensembles upstream.
 #'
 #' @examples
-#' \dontrun{
-#' # Requires PESTO (>= 0.3.0) -- wired through Imports.
+#' \donttest{
+#' # Requires PESTO (>= 0.4.1) -- wired through Imports.
 #' library(PESTO)
 #' npar <- 2L; nobs <- 4L; nreal <- 60L
 #' G  <- matrix(stats::rnorm(nobs * npar), nobs, npar)
@@ -88,6 +88,7 @@
 #'                          n_permutations = 200L, seed = 1L)
 #' print(res)
 #' }
+#' @family distributional treatment effects
 #' @export
 dr_date_scenario <- function(baseline, intervention,
                               output            = NULL,

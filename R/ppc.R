@@ -28,6 +28,7 @@
 #' ens  <- pesto_ensemble(post, obs, metadata = list(holdout_year = 2018))
 #' ens
 #'
+#' @family posterior predictive checks
 #' @export
 pesto_ensemble <- function(posterior, observed = NULL, metadata = list()) {
   posterior <- as.matrix(posterior)
@@ -139,6 +140,7 @@ print.pesto_ensemble <- function(x, ...) {
 #' fit_bad
 #'
 #' @seealso [mmd_test()], [pesto_ensemble()]
+#' @family posterior predictive checks
 #' @export
 mmd_ppc <- function(x, ...) UseMethod("mmd_ppc")
 

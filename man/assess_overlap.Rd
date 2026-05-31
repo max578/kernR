@@ -32,3 +32,13 @@ scores <- plogis(rnorm(n) + 0.6 * treatment)
 assess_overlap(scores, treatment)
 
 }
+\seealso{
+Other density ratio and propensity: 
+\code{\link{effective_sample_size}()},
+\code{\link{estimate_density_ratio}()},
+\code{\link{estimate_propensity}()},
+\code{\link{fit_density_ratio}()},
+\code{\link{plot_weights}()},
+\code{\link{predict_density_ratio}()}
+}
+\concept{density ratio and propensity}

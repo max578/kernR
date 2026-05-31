@@ -51,6 +51,7 @@
 #' fit <- fit_density_ratio(x, z, method = "logistic", seed = 1L)
 #' fit$diagnostics
 #'
+#' @family density ratio and propensity
 #' @export
 fit_density_ratio <- function(x, z,
                               method = c("logistic", "ranger",
@@ -205,6 +206,7 @@ fit_density_ratio <- function(x, z,
 #'                                  type = "weight")
 #' summary(weights)
 #'
+#' @family density ratio and propensity
 #' @export
 predict_density_ratio <- function(object, new_x, new_z,
                                   type = c("log_ratio", "weight",
@@ -310,6 +312,7 @@ print.density_ratio_fit <- function(x, ...) {
 #' x <- z[, 1] + rnorm(n)
 #' dr <- estimate_density_ratio(x, z)
 #' dr$ess
+#' @family density ratio and propensity
 #' @export
 estimate_density_ratio <- function(x, z,
                                    method = c("logistic", "ranger",

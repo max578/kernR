@@ -47,6 +47,7 @@
 #' result <- hsic_test(x, y_ind)
 #' print(result)
 #'
+#' @family independence and two-sample tests
 #' @export
 hsic_test <- function(x, y,
                       kernel_x = kernel_spec(),

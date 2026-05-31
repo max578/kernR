@@ -56,3 +56,13 @@ ps <- estimate_propensity(t, x)
 summary(ps$scores)
 
 }
+\seealso{
+Other density ratio and propensity: 
+\code{\link{assess_overlap}()},
+\code{\link{effective_sample_size}()},
+\code{\link{estimate_density_ratio}()},
+\code{\link{fit_density_ratio}()},
+\code{\link{plot_weights}()},
+\code{\link{predict_density_ratio}()}
+}
+\concept{density ratio and propensity}

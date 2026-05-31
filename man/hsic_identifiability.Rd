@@ -103,4 +103,9 @@ measures. \emph{Journal of Statistical Computation and Simulation}, 85(7),
 }
 \seealso{
 \code{\link[=lhs_design]{lhs_design()}}, \code{\link[=hsic_test]{hsic_test()}}
+
+Other sensitivity and identifiability: 
+\code{\link{hsic_sensitivity}()},
+\code{\link{lhs_design}()}
 }
+\concept{sensitivity and identifiability}

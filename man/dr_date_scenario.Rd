@@ -87,8 +87,8 @@ supported input shape; the per-realisation file-I/O for ingestion is
 handled by \code{PESTO::read_manifest()} upstream of this call.
 }
 \examples{
-\dontrun{
-# Requires PESTO (>= 0.3.0) -- wired through Imports.
+\donttest{
+# Requires PESTO (>= 0.4.1) -- wired through Imports.
 library(PESTO)
 npar <- 2L; nobs <- 4L; nreal <- 60L
 G  <- matrix(stats::rnorm(nobs * npar), nobs, npar)
@@ -118,4 +118,9 @@ robust kernel statistics for testing distributional treatment effects.
 \code{\link[=dr_date_test]{dr_date_test()}} for the underlying observational-causal
 test; \code{\link[PESTO:pesto_ensemble_manifest]{PESTO::pesto_ensemble_manifest}} for the input contract;
 \code{\link[PESTO:pesto_ies_callback]{PESTO::pesto_ies_callback()}} for producing the ensembles upstream.
+
+Other distributional treatment effects: 
+\code{\link{dr_date_test}()},
+\code{\link{dr_dett_test}()}
 }
+\concept{distributional treatment effects}

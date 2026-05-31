@@ -156,6 +156,7 @@
 #' predict(fit, new_bags)
 #' }
 #'
+#' @family downscaling and embeddings
 #' @export
 dist_regression <- function(bags, y,
                             inner_kernel = kernel_spec(),

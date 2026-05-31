@@ -47,6 +47,7 @@
 #' f <- nystrom_factor(x, m = 80L, seed = 1L)
 #' dim(f$F)
 #'
+#' @family low-rank acceleration
 #' @export
 nystrom_factor <- function(x,
                            kernel = kernel_spec(),
@@ -141,6 +142,7 @@ nystrom_factor <- function(x,
 #' f <- rff_features(x, D = 150L, seed = 1L)
 #' dim(f$F)
 #'
+#' @family low-rank acceleration
 #' @export
 rff_features <- function(x,
                          kernel = kernel_spec("rbf"),
@@ -270,6 +272,7 @@ hsic_from_factors <- function(Fxc, Fyc, n) {
 #' fit
 #' }
 #'
+#' @family low-rank acceleration
 #' @export
 hsic_test_nystrom <- function(x, y,
                               kernel_x = kernel_spec(),

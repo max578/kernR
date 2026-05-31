@@ -36,6 +36,7 @@
 #' head(design)
 #'
 #' @seealso [hsic_identifiability()]
+#' @family sensitivity and identifiability
 #' @export
 lhs_design <- function(n, bounds, seed = NULL) {
   n <- as.integer(n)
@@ -149,6 +150,7 @@ lhs_design <- function(n, bounds, seed = NULL) {
 #' }
 #'
 #' @seealso [lhs_design()], [hsic_test()]
+#' @family sensitivity and identifiability
 #' @export
 hsic_identifiability <- function(theta, y,
                                  alpha = 0.05,

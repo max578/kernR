@@ -133,4 +133,11 @@ fit2$posterior_mean
 }
 \seealso{
 \code{\link[=kernel_downscale]{kernel_downscale()}}, \code{\link[=dist_regression]{dist_regression()}}.
+
+Other downscaling and embeddings: 
+\code{\link{dist_regression}()},
+\code{\link{fit_cme}()},
+\code{\link{kernel_downscale}()},
+\code{\link{posterior_sample_aggregate}()}
 }
+\concept{downscaling and embeddings}

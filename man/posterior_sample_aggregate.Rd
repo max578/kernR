@@ -35,3 +35,11 @@ draws <- posterior_sample_aggregate(fit, n = 500L, seed = 1L)
 colMeans(draws)
 
 }
+\seealso{
+Other downscaling and embeddings: 
+\code{\link{aggregate_downscale}()},
+\code{\link{dist_regression}()},
+\code{\link{fit_cme}()},
+\code{\link{kernel_downscale}()}
+}
+\concept{downscaling and embeddings}

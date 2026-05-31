@@ -109,3 +109,9 @@ Fawkes, J., Hu, R., Evans, R. J., & Sejdinovic, D. (2024). Doubly
 robust kernel statistics for testing distributional treatment effects.
 \emph{Transactions on Machine Learning Research}.
 }
+\seealso{
+Other distributional treatment effects: 
+\code{\link{dr_date_scenario}()},
+\code{\link{dr_date_test}()}
+}
+\concept{distributional treatment effects}

@@ -42,4 +42,8 @@ ens
 }
 \seealso{
 \code{\link[=mmd_ppc]{mmd_ppc()}}
+
+Other posterior predictive checks: 
+\code{\link{mmd_ppc}()}
 }
+\concept{posterior predictive checks}

@@ -33,3 +33,9 @@ x <- matrix(rnorm(200), 100, 2)
 select_bandwidth(x, "median")
 
 }
+\seealso{
+Other kernel primitives: 
+\code{\link{kernel_matrix}()},
+\code{\link{kernel_spec}()}
+}
+\concept{kernel primitives}

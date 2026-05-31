@@ -45,6 +45,7 @@
 #' fit <- fit_cme(x, y, lambda = 1e-2)
 #' dim(fit$W)
 #'
+#' @family downscaling and embeddings
 #' @export
 fit_cme <- function(x, y,
                     kernel_x = kernel_spec(),
@@ -104,6 +105,39 @@ predict.cme_fit <- function(object, x_new, ...) {
   x_new <- as.matrix(x_new)
   Kxs <- kernel_matrix(x_new, object$x_train, kernel = object$kernel_x)
   Kxs %*% object$W
+}
+
+#' Print a Conditional Mean Embedding Fit
+#'
+#' Prints a compact summary of a fitted conditional mean embedding: the
+#' training-sample size, the input and output dimensions, the resolved
+#' kernels, and the ridge regularisation parameter that was used.
+#'
+#' @param x A `cme_fit` object returned by [fit_cme()].
+#' @param ... Unused; present for S3 generic compatibility.
+#'
+#' @return The `cme_fit` object `x`, invisibly.
+#'
+#' @seealso [fit_cme()]
+#' @examples
+#' set.seed(1L)
+#' x <- matrix(rnorm(60L), ncol = 2L)
+#' y <- matrix(x[, 1L] + rnorm(30L, sd = 0.2), ncol = 1L)
+#' print(fit_cme(x, y, lambda = 1e-2))
+#'
+#' @export
+print.cme_fit <- function(x, ...) {
+  cat("Conditional mean embedding (kernel ridge regression)\n")
+  cat("  Training points: ", nrow(x$x_train), "\n", sep = "")
+  cat("  Input dim:       ", ncol(x$x_train), "\n", sep = "")
+  cat("  Output dim:      ", ncol(x$Ky), "\n", sep = "")
+  cat("  Kernel (x):      ", x$kernel_x$type, "\n", sep = "")
+  cat("  Kernel (y):      ", x$kernel_y$type, "\n", sep = "")
+  cat("  Ridge lambda:    ",
+    formatC(x$lambda, digits = 4, format = "g"), "\n",
+    sep = ""
+  )
+  invisible(x)
 }
 
 #' Cross-Validate Ridge Parameter for KRR

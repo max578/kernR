@@ -40,6 +40,7 @@
 #' result <- mmd_test(x, y_shifted)
 #' print(result)
 #'
+#' @family independence and two-sample tests
 #' @export
 mmd_test <- function(x, y,
                      kernel = kernel_spec(),
