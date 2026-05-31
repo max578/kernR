@@ -77,6 +77,10 @@ machines. *NeurIPS*, 20.
 [`nystrom_factor()`](https://max578.github.io/kernR/reference/nystrom_factor.md),
 [`hsic_test_nystrom()`](https://max578.github.io/kernR/reference/hsic_test_nystrom.md)
 
+Other low-rank acceleration:
+[`hsic_test_nystrom()`](https://max578.github.io/kernR/reference/hsic_test_nystrom.md),
+[`nystrom_factor()`](https://max578.github.io/kernR/reference/nystrom_factor.md)
+
 ## Examples
 
 ``` r

@@ -46,6 +46,12 @@ kernel_spec(
 
 An object of class `"kernel_spec"`.
 
+## See also
+
+Other kernel primitives:
+[`kernel_matrix()`](https://max578.github.io/kernR/reference/kernel_matrix.md),
+[`select_bandwidth()`](https://max578.github.io/kernR/reference/select_bandwidth.md)
+
 ## Examples
 
 ``` r

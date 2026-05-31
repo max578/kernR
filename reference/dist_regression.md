@@ -132,6 +132,12 @@ Foundations and Trends in Machine Learning, 10(1-2).
 [`predict.dist_regression()`](https://max578.github.io/kernR/reference/predict.dist_regression.md),
 [`kernel_downscale()`](https://max578.github.io/kernR/reference/kernel_downscale.md)
 
+Other downscaling and embeddings:
+[`aggregate_downscale()`](https://max578.github.io/kernR/reference/aggregate_downscale.md),
+[`fit_cme()`](https://max578.github.io/kernR/reference/fit_cme.md),
+[`kernel_downscale()`](https://max578.github.io/kernR/reference/kernel_downscale.md),
+[`posterior_sample_aggregate()`](https://max578.github.io/kernR/reference/posterior_sample_aggregate.md)
+
 ## Examples
 
 ``` r

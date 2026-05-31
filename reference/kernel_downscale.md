@@ -124,6 +124,12 @@ Foundations and Trends in Machine Learning, 10(1-2).
 (for downscaling when each coarse "input" is a bag of points rather than
 a single vector).
 
+Other downscaling and embeddings:
+[`aggregate_downscale()`](https://max578.github.io/kernR/reference/aggregate_downscale.md),
+[`dist_regression()`](https://max578.github.io/kernR/reference/dist_regression.md),
+[`fit_cme()`](https://max578.github.io/kernR/reference/fit_cme.md),
+[`posterior_sample_aggregate()`](https://max578.github.io/kernR/reference/posterior_sample_aggregate.md)
+
 ## Examples
 
 ``` r

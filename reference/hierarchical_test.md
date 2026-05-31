@@ -95,6 +95,12 @@ The combined statistic is a weighted sum, with weights determined by
 `weight_method`. Permutation is performed within clusters to preserve
 the hierarchical structure.
 
+## See also
+
+Other causal association tests:
+[`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md),
+[`kernel_causal_test()`](https://max578.github.io/kernR/reference/kernel_causal_test.md)
+
 ## Examples
 
 ``` r

@@ -28,6 +28,12 @@ kernel_matrix(x, y = NULL, kernel = kernel_spec())
 
 An n x m numeric matrix.
 
+## See also
+
+Other kernel primitives:
+[`kernel_spec()`](https://max578.github.io/kernR/reference/kernel_spec.md),
+[`select_bandwidth()`](https://max578.github.io/kernR/reference/select_bandwidth.md)
+
 ## Examples
 
 ``` r

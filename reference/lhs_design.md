@@ -51,6 +51,10 @@ output from a computer code. *Technometrics*, 21(2), 239-245.
 
 [`hsic_identifiability()`](https://max578.github.io/kernR/reference/hsic_identifiability.md)
 
+Other sensitivity and identifiability:
+[`hsic_identifiability()`](https://max578.github.io/kernR/reference/hsic_identifiability.md),
+[`hsic_sensitivity()`](https://max578.github.io/kernR/reference/hsic_sensitivity.md)
+
 ## Examples
 
 ``` r

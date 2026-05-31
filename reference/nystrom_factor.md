@@ -99,6 +99,10 @@ speed up kernel machines. *NeurIPS*, 13.
 [`rff_features()`](https://max578.github.io/kernR/reference/rff_features.md),
 [`hsic_test_nystrom()`](https://max578.github.io/kernR/reference/hsic_test_nystrom.md)
 
+Other low-rank acceleration:
+[`hsic_test_nystrom()`](https://max578.github.io/kernR/reference/hsic_test_nystrom.md),
+[`rff_features()`](https://max578.github.io/kernR/reference/rff_features.md)
+
 ## Examples
 
 ``` r

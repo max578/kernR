@@ -128,6 +128,9 @@ Sinica*, 6(4), 733-760.
 [`mmd_test()`](https://max578.github.io/kernR/reference/mmd_test.md),
 [`pesto_ensemble()`](https://max578.github.io/kernR/reference/pesto_ensemble.md)
 
+Other posterior predictive checks:
+[`pesto_ensemble()`](https://max578.github.io/kernR/reference/pesto_ensemble.md)
+
 ## Examples
 
 ``` r

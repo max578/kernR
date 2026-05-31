@@ -83,6 +83,11 @@ An object of class `"kernel_test_result"` with components:
 Gretton, A., Borgwardt, K. M., Rasch, M. J., Scholkopf, B., & Smola, A.
 (2012). A kernel two-sample test. *JMLR*, 13, 723-773.
 
+## See also
+
+Other independence and two-sample tests:
+[`hsic_test()`](https://max578.github.io/kernR/reference/hsic_test.md)
+
 ## Examples
 
 ``` r

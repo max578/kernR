@@ -114,6 +114,8 @@ downscaling.
   : Sample from the posterior of an aggregate-downscale fit
 - [`predict(`*`<cme_fit>`*`)`](https://max578.github.io/kernR/reference/predict.cme_fit.md)
   : Predict Conditional Mean Embedding Weights at New Points
+- [`print(`*`<cme_fit>`*`)`](https://max578.github.io/kernR/reference/print.cme_fit.md)
+  : Print a Conditional Mean Embedding Fit
 - [`predict(`*`<dist_regression>`*`)`](https://max578.github.io/kernR/reference/predict.dist_regression.md)
   : Predict from a Fitted Distribution Regression Model
 

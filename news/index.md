@@ -1,5 +1,55 @@
 # Changelog
 
+## kernR 0.3.1
+
+### Testing
+
+- New end-to-end analytical-correctness test (`test-end-to-end.R`). One
+  confounded data-generating process is run through the whole pipeline
+  and every analytical corner is checked for a meaningful, correct
+  verdict: marginal
+  [`hsic_test()`](https://max578.github.io/kernR/reference/hsic_test.md)
+  power and independence;
+  [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
+  removing a purely confounder-induced association while detecting a
+  genuine causal one; propensity recovery;
+  [`dr_date_test()`](https://max578.github.io/kernR/reference/dr_date_test.md)
+  power, Type I control, and double robustness (AIPW and IPW-only
+  fallback agree);
+  [`dr_dett_test()`](https://max578.github.io/kernR/reference/dr_dett_test.md);
+  two-sample
+  [`mmd_test()`](https://max578.github.io/kernR/reference/mmd_test.md);
+  Nystrom and RFF agreement with exact HSIC; hierarchical within-cluster
+  Type I control; full-pipeline seed reproducibility; and
+  permutation-null calibration.
+- New coverage for the public density-ratio API and weight diagnostics
+  (`test-density-ratio-api.R`):
+  [`fit_density_ratio()`](https://max578.github.io/kernR/reference/fit_density_ratio.md)
+  /
+  [`predict_density_ratio()`](https://max578.github.io/kernR/reference/predict_density_ratio.md)
+  round-trip and reproducibility,
+  [`plot_weights()`](https://max578.github.io/kernR/reference/plot_weights.md),
+  and the new
+  [`print.cme_fit()`](https://max578.github.io/kernR/reference/print.cme_fit.md)
+  method.
+
+### Minor improvements and fixes
+
+- New [`print()`](https://rdrr.io/r/base/print.html) method for
+  [`fit_cme()`](https://max578.github.io/kernR/reference/fit_cme.md)
+  objects
+  ([`print.cme_fit()`](https://max578.github.io/kernR/reference/print.cme_fit.md)).
+- `@family` tags added across the exported API so the documentation
+  cross-links related functions;
+  [`dr_date_scenario()`](https://max578.github.io/kernR/reference/dr_date_scenario.md)’s
+  example now runs (`\donttest` rather than `\dontrun`).
+- `R/sensitivity.R` split: the
+  [`hsic_sensitivity()`](https://max578.github.io/kernR/reference/hsic_sensitivity.md)
+  S3 methods now live in `R/sensitivity-methods.R`.
+- Dropped the `Remotes: github::max578/PESTO` line now that PESTO (\>=
+  0.4.1) is served from the max578 r-universe; the CI
+  `extra-repositories` entry resolves it.
+
 ## kernR 0.3.0
 
 ### Correctness

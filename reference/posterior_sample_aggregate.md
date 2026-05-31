@@ -28,6 +28,14 @@ posterior_sample_aggregate(object, n = 1000L, seed = NULL)
 
 An `n x dim_x` numeric matrix.
 
+## See also
+
+Other downscaling and embeddings:
+[`aggregate_downscale()`](https://max578.github.io/kernR/reference/aggregate_downscale.md),
+[`dist_regression()`](https://max578.github.io/kernR/reference/dist_regression.md),
+[`fit_cme()`](https://max578.github.io/kernR/reference/fit_cme.md),
+[`kernel_downscale()`](https://max578.github.io/kernR/reference/kernel_downscale.md)
+
 ## Examples
 
 ``` r

@@ -70,6 +70,16 @@ A list of class `"propensity_fit"` with components:
 
   Number of scores that were trimmed.
 
+## See also
+
+Other density ratio and propensity:
+[`assess_overlap()`](https://max578.github.io/kernR/reference/assess_overlap.md),
+[`effective_sample_size()`](https://max578.github.io/kernR/reference/effective_sample_size.md),
+[`estimate_density_ratio()`](https://max578.github.io/kernR/reference/estimate_density_ratio.md),
+[`fit_density_ratio()`](https://max578.github.io/kernR/reference/fit_density_ratio.md),
+[`plot_weights()`](https://max578.github.io/kernR/reference/plot_weights.md),
+[`predict_density_ratio()`](https://max578.github.io/kernR/reference/predict_density_ratio.md)
+
 ## Examples
 
 ``` r

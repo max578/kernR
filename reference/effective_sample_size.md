@@ -18,6 +18,16 @@ effective_sample_size(w)
 
 Scalar effective sample size.
 
+## See also
+
+Other density ratio and propensity:
+[`assess_overlap()`](https://max578.github.io/kernR/reference/assess_overlap.md),
+[`estimate_density_ratio()`](https://max578.github.io/kernR/reference/estimate_density_ratio.md),
+[`estimate_propensity()`](https://max578.github.io/kernR/reference/estimate_propensity.md),
+[`fit_density_ratio()`](https://max578.github.io/kernR/reference/fit_density_ratio.md),
+[`plot_weights()`](https://max578.github.io/kernR/reference/plot_weights.md),
+[`predict_density_ratio()`](https://max578.github.io/kernR/reference/predict_density_ratio.md)
+
 ## Examples
 
 ``` r

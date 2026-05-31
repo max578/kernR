@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,23 @@
       <small>Source: <a href="https://github.com/max578/kernR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.1" id="kernr-031">kernR 0.3.1<a class="anchor" aria-label="anchor" href="#kernr-031"></a></h2>
+<div class="section level3">
+<h3 id="testing-0-3-1">Testing<a class="anchor" aria-label="anchor" href="#testing-0-3-1"></a></h3>
+<ul><li>New end-to-end analytical-correctness test (<code>test-end-to-end.R</code>). One confounded data-generating process is run through the whole pipeline and every analytical corner is checked for a meaningful, correct verdict: marginal <code><a href="../reference/hsic_test.html">hsic_test()</a></code> power and independence; <code><a href="../reference/bd_hsic_test.html">bd_hsic_test()</a></code> removing a purely confounder-induced association while detecting a genuine causal one; propensity recovery; <code><a href="../reference/dr_date_test.html">dr_date_test()</a></code> power, Type I control, and double robustness (AIPW and IPW-only fallback agree); <code><a href="../reference/dr_dett_test.html">dr_dett_test()</a></code>; two-sample <code><a href="../reference/mmd_test.html">mmd_test()</a></code>; Nystrom and RFF agreement with exact HSIC; hierarchical within-cluster Type I control; full-pipeline seed reproducibility; and permutation-null calibration.</li>
+<li>New coverage for the public density-ratio API and weight diagnostics (<code>test-density-ratio-api.R</code>): <code><a href="../reference/fit_density_ratio.html">fit_density_ratio()</a></code> / <code><a href="../reference/predict_density_ratio.html">predict_density_ratio()</a></code> round-trip and reproducibility, <code><a href="../reference/plot_weights.html">plot_weights()</a></code>, and the new <code><a href="../reference/print.cme_fit.html">print.cme_fit()</a></code> method.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="minor-improvements-and-fixes-0-3-1">Minor improvements and fixes<a class="anchor" aria-label="anchor" href="#minor-improvements-and-fixes-0-3-1"></a></h3>
+<ul><li>New <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method for <code><a href="../reference/fit_cme.html">fit_cme()</a></code> objects (<code><a href="../reference/print.cme_fit.html">print.cme_fit()</a></code>).</li>
+<li>
+<code>@family</code> tags added across the exported API so the documentation cross-links related functions; <code><a href="../reference/dr_date_scenario.html">dr_date_scenario()</a></code>’s example now runs (<code>\donttest</code> rather than <code>\dontrun</code>).</li>
+<li>
+<code>R/sensitivity.R</code> split: the <code><a href="../reference/hsic_sensitivity.html">hsic_sensitivity()</a></code> S3 methods now live in <code>R/sensitivity-methods.R</code>.</li>
+<li>Dropped the <code>Remotes: github::max578/PESTO</code> line now that PESTO (&gt;= 0.4.1) is served from the max578 r-universe; the CI <code>extra-repositories</code> entry resolves it.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="kernr-030">kernR 0.3.0<a class="anchor" aria-label="anchor" href="#kernr-030"></a></h2>
 <div class="section level3">

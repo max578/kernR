@@ -89,6 +89,11 @@ An object of class `"kernel_test_result"` with components:
 Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., & Smola,
 A. J. (2008). A kernel statistical test of independence. *NeurIPS*, 20.
 
+## See also
+
+Other independence and two-sample tests:
+[`mmd_test()`](https://max578.github.io/kernR/reference/mmd_test.md)
+
 ## Examples
 
 ``` r

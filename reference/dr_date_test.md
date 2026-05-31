@@ -147,6 +147,12 @@ Newey, W., & Robins, J. (2018). Double/debiased machine learning for
 treatment and structural parameters. *The Econometrics Journal*, 21(1),
 C1-C68.
 
+## See also
+
+Other distributional treatment effects:
+[`dr_date_scenario()`](https://max578.github.io/kernR/reference/dr_date_scenario.md),
+[`dr_dett_test()`](https://max578.github.io/kernR/reference/dr_dett_test.md)
+
 ## Examples
 
 ``` r

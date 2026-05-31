@@ -253,6 +253,10 @@ statistical dependence with Hilbert-Schmidt norms. *ALT*, 63-77.
 [`hsic_identifiability()`](https://max578.github.io/kernR/reference/hsic_identifiability.md),
 [`hsic_test()`](https://max578.github.io/kernR/reference/hsic_test.md)
 
+Other sensitivity and identifiability:
+[`hsic_identifiability()`](https://max578.github.io/kernR/reference/hsic_identifiability.md),
+[`lhs_design()`](https://max578.github.io/kernR/reference/lhs_design.md)
+
 ## Examples
 
 ``` r

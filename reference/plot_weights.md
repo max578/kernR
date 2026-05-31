@@ -23,6 +23,16 @@ plot_weights(weights, main = "Weight Distribution")
 
 Invisibly returns `weights`.
 
+## See also
+
+Other density ratio and propensity:
+[`assess_overlap()`](https://max578.github.io/kernR/reference/assess_overlap.md),
+[`effective_sample_size()`](https://max578.github.io/kernR/reference/effective_sample_size.md),
+[`estimate_density_ratio()`](https://max578.github.io/kernR/reference/estimate_density_ratio.md),
+[`estimate_propensity()`](https://max578.github.io/kernR/reference/estimate_propensity.md),
+[`fit_density_ratio()`](https://max578.github.io/kernR/reference/fit_density_ratio.md),
+[`predict_density_ratio()`](https://max578.github.io/kernR/reference/predict_density_ratio.md)
+
 ## Examples
 
 ``` r

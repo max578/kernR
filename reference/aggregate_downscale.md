@@ -142,6 +142,12 @@ prior).
 [`kernel_downscale()`](https://max578.github.io/kernR/reference/kernel_downscale.md),
 [`dist_regression()`](https://max578.github.io/kernR/reference/dist_regression.md).
 
+Other downscaling and embeddings:
+[`dist_regression()`](https://max578.github.io/kernR/reference/dist_regression.md),
+[`fit_cme()`](https://max578.github.io/kernR/reference/fit_cme.md),
+[`kernel_downscale()`](https://max578.github.io/kernR/reference/kernel_downscale.md),
+[`posterior_sample_aggregate()`](https://max578.github.io/kernR/reference/posterior_sample_aggregate.md)
+
 ## Examples
 
 ``` r

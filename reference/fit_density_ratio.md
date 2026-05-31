@@ -91,6 +91,14 @@ same data.
 [`estimate_density_ratio()`](https://max578.github.io/kernR/reference/estimate_density_ratio.md),
 [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md).
 
+Other density ratio and propensity:
+[`assess_overlap()`](https://max578.github.io/kernR/reference/assess_overlap.md),
+[`effective_sample_size()`](https://max578.github.io/kernR/reference/effective_sample_size.md),
+[`estimate_density_ratio()`](https://max578.github.io/kernR/reference/estimate_density_ratio.md),
+[`estimate_propensity()`](https://max578.github.io/kernR/reference/estimate_propensity.md),
+[`plot_weights()`](https://max578.github.io/kernR/reference/plot_weights.md),
+[`predict_density_ratio()`](https://max578.github.io/kernR/reference/predict_density_ratio.md)
+
 ## Examples
 
 ``` r

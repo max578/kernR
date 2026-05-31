@@ -116,7 +116,7 @@ m_baseline
 #>   ensemble      : 60 realisations x 2 parameters | 4 observations
 #>   failure rate  : 0.00%
 #>   pesto version : 0.4.1  apsim: NA
-#>   timestamp     : 2026-05-30T03:43:14+0000
+#>   timestamp     : 2026-05-31T03:38:21+0000
 #>   data hash     : sha256:vignette_baseline
 ```
 
@@ -282,7 +282,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] PESTO_0.4.1 kernR_0.3.0
+#> [1] PESTO_0.4.1 kernR_0.3.1
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.51         rlang_1.2.0       

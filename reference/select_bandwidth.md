@@ -33,6 +33,12 @@ A positive numeric scalar.
 - `"scott"`: Scott's rule: `n^(-1/(d+4)) * sd_pooled`. Good for density
   estimation but may undersmooth for testing.
 
+## See also
+
+Other kernel primitives:
+[`kernel_matrix()`](https://max578.github.io/kernR/reference/kernel_matrix.md),
+[`kernel_spec()`](https://max578.github.io/kernR/reference/kernel_spec.md)
+
 ## Examples
 
 ``` r

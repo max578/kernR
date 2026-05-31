@@ -45,6 +45,9 @@ object directly from in-memory matrices.
 
 [`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md)
 
+Other posterior predictive checks:
+[`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md)
+
 ## Examples
 
 ``` r

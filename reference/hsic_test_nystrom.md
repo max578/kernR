@@ -107,6 +107,10 @@ statistical dependence with Hilbert-Schmidt norms. *ALT*, 63-77.
 [`nystrom_factor()`](https://max578.github.io/kernR/reference/nystrom_factor.md),
 [`rff_features()`](https://max578.github.io/kernR/reference/rff_features.md)
 
+Other low-rank acceleration:
+[`nystrom_factor()`](https://max578.github.io/kernR/reference/nystrom_factor.md),
+[`rff_features()`](https://max578.github.io/kernR/reference/rff_features.md)
+
 ## Examples
 
 ``` r

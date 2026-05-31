@@ -155,11 +155,15 @@ for the input contract;
 [`PESTO::pesto_ies_callback()`](https://rdrr.io/pkg/PESTO/man/pesto_ies_callback.html)
 for producing the ensembles upstream.
 
+Other distributional treatment effects:
+[`dr_date_test()`](https://max578.github.io/kernR/reference/dr_date_test.md),
+[`dr_dett_test()`](https://max578.github.io/kernR/reference/dr_dett_test.md)
+
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Requires PESTO (>= 0.3.0) -- wired through Imports.
+# \donttest{
+# Requires PESTO (>= 0.4.1) -- wired through Imports.
 library(PESTO)
 npar <- 2L; nobs <- 4L; nreal <- 60L
 G  <- matrix(stats::rnorm(nobs * npar), nobs, npar)
@@ -178,5 +182,22 @@ m_intv <- as_manifest(fit1, run_id = "intervention")
 res <- dr_date_scenario(m_base, m_intv,
                          n_permutations = 200L, seed = 1L)
 print(res)
-} # }
+#> 
+#>    DR-DATE (scenario) Test
+#> 
+#> Statistic: 0.203779 
+#> P-value:   1.0000 
+#> N:         120 
+#> Perms:     200 
+#> Kernel Y:  rbf (bw = 0.8709)
+#> ESS:       60.0 
+#> 
+#> Scenario contrast
+#>   baseline      : baseline (n=60)
+#>   intervention  : intervention (n=60)
+#>   outputs tested: o1, o2, o3, o4
+#>   PESTO versions: baseline=0.4.1, intervention=0.4.1
+#>   Verdict:        fail to reject (no distributional difference detected)
+#> 
+# }
 ```

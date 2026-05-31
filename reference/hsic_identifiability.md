@@ -138,6 +138,10 @@ measures. *Journal of Statistical Computation and Simulation*, 85(7),
 [`lhs_design()`](https://max578.github.io/kernR/reference/lhs_design.md),
 [`hsic_test()`](https://max578.github.io/kernR/reference/hsic_test.md)
 
+Other sensitivity and identifiability:
+[`hsic_sensitivity()`](https://max578.github.io/kernR/reference/hsic_sensitivity.md),
+[`lhs_design()`](https://max578.github.io/kernR/reference/lhs_design.md)
+
 ## Examples
 
 ``` r

@@ -35,6 +35,16 @@ A list of class `"overlap_diagnostic"` with:
 
   Logical. TRUE if overlap is poor.
 
+## See also
+
+Other density ratio and propensity:
+[`effective_sample_size()`](https://max578.github.io/kernR/reference/effective_sample_size.md),
+[`estimate_density_ratio()`](https://max578.github.io/kernR/reference/estimate_density_ratio.md),
+[`estimate_propensity()`](https://max578.github.io/kernR/reference/estimate_propensity.md),
+[`fit_density_ratio()`](https://max578.github.io/kernR/reference/fit_density_ratio.md),
+[`plot_weights()`](https://max578.github.io/kernR/reference/plot_weights.md),
+[`predict_density_ratio()`](https://max578.github.io/kernR/reference/predict_density_ratio.md)
+
 ## Examples
 
 ``` r
