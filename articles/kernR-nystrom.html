@@ -169,16 +169,16 @@ accelerated HSIC test.</p>
 <span></span>
 <span><span class="fu">benchmark_hsic</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500L</span>,  m <span class="op">=</span> <span class="fl">60L</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     n  m            method elapsed_s p_value</span></span>
-<span><span class="co">#&gt; 1 500 60 hsic_test (exact)     0.099    0.02</span></span>
+<span><span class="co">#&gt; 1 500 60 hsic_test (exact)     0.096    0.02</span></span>
 <span><span class="co">#&gt; 2 500 60           nystrom     0.018    0.02</span></span>
-<span><span class="co">#&gt; 3 500 60               rff     0.018    0.02</span></span></code></pre></div>
+<span><span class="co">#&gt; 3 500 60               rff     0.017    0.02</span></span></code></pre></div>
 <p>For larger <code>n</code>, the gap widens:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">benchmark_hsic</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">1500L</span>, m <span class="op">=</span> <span class="fl">100L</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      n   m            method elapsed_s p_value</span></span>
-<span><span class="co">#&gt; 1 1500 100 hsic_test (exact)     1.156    0.02</span></span>
-<span><span class="co">#&gt; 2 1500 100           nystrom     0.132    0.02</span></span>
-<span><span class="co">#&gt; 3 1500 100               rff     0.130    0.02</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 1500 100 hsic_test (exact)     1.294    0.02</span></span>
+<span><span class="co">#&gt; 2 1500 100           nystrom     0.137    0.02</span></span>
+<span><span class="co">#&gt; 3 1500 100               rff     0.133    0.02</span></span></code></pre></div>
 <p>The verdict (reject vs accept) agrees across exact and approximate
 tests at moderate <code>m</code>; the approximation is for speed, not
 for detecting a different signal.</p>
