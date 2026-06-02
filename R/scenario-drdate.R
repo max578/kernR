@@ -43,6 +43,9 @@
 #' @param alpha Forwarded to [dr_date_test()]. Default 0.05.
 #' @param seed Integer or `NULL`. Random seed.
 #' @param verbose Logical. Default `FALSE`.
+#' @param strict_fidelity Logical. If `FALSE` (default) a mismatch in the
+#'   two manifests' multi-fidelity provenance raises a `warning`; if `TRUE`
+#'   it raises an error. See the *Fidelity provenance* section.
 #' @param ... Reserved.
 #'
 #' @return An object of class
@@ -55,7 +58,24 @@
 #'     \item{n_intervention}{Realisations in intervention ensemble.}
 #'     \item{outputs_tested}{Character vector of output columns used.}
 #'     \item{pesto_versions}{Named character -- baseline / intervention.}
+#'     \item{fidelity}{List with `baseline` / `intervention` fidelity
+#'       provenance from the PESTO manifests (a
+#'       `list(type, schedule, final_level, n_levels, costs)` for a
+#'       multi-fidelity run, or `NULL` for a single-fidelity run).}
 #'   }
+#'
+#' @section Fidelity provenance:
+#' A PESTO multi-fidelity run records, in the manifest `fidelity` slot,
+#' which fidelity levels produced the ensemble. Comparing a baseline and
+#' an intervention that were calibrated at different fidelities risks
+#' confounding the distributional contrast with fidelity bias. This
+#' wrapper therefore surfaces a provenance mismatch -- one scenario
+#' single-fidelity and the other multi-fidelity, or two multi-fidelity
+#' runs with different stack shapes / final levels -- as a `warning`
+#' (default) or, with `strict_fidelity = TRUE`, a hard error. Matched or
+#' both-single-fidelity provenance passes silently. The check is
+#' forward-compatible: manifests from PESTO versions that do not populate
+#' the slot read as `NULL` and pass.
 #'
 #' @references
 #' Fawkes, J., Hu, R., Evans, R. J., & Sejdinovic, D. (2024). Doubly
@@ -101,6 +121,7 @@ dr_date_scenario <- function(baseline, intervention,
                               alpha             = 0.05,
                               seed              = NULL,
                               verbose           = FALSE,
+                              strict_fidelity   = FALSE,
                               ...) {
 
   cl <- match.call()
@@ -108,6 +129,7 @@ dr_date_scenario <- function(baseline, intervention,
   outcome_model    <- match.arg(outcome_model)
 
   .validate_manifest_pair(baseline, intervention)
+  .validate_fidelity_pair(baseline, intervention, strict = strict_fidelity)
 
   params_b  <- as.data.frame(baseline@params)
   params_i  <- as.data.frame(intervention@params)
@@ -160,6 +182,8 @@ dr_date_scenario <- function(baseline, intervention,
   res$outputs_tested      <- output
   res$pesto_versions      <- c(baseline     = baseline@pesto_version,
                                intervention = intervention@pesto_version)
+  res$fidelity            <- list(baseline     = baseline@fidelity,
+                                  intervention = intervention@fidelity)
   res$alpha               <- alpha
   res$reject              <- res$p_value <= alpha
   res$call                <- cl
@@ -212,6 +236,72 @@ dr_date_scenario <- function(baseline, intervention,
   invisible(NULL)
 }
 
+# Soft compatibility check on the two manifests' fidelity provenance.
+# A PESTO multi-fidelity run records list(type, schedule, final_level,
+# n_levels, costs) in the manifest `fidelity` slot; a single-fidelity run
+# leaves it NULL. The final ensemble is always refreshed at the run's top
+# fidelity, so a provenance MISMATCH (one single vs one multi, or differing
+# stack shape / final level) does not prove the two ensembles sit at
+# different physical fidelities -- but it is a confound risk worth
+# surfacing rather than swallowing. Hence a warning by default, escalated
+# to a hard stop under `strict = TRUE`. Matched (or both-NULL) provenance
+# passes silently.
+.validate_fidelity_pair <- function(baseline, intervention,
+                                    strict = FALSE) {
+  msg <- .fidelity_mismatch_message(baseline@fidelity,
+                                    intervention@fidelity)
+  if (is.null(msg)) return(invisible(NULL))
+  if (isTRUE(strict)) {
+    stop(msg, call. = FALSE)
+  } else {
+    warning(msg, call. = FALSE)
+  }
+  invisible(NULL)
+}
+
+# Returns a human-readable mismatch message, or NULL when the two
+# fidelity records are compatible (both single-fidelity, or both
+# multi-fidelity with the same stack shape and final level).
+.fidelity_mismatch_message <- function(fb, fi) {
+  if (is.null(fb) && is.null(fi)) return(NULL)
+
+  if (is.null(fb) != is.null(fi)) {
+    multi <- if (is.null(fb)) fi else fb
+    side  <- if (is.null(fb)) "intervention" else "baseline"
+    return(sprintf(
+      paste0(
+        "Fidelity provenance differs: one scenario is single-fidelity ",
+        "and the other (%s) is multi-fidelity (final level %d of %d). ",
+        "Confirm both ensembles were produced at the same model ",
+        "fidelity before trusting the contrast, or pass ",
+        "strict_fidelity = TRUE to make this a hard error."
+      ),
+      side, multi$final_level, multi$n_levels
+    ))
+  }
+
+  diffs <- character(0)
+  if (!identical(fb$n_levels, fi$n_levels)) {
+    diffs <- c(diffs, sprintf("n_levels (baseline %d vs intervention %d)",
+                              fb$n_levels, fi$n_levels))
+  }
+  if (!identical(fb$final_level, fi$final_level)) {
+    diffs <- c(diffs,
+               sprintf("final_level (baseline %d vs intervention %d)",
+                       fb$final_level, fi$final_level))
+  }
+  if (length(diffs) == 0L) return(NULL)
+  sprintf(
+    paste0(
+      "Multi-fidelity provenance differs between scenarios: %s. The two ",
+      "ensembles may sit at different physical fidelities, confounding ",
+      "the distributional contrast. Pass strict_fidelity = TRUE to make ",
+      "this a hard error."
+    ),
+    paste(diffs, collapse = "; ")
+  )
+}
+
 # S7 classes carry a package-qualified S3 class string
 # ("PESTO::pesto_ensemble_manifest"), not the bare class name. Accept
 # both qualified and bare forms so this works whether or not S7 has
@@ -227,6 +317,18 @@ dr_date_scenario <- function(baseline, intervention,
   paste(parts[1L:2L], collapse = ".")
 }
 
+# One-line fidelity summary for print(); robust to a NULL field on
+# results produced before fidelity provenance was threaded through.
+.format_fidelity_summary <- function(fid) {
+  if (is.null(fid)) return("n/a")
+  describe_one <- function(f) {
+    if (is.null(f)) return("single")
+    sprintf("%s(L%d/%d)", f$type, f$final_level, f$n_levels)
+  }
+  sprintf("baseline=%s, intervention=%s",
+          describe_one(fid$baseline), describe_one(fid$intervention))
+}
+
 #' @export
 print.dr_date_scenario <- function(x, ...) {
   NextMethod()
@@ -240,6 +342,8 @@ print.dr_date_scenario <- function(x, ...) {
   cat("  PESTO versions: ", paste(names(x$pesto_versions),
                                   unname(x$pesto_versions),
                                   sep = "=", collapse = ", "),
+      "\n", sep = "")
+  cat("  fidelity      : ", .format_fidelity_summary(x$fidelity),
       "\n", sep = "")
   cat("  Verdict:        ",
       if (isTRUE(x$reject)) {

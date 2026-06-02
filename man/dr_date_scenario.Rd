@@ -16,6 +16,7 @@ dr_date_scenario(
   alpha = 0.05,
   seed = NULL,
   verbose = FALSE,
+  strict_fidelity = FALSE,
   ...
 )
 }
@@ -52,6 +53,10 @@ imbalance.}
 
 \item{verbose}{Logical. Default \code{FALSE}.}
 
+\item{strict_fidelity}{Logical. If \code{FALSE} (default) a mismatch in the
+two manifests' multi-fidelity provenance raises a \code{warning}; if \code{TRUE}
+it raises an error. See the \emph{Fidelity provenance} section.}
+
 \item{...}{Reserved.}
 }
 \value{
@@ -65,6 +70,10 @@ An object of class
 \item{n_intervention}{Realisations in intervention ensemble.}
 \item{outputs_tested}{Character vector of output columns used.}
 \item{pesto_versions}{Named character -- baseline / intervention.}
+\item{fidelity}{List with \code{baseline} / \code{intervention} fidelity
+provenance from the PESTO manifests (a
+\code{list(type, schedule, final_level, n_levels, costs)} for a
+multi-fidelity run, or \code{NULL} for a single-fidelity run).}
 }
 }
 \description{
@@ -86,6 +95,21 @@ The PESTO 0.3.0 \code{\link[PESTO:pesto_ensemble_manifest]{PESTO::pesto_ensemble
 supported input shape; the per-realisation file-I/O for ingestion is
 handled by \code{PESTO::read_manifest()} upstream of this call.
 }
+\section{Fidelity provenance}{
+
+A PESTO multi-fidelity run records, in the manifest \code{fidelity} slot,
+which fidelity levels produced the ensemble. Comparing a baseline and
+an intervention that were calibrated at different fidelities risks
+confounding the distributional contrast with fidelity bias. This
+wrapper therefore surfaces a provenance mismatch -- one scenario
+single-fidelity and the other multi-fidelity, or two multi-fidelity
+runs with different stack shapes / final levels -- as a \code{warning}
+(default) or, with \code{strict_fidelity = TRUE}, a hard error. Matched or
+both-single-fidelity provenance passes silently. The check is
+forward-compatible: manifests from PESTO versions that do not populate
+the slot read as \code{NULL} and pass.
+}
+
 \examples{
 \donttest{
 # Requires PESTO (>= 0.4.1) -- wired through Imports.

@@ -77,6 +77,12 @@ Use after an ensemble-smoother run (PESTO IES, EnKF, etc.) to ask:
 held-out year / paddock / season at the distributional level?} The
 MMD test is sensitive to mean, variance, and tail differences --
 strictly more informative than RMSE on the posterior predictive mean.
+
+The \code{pesto_ensemble_manifest} method records provenance from the input
+manifest in \code{result$pesto_metadata}: \code{run_id}, \code{pesto_version},
+\code{method}, \code{outputs_used}, and \code{fidelity} (the multi-fidelity provenance
+record, or \code{NULL} for a single-fidelity run), so the PPC verdict traces
+back to the producing ensemble and the fidelity it was calibrated at.
 }
 \examples{
 set.seed(1)

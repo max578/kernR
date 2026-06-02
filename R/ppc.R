@@ -212,6 +212,12 @@ mmd_ppc.pesto_ensemble <- function(x, observed = NULL, ...) {
 #'   the manifest to test against. Defaults to all numeric output columns
 #'   (the `real_name` column is excluded). Used only for the
 #'   `pesto_ensemble_manifest` method.
+#' @details
+#' The `pesto_ensemble_manifest` method records provenance from the input
+#' manifest in `result$pesto_metadata`: `run_id`, `pesto_version`,
+#' `method`, `outputs_used`, and `fidelity` (the multi-fidelity provenance
+#' record, or `NULL` for a single-fidelity run), so the PPC verdict traces
+#' back to the producing ensemble and the fidelity it was calibrated at.
 #' @export
 mmd_ppc.pesto_ensemble_manifest <- function(x, observed,
                                             outputs = NULL, ...) {
@@ -250,7 +256,8 @@ mmd_ppc.pesto_ensemble_manifest <- function(x, observed,
     run_id        = x@run_id,
     pesto_version = x@pesto_version,
     method        = x@method,
-    outputs_used  = outputs
+    outputs_used  = outputs,
+    fidelity      = x@fidelity
   )
   out$call <- cl
   out

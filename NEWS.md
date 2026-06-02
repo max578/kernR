@@ -1,3 +1,23 @@
+# kernR 0.4.0.9000 (development)
+
+## Fidelity-provenance awareness when consuming PESTO manifests
+
+* `dr_date_scenario()` now inspects the `fidelity` slot of the two input
+  `PESTO::pesto_ensemble_manifest` objects. A provenance mismatch -- one
+  scenario single-fidelity and the other multi-fidelity, or two
+  multi-fidelity runs with different stack shapes / final levels -- raises
+  a `warning` by default (the two ensembles may sit at different physical
+  fidelities, confounding the distributional contrast), escalated to an
+  error with the new `strict_fidelity = TRUE` argument. The fidelity
+  provenance (`list(baseline, intervention)`) is threaded into the result
+  and shown by `print()`.
+* `mmd_ppc()` on a manifest records the manifest's `fidelity` provenance in
+  `result$pesto_metadata$fidelity`, so a PPC verdict traces back to the
+  fidelity the producing ensemble was calibrated at.
+* Both checks are forward-compatible: manifests from PESTO versions that do
+  not populate the slot read as `NULL` and pass. Full fidelity provenance
+  is populated by PESTO's multi-fidelity `pesto_ies_callback()` runs.
+
 # kernR 0.4.0
 
 ## New features
