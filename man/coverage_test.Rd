@@ -26,6 +26,8 @@ coverage_test(x, ...)
 \item{x}{Numeric matrix \verb{n_draws x d} of predictive draws, a
 \code{pesto_ensemble} (see \code{\link[=pesto_ensemble]{pesto_ensemble()}}), or a \code{pesto_ensemble_manifest}.}
 
+\item{...}{Additional arguments passed between methods (currently unused).}
+
 \item{observed}{Numeric matrix \verb{n_obs x d} of held-out observations. When \code{x}
 is a \code{pesto_ensemble} carrying an \code{observed} slot, may be \code{NULL}.}
 

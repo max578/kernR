@@ -45,6 +45,7 @@
 #'   uniformity test. Default `10`.
 #' @param alpha Numeric in `(0, 1)`. Significance level for the calibration
 #'   verdict. Default `0.05`.
+#' @param ... Additional arguments passed between methods (currently unused).
 #'
 #' @returns An object of class `"coverage_test"` with components:
 #'   \describe{
