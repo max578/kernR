@@ -138,3 +138,76 @@ arma::uvec stratified_permute_cpp(const arma::ivec& bins, int n_bins) {
 
   return result;
 }
+
+//' Permutation k-sample MMD: summed pairwise unbiased MMD^2 under joint relabel
+//'
+//' Given the pooled (N x N) kernel matrix of K stacked groups and their sizes,
+//' draws n_perm joint relabelings of the pooled sample into the original group
+//' sizes and returns, for each, the summed pairwise unbiased MMD^2 statistic
+//' \eqn{\sum_{a < b} \mathrm{MMD}^2_u(a, b)}. The single shared relabeling per
+//' replicate (not independent per-pair permutation) is what makes this a valid
+//' k-sample null. Relabeling uses r_randperm, so callers honour set.seed().
+//'
+//' @param K_pool (N x N) kernel matrix of the row-stacked groups.
+//' @param sizes Integer vector of the K group sizes (summing to N).
+//' @param n_perm Number of permutations.
+//' @return Vector of n_perm summed-pairwise MMD^2 values under the null.
+//' @keywords internal
+// [[Rcpp::export]]
+arma::vec permutation_ksample_mmd_cpp(const arma::mat& K_pool,
+                                       const arma::ivec& sizes,
+                                       int n_perm) {
+  int K = sizes.n_elem;
+  int N = K_pool.n_rows;
+
+  arma::ivec offset(K);
+  int acc = 0;
+  for (int k = 0; k < K; k++) {
+    offset(k) = acc;
+    acc += sizes(k);
+  }
+
+  arma::vec results(n_perm);
+
+  for (int p = 0; p < n_perm; p++) {
+    arma::uvec perm = r_randperm(N);
+
+    // Within-group sums (i != j), one block per group
+    arma::vec within(K, arma::fill::zeros);
+    for (int g = 0; g < K; g++) {
+      int s = offset(g);
+      int ng = sizes(g);
+      for (int i = 0; i < ng; i++) {
+        for (int j = 0; j < ng; j++) {
+          if (i != j) within(g) += K_pool(perm(s + i), perm(s + j));
+        }
+      }
+    }
+
+    // Each within-group term appears in (K - 1) pairs
+    double stat = 0.0;
+    for (int g = 0; g < K; g++) {
+      double ng = (double) sizes(g);
+      stat += (K - 1) * within(g) / (ng * (ng - 1));
+    }
+
+    // Between-group sums over the upper triangle of group pairs
+    for (int a = 0; a < K; a++) {
+      for (int b = a + 1; b < K; b++) {
+        int sa = offset(a), na = sizes(a);
+        int sb = offset(b), nb = sizes(b);
+        double between = 0.0;
+        for (int i = 0; i < na; i++) {
+          for (int j = 0; j < nb; j++) {
+            between += K_pool(perm(sa + i), perm(sb + j));
+          }
+        }
+        stat -= 2.0 * between / ((double) na * nb);
+      }
+    }
+
+    results(p) = stat;
+  }
+
+  return results;
+}

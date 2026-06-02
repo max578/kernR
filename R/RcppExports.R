@@ -106,6 +106,57 @@ polynomial_kernel_matrix_cpp <- function(x, y, degree, offset) {
     .Call(`_kernR_polynomial_kernel_matrix_cpp`, x, y, degree, offset)
 }
 
+#' Inverse multi-quadric Stein kernel matrix
+#'
+#' Builds the n x n Stein-kernel matrix u_p(x_i, x_j) for the IMQ base
+#' kernel k(x, y) = (c^2 + ||x - y||^2)^beta under the Langevin Stein
+#' operator, given the score (gradient of the log target density) evaluated
+#' at each sample point.
+#'
+#' @param X Numeric matrix (n x d): the sample.
+#' @param S Numeric matrix (n x d): the score evaluated row-wise at X.
+#' @param beta Negative scalar exponent in (-1, 0).
+#' @param c2 Squared offset c^2 (positive scalar).
+#' @return Symmetric n x n Stein-kernel matrix.
+#' @keywords internal
+stein_kernel_imq_cpp <- function(X, S, beta, c2) {
+    .Call(`_kernR_stein_kernel_imq_cpp`, X, S, beta, c2)
+}
+
+#' RBF Stein kernel matrix
+#'
+#' Builds the n x n Stein-kernel matrix u_p(x_i, x_j) for the Gaussian
+#' base kernel k(x, y) = exp(-||x - y||^2 / (2 h^2)) under the Langevin
+#' Stein operator, given the score evaluated at each sample point. The
+#' bandwidth convention matches rbf_kernel_matrix_cpp.
+#'
+#' @param X Numeric matrix (n x d): the sample.
+#' @param S Numeric matrix (n x d): the score evaluated row-wise at X.
+#' @param h2 Squared bandwidth h^2 (positive scalar).
+#' @return Symmetric n x n Stein-kernel matrix.
+#' @keywords internal
+stein_kernel_rbf_cpp <- function(X, S, h2) {
+    .Call(`_kernR_stein_kernel_rbf_cpp`, X, S, h2)
+}
+
+#' Wild bootstrap of the kernel Stein discrepancy null
+#'
+#' Given the Stein-kernel matrix H, draws n_boot wild-bootstrap replicates
+#' of the degenerate U-statistic null via independent Rademacher multipliers
+#' \eqn{W_i \in \{-1, +1\}}: each replicate is
+#' \eqn{(1 / (n (n - 1))) \sum_{i \ne j} W_i W_j H_{ij}}. The diagonal is
+#' excluded to match the unbiased U-statistic. Multipliers are drawn through
+#' R's RNG (R::unif_rand within Rcpp's RNGScope), so callers honour
+#' set.seed().
+#'
+#' @param H Symmetric n x n Stein-kernel matrix.
+#' @param n_boot Number of bootstrap replicates.
+#' @return Vector of n_boot bootstrap KSD statistics.
+#' @keywords internal
+ksd_wild_bootstrap_cpp <- function(H, n_boot) {
+    .Call(`_kernR_ksd_wild_bootstrap_cpp`, H, n_boot)
+}
+
 #' Compute the unbiased MMD^2 statistic
 #'
 #' Unbiased estimator of MMD^2:
@@ -175,5 +226,23 @@ permutation_mmd_cpp <- function(K_pool, n, m, n_perm) {
 #' @keywords internal
 stratified_permute_cpp <- function(bins, n_bins) {
     .Call(`_kernR_stratified_permute_cpp`, bins, n_bins)
+}
+
+#' Permutation k-sample MMD: summed pairwise unbiased MMD^2 under joint relabel
+#'
+#' Given the pooled (N x N) kernel matrix of K stacked groups and their sizes,
+#' draws n_perm joint relabelings of the pooled sample into the original group
+#' sizes and returns, for each, the summed pairwise unbiased MMD^2 statistic
+#' \eqn{\sum_{a < b} \mathrm{MMD}^2_u(a, b)}. The single shared relabeling per
+#' replicate (not independent per-pair permutation) is what makes this a valid
+#' k-sample null. Relabeling uses r_randperm, so callers honour set.seed().
+#'
+#' @param K_pool (N x N) kernel matrix of the row-stacked groups.
+#' @param sizes Integer vector of the K group sizes (summing to N).
+#' @param n_perm Number of permutations.
+#' @return Vector of n_perm summed-pairwise MMD^2 values under the null.
+#' @keywords internal
+permutation_ksample_mmd_cpp <- function(K_pool, sizes, n_perm) {
+    .Call(`_kernR_permutation_ksample_mmd_cpp`, K_pool, sizes, n_perm)
 }
 

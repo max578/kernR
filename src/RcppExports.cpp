@@ -113,6 +113,45 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// stein_kernel_imq_cpp
+arma::mat stein_kernel_imq_cpp(const arma::mat& X, const arma::mat& S, double beta, double c2);
+RcppExport SEXP _kernR_stein_kernel_imq_cpp(SEXP XSEXP, SEXP SSEXP, SEXP betaSEXP, SEXP c2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< double >::type c2(c2SEXP);
+    rcpp_result_gen = Rcpp::wrap(stein_kernel_imq_cpp(X, S, beta, c2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// stein_kernel_rbf_cpp
+arma::mat stein_kernel_rbf_cpp(const arma::mat& X, const arma::mat& S, double h2);
+RcppExport SEXP _kernR_stein_kernel_rbf_cpp(SEXP XSEXP, SEXP SSEXP, SEXP h2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< double >::type h2(h2SEXP);
+    rcpp_result_gen = Rcpp::wrap(stein_kernel_rbf_cpp(X, S, h2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ksd_wild_bootstrap_cpp
+arma::vec ksd_wild_bootstrap_cpp(const arma::mat& H, int n_boot);
+RcppExport SEXP _kernR_ksd_wild_bootstrap_cpp(SEXP HSEXP, SEXP n_bootSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type H(HSEXP);
+    Rcpp::traits::input_parameter< int >::type n_boot(n_bootSEXP);
+    rcpp_result_gen = Rcpp::wrap(ksd_wild_bootstrap_cpp(H, n_boot));
+    return rcpp_result_gen;
+END_RCPP
+}
 // mmd2_unbiased_cpp
 double mmd2_unbiased_cpp(const arma::mat& Kxx, const arma::mat& Kyy, const arma::mat& Kxy);
 RcppExport SEXP _kernR_mmd2_unbiased_cpp(SEXP KxxSEXP, SEXP KyySEXP, SEXP KxySEXP) {
@@ -178,6 +217,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// permutation_ksample_mmd_cpp
+arma::vec permutation_ksample_mmd_cpp(const arma::mat& K_pool, const arma::ivec& sizes, int n_perm);
+RcppExport SEXP _kernR_permutation_ksample_mmd_cpp(SEXP K_poolSEXP, SEXP sizesSEXP, SEXP n_permSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type K_pool(K_poolSEXP);
+    Rcpp::traits::input_parameter< const arma::ivec& >::type sizes(sizesSEXP);
+    Rcpp::traits::input_parameter< int >::type n_perm(n_permSEXP);
+    rcpp_result_gen = Rcpp::wrap(permutation_ksample_mmd_cpp(K_pool, sizes, n_perm));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_kernR_rulsif_solve_cpp", (DL_FUNC) &_kernR_rulsif_solve_cpp, 3},
@@ -188,11 +240,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_kernR_matern_kernel_matrix_cpp", (DL_FUNC) &_kernR_matern_kernel_matrix_cpp, 4},
     {"_kernR_linear_kernel_matrix_cpp", (DL_FUNC) &_kernR_linear_kernel_matrix_cpp, 2},
     {"_kernR_polynomial_kernel_matrix_cpp", (DL_FUNC) &_kernR_polynomial_kernel_matrix_cpp, 4},
+    {"_kernR_stein_kernel_imq_cpp", (DL_FUNC) &_kernR_stein_kernel_imq_cpp, 4},
+    {"_kernR_stein_kernel_rbf_cpp", (DL_FUNC) &_kernR_stein_kernel_rbf_cpp, 3},
+    {"_kernR_ksd_wild_bootstrap_cpp", (DL_FUNC) &_kernR_ksd_wild_bootstrap_cpp, 2},
     {"_kernR_mmd2_unbiased_cpp", (DL_FUNC) &_kernR_mmd2_unbiased_cpp, 3},
     {"_kernR_mmd2_biased_cpp", (DL_FUNC) &_kernR_mmd2_biased_cpp, 3},
     {"_kernR_permutation_hsic_cpp", (DL_FUNC) &_kernR_permutation_hsic_cpp, 3},
     {"_kernR_permutation_mmd_cpp", (DL_FUNC) &_kernR_permutation_mmd_cpp, 4},
     {"_kernR_stratified_permute_cpp", (DL_FUNC) &_kernR_stratified_permute_cpp, 2},
+    {"_kernR_permutation_ksample_mmd_cpp", (DL_FUNC) &_kernR_permutation_ksample_mmd_cpp, 3},
     {NULL, NULL, 0}
 };
 

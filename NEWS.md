@@ -1,3 +1,37 @@
+# kernR 0.4.0
+
+## New features
+
+* New `ksd_test()`: a one-sample kernel Stein discrepancy goodness-of-fit
+  test. Where `mmd_test()` compares two samples, `ksd_test()` compares a
+  sample against a *distribution* supplied through its score
+  (the gradient of its log density), so the target may be unnormalised and
+  no reference sample is needed. The calibration framing is direct -- given
+  posterior or ensemble draws and the score of the distribution they claim
+  to represent, the test asks whether the draws actually follow it. It is
+  sensitive to mean, variance, and tail mis-specification, and calibrates
+  the degenerate U-statistic null with a wild bootstrap (Chwialkowski et
+  al., 2016).
+* The default base kernel is the inverse multi-quadric (IMQ), which detects
+  non-convergence in regimes where the Gaussian kernel is blind as dimension
+  grows (Gorham & Mackey, 2017); the Gaussian (RBF) base kernel remains
+  available via `kernel = "rbf"`.
+* New `gaussian_score()`: a score-function factory for a multivariate-normal
+  target, for use as the `score` argument of `ksd_test()`.
+* New `concordance_test()`: a kernel k-sample concordance test asking whether
+  several samples -- posterior draws from different inference engines, or
+  scenario ensembles from different simulators -- come from a common
+  distribution. The statistic is the summed pairwise Maximum Mean Discrepancy
+  with a single joint-permutation null (so the family-wise error is
+  controlled), and the result carries the full pairwise discrepancy matrix, so
+  a rejection localises *which* source diverges and on which margin.
+* New `numeric_score()`: a finite-difference score adapter that turns any
+  (possibly unnormalised) log density into the score `ksd_test()` needs, so a
+  target need only be expressible as a log-density function, not
+  hand-differentiated.
+* New vignette *Calibration and concordance: kernR's validation layer* tying
+  `ksd_test()`, `concordance_test()`, and `numeric_score()` together.
+
 # kernR 0.3.1
 
 ## Testing

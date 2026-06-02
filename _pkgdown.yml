@@ -19,6 +19,14 @@ reference:
   - hsic_test_nystrom
   - plot.kernel_test_result
 
+- title: Goodness-of-fit and concordance
+  desc: One-sample kernel Stein discrepancy against a score-specified target, and a k-sample concordance test over ensembles.
+  contents:
+  - ksd_test
+  - concordance_test
+  - gaussian_score
+  - numeric_score
+
 - title: Causal association (bd-HSIC)
   desc: Backdoor-adjusted HSIC for testing causal association after confounder adjustment.
   contents:
@@ -93,6 +101,10 @@ articles:
   - kernR-bdhsic
   - kernR-drtest
   - kernR-hierarchical
+
+- title: Calibration and validation
+  contents:
+  - kernR-calibration
 
 - title: Sensitivity and identifiability
   contents:
