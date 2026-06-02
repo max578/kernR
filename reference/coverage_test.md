@@ -40,6 +40,10 @@ coverage_test(x, observed, outputs = NULL, ...)
   [`pesto_ensemble()`](https://max578.github.io/kernR/reference/pesto_ensemble.md)),
   or a `pesto_ensemble_manifest`.
 
+- ...:
+
+  Additional arguments passed between methods (currently unused).
+
 - observed:
 
   Numeric matrix `n_obs x d` of held-out observations. When `x` is a

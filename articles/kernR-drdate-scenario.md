@@ -116,7 +116,7 @@ m_baseline
 #>   ensemble      : 60 realisations x 2 parameters | 4 observations
 #>   failure rate  : 0.00%
 #>   pesto version : 0.4.1  apsim: NA
-#>   timestamp     : 2026-06-02T09:45:12+0000
+#>   timestamp     : 2026-06-02T10:35:13+0000
 #>   data hash     : sha256:vignette_baseline
 ```
 
