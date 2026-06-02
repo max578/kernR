@@ -1,4 +1,4 @@
-# kernR 0.5.0.9000 (development version)
+# kernR 0.6.0
 
 ## New features
 
