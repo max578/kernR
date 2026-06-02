@@ -116,7 +116,7 @@ m_baseline
 #>   ensemble      : 60 realisations x 2 parameters | 4 observations
 #>   failure rate  : 0.00%
 #>   pesto version : 0.4.1  apsim: NA
-#>   timestamp     : 2026-06-02T07:26:34+0000
+#>   timestamp     : 2026-06-02T07:50:09+0000
 #>   data hash     : sha256:vignette_baseline
 ```
 
@@ -153,6 +153,7 @@ print(res)
 #>   intervention  : wagga_stubble_2026 (n=60)
 #>   outputs tested: o1, o2, o3, o4
 #>   PESTO versions: baseline=0.4.1, intervention=0.4.1
+#>   fidelity      : baseline=single, intervention=single
 #>   Verdict:        REJECT (distributions differ; intervention has effect)
 ```
 
@@ -282,7 +283,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] PESTO_0.4.1 kernR_0.4.0
+#> [1] PESTO_0.4.1 kernR_0.5.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.51         rlang_1.2.0       

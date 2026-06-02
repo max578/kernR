@@ -262,7 +262,7 @@ mmd_ppc(m, observed = held_out, n_permutations = 199L, seed = 1L)
 #>   Observed:   20 obs
 #>   Surprise:   0.464 bits
 #>   Verdict:    consistent with observations
-#>   Metadata:   run_id, pesto_version, method, outputs_used
+#>   Metadata:   run_id, pesto_version, method, outputs_used, fidelity
 ```
 
 The `outputs =` argument focuses the check on specific observation

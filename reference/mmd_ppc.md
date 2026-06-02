@@ -114,6 +114,12 @@ year / paddock / season at the distributional level?* The MMD test is
 sensitive to mean, variance, and tail differences – strictly more
 informative than RMSE on the posterior predictive mean.
 
+The `pesto_ensemble_manifest` method records provenance from the input
+manifest in `result$pesto_metadata`: `run_id`, `pesto_version`,
+`method`, `outputs_used`, and `fidelity` (the multi-fidelity provenance
+record, or `NULL` for a single-fidelity run), so the PPC verdict traces
+back to the producing ensemble and the fidelity it was calibrated at.
+
 ## References
 
 Gretton, A., Borgwardt, K. M., Rasch, M. J., Scholkopf, B., & Smola, A.

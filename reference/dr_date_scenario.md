@@ -21,6 +21,7 @@ dr_date_scenario(
   alpha = 0.05,
   seed = NULL,
   verbose = FALSE,
+  strict_fidelity = FALSE,
   ...
 )
 ```
@@ -90,6 +91,12 @@ dr_date_scenario(
 
   Logical. Default `FALSE`.
 
+- strict_fidelity:
+
+  Logical. If `FALSE` (default) a mismatch in the two manifests'
+  multi-fidelity provenance raises a `warning`; if `TRUE` it raises an
+  error. See the *Fidelity provenance* section.
+
 - ...:
 
   Reserved.
@@ -123,6 +130,13 @@ the standard `kernel_test_result` fields plus:
 
   Named character – baseline / intervention.
 
+- fidelity:
+
+  List with `baseline` / `intervention` fidelity provenance from the
+  PESTO manifests (a
+  `list(type, schedule, final_level, n_levels, costs)` for a
+  multi-fidelity run, or `NULL` for a single-fidelity run).
+
 ## Details
 
 This is a thin scenario-facing wrapper around
@@ -139,6 +153,20 @@ S7 contract is the supported input shape; the per-realisation file-I/O
 for ingestion is handled by
 [`PESTO::read_manifest()`](https://rdrr.io/pkg/PESTO/man/read_manifest.html)
 upstream of this call.
+
+## Fidelity provenance
+
+A PESTO multi-fidelity run records, in the manifest `fidelity` slot,
+which fidelity levels produced the ensemble. Comparing a baseline and an
+intervention that were calibrated at different fidelities risks
+confounding the distributional contrast with fidelity bias. This wrapper
+therefore surfaces a provenance mismatch – one scenario single-fidelity
+and the other multi-fidelity, or two multi-fidelity runs with different
+stack shapes / final levels – as a `warning` (default) or, with
+`strict_fidelity = TRUE`, a hard error. Matched or both-single-fidelity
+provenance passes silently. The check is forward-compatible: manifests
+from PESTO versions that do not populate the slot read as `NULL` and
+pass.
 
 ## References
 
@@ -197,6 +225,7 @@ print(res)
 #>   intervention  : intervention (n=60)
 #>   outputs tested: o1, o2, o3, o4
 #>   PESTO versions: baseline=0.4.1, intervention=0.4.1
+#>   fidelity      : baseline=single, intervention=single
 #>   Verdict:        fail to reject (no distributional difference detected)
 #> 
 # }

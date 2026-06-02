@@ -19,7 +19,7 @@ at n_permutations = B is log2(B + 1)."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -160,6 +160,11 @@ when provided; otherwise <code>NULL</code>.</p></dd>
 held-out year / paddock / season at the distributional level?</em> The
 MMD test is sensitive to mean, variance, and tail differences –
 strictly more informative than RMSE on the posterior predictive mean.</p>
+<p>The <code>pesto_ensemble_manifest</code> method records provenance from the input
+manifest in <code>result$pesto_metadata</code>: <code>run_id</code>, <code>pesto_version</code>,
+<code>method</code>, <code>outputs_used</code>, and <code>fidelity</code> (the multi-fidelity provenance
+record, or <code>NULL</code> for a single-fidelity run), so the PPC verdict traces
+back to the producing ensemble and the fidelity it was calibrated at.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

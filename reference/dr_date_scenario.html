@@ -15,7 +15,7 @@ over the pooled ensembles."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,6 +70,7 @@ over the pooled ensembles.</p>
 <span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  strict_fidelity <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -132,6 +133,12 @@ imbalance.</p></dd>
 <dd><p>Logical. Default <code>FALSE</code>.</p></dd>
 
 
+<dt id="arg-strict-fidelity">strict_fidelity<a class="anchor" aria-label="anchor" href="#arg-strict-fidelity"></a></dt>
+<dd><p>Logical. If <code>FALSE</code> (default) a mismatch in the
+two manifests' multi-fidelity provenance raises a <code>warning</code>; if <code>TRUE</code>
+it raises an error. See the <em>Fidelity provenance</em> section.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Reserved.</p></dd>
 
@@ -158,6 +165,12 @@ imbalance.</p></dd>
 <dt>pesto_versions</dt>
 <dd><p>Named character – baseline / intervention.</p></dd>
 
+<dt>fidelity</dt>
+<dd><p>List with <code>baseline</code> / <code>intervention</code> fidelity
+provenance from the PESTO manifests (a
+<code>list(type, schedule, final_level, n_levels, costs)</code> for a
+multi-fidelity run, or <code>NULL</code> for a single-fidelity run).</p></dd>
+
 
 </dl></div>
     <div class="section level2">
@@ -171,6 +184,22 @@ the binary treatment. Sensitive to distributional differences
 <p>The PESTO 0.3.0 <code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html" class="external-link">PESTO::pesto_ensemble_manifest</a></code> S7 contract is the
 supported input shape; the per-realisation file-I/O for ingestion is
 handled by <code><a href="https://rdrr.io/pkg/PESTO/man/read_manifest.html" class="external-link">PESTO::read_manifest()</a></code> upstream of this call.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="fidelity-provenance">Fidelity provenance<a class="anchor" aria-label="anchor" href="#fidelity-provenance"></a></h2>
+
+
+<p>A PESTO multi-fidelity run records, in the manifest <code>fidelity</code> slot,
+which fidelity levels produced the ensemble. Comparing a baseline and
+an intervention that were calibrated at different fidelities risks
+confounding the distributional contrast with fidelity bias. This
+wrapper therefore surfaces a provenance mismatch – one scenario
+single-fidelity and the other multi-fidelity, or two multi-fidelity
+runs with different stack shapes / final levels – as a <code>warning</code>
+(default) or, with <code>strict_fidelity = TRUE</code>, a hard error. Matched or
+both-single-fidelity provenance passes silently. The check is
+forward-compatible: manifests from PESTO versions that do not populate
+the slot read as <code>NULL</code> and pass.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -225,6 +254,7 @@ test; <code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html"
 <span class="r-out co"><span class="r-pr">#&gt;</span>   intervention  : intervention (n=60)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   outputs tested: o1, o2, o3, o4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   PESTO versions: baseline=0.4.1, intervention=0.4.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   fidelity      : baseline=single, intervention=single</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Verdict:        fail to reject (no distributional difference detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="co"># }</span></span></span>

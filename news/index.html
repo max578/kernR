@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,17 @@
       <small>Source: <a href="https://github.com/max578/kernR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.0" id="kernr-050">kernR 0.5.0<a class="anchor" aria-label="anchor" href="#kernr-050"></a></h2>
+<div class="section level3">
+<h3 id="fidelity-provenance-awareness-when-consuming-pesto-manifests-0-5-0">Fidelity-provenance awareness when consuming PESTO manifests<a class="anchor" aria-label="anchor" href="#fidelity-provenance-awareness-when-consuming-pesto-manifests-0-5-0"></a></h3>
+<ul><li>
+<code><a href="../reference/dr_date_scenario.html">dr_date_scenario()</a></code> now inspects the <code>fidelity</code> slot of the two input <code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html" class="external-link">PESTO::pesto_ensemble_manifest</a></code> objects. A provenance mismatch – one scenario single-fidelity and the other multi-fidelity, or two multi-fidelity runs with different stack shapes / final levels – raises a <code>warning</code> by default (the two ensembles may sit at different physical fidelities, confounding the distributional contrast), escalated to an error with the new <code>strict_fidelity = TRUE</code> argument. The fidelity provenance (<code>list(baseline, intervention)</code>) is threaded into the result and shown by <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>.</li>
+<li>
+<code><a href="../reference/mmd_ppc.html">mmd_ppc()</a></code> on a manifest records the manifest’s <code>fidelity</code> provenance in <code>result$pesto_metadata$fidelity</code>, so a PPC verdict traces back to the fidelity the producing ensemble was calibrated at.</li>
+<li>Both checks are forward-compatible: manifests from PESTO versions that do not populate the slot read as <code>NULL</code> and pass. Full fidelity provenance is populated by PESTO’s multi-fidelity <code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ies_callback.html" class="external-link">pesto_ies_callback()</a></code> runs.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="kernr-040">kernR 0.4.0<a class="anchor" aria-label="anchor" href="#kernr-040"></a></h2>
 <div class="section level3">
