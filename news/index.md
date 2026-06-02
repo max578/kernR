@@ -1,5 +1,32 @@
 # Changelog
 
+## kernR 0.6.0
+
+### New features
+
+- New
+  [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md):
+  a graded coverage / calibration diagnostic for a predictive ensemble
+  against held-out observations. Where
+  [`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md) and
+  [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md)
+  give a binary reject/accept verdict,
+  [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md)
+  reports *how* and *which way* an ensemble is mis-calibrated –
+  empirical coverage at nominal interval levels, a signed dispersion
+  ratio (`Var(PIT)/(1/12)`: above one is under-dispersion /
+  over-confidence, below one is over-dispersion), a bias indicator, and
+  a rank-histogram uniformity test – classifying the ensemble as
+  calibrated, under-dispersed, over-dispersed, or biased. It is the
+  interpretable companion to the kernel verdicts, and quantifies the
+  ensemble-under-dispersion that the cross-member PESTO validation
+  surfaced (e.g. “your 90% intervals cover 56% – under-dispersed by a
+  factor of 1.9”). Dispatches on a numeric matrix, a `pesto_ensemble`,
+  or a `pesto_ensemble_manifest` (threading fidelity provenance),
+  mirroring
+  [`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md).
+  Marginal (per-output) calibration; pure R.
+
 ## kernR 0.5.0
 
 ### Fidelity-provenance awareness when consuming PESTO manifests

@@ -102,6 +102,7 @@ Research*, 13, 723-773.
 [`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md)
 
 Other goodness-of-fit tests:
+[`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md),
 [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md),
 [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md),
 [`numeric_score()`](https://max578.github.io/kernR/reference/numeric_score.md)

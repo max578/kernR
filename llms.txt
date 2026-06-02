@@ -162,15 +162,17 @@ acceleration.
 - [`plot(`*`<kernel_test_result>`*`)`](https://max578.github.io/kernR/reference/plot.kernel_test_result.md)
   : Plot a Kernel Test Result
 
-## Goodness-of-fit and concordance
+## Goodness-of-fit, concordance, and calibration
 
-One-sample kernel Stein discrepancy against a score-specified target,
-and a k-sample concordance test over ensembles.
+One-sample kernel Stein discrepancy, a k-sample concordance test over
+ensembles, and a graded coverage / calibration diagnostic.
 
 - [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md) :
   Kernel Stein Discrepancy Goodness-of-Fit Test
 - [`concordance_test()`](https://max578.github.io/kernR/reference/concordance_test.md)
   : Kernel k-sample Concordance Test
+- [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md)
+  : Coverage / Calibration Diagnostic for a Predictive Ensemble
 - [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md)
   : Score function for a multivariate normal target
 - [`numeric_score()`](https://max578.github.io/kernR/reference/numeric_score.md)

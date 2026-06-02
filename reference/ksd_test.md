@@ -152,6 +152,7 @@ PMLR 70, 1292-1301.
 
 Other goodness-of-fit tests:
 [`concordance_test()`](https://max578.github.io/kernR/reference/concordance_test.md),
+[`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md),
 [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md),
 [`numeric_score()`](https://max578.github.io/kernR/reference/numeric_score.md)
 
