@@ -127,6 +127,7 @@ PMLR 70, 1292-1301.
 
 Other goodness-of-fit tests: 
 \code{\link{concordance_test}()},
+\code{\link{coverage_test}()},
 \code{\link{gaussian_score}()},
 \code{\link{numeric_score}()}
 }

@@ -88,6 +88,7 @@ Gretton, A., Borgwardt, K. M., Rasch, M. J., Scholkopf, B., & Smola, A.
 \code{\link[=mmd_test]{mmd_test()}}, \code{\link[=ksd_test]{ksd_test()}}, \code{\link[=mmd_ppc]{mmd_ppc()}}
 
 Other goodness-of-fit tests: 
+\code{\link{coverage_test}()},
 \code{\link{gaussian_score}()},
 \code{\link{ksd_test}()},
 \code{\link{numeric_score}()}

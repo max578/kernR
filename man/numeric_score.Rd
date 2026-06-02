@@ -59,6 +59,7 @@ ksd_test(x, score = numeric_score(ld), n_boot = 199L, seed = 1L)
 
 Other goodness-of-fit tests: 
 \code{\link{concordance_test}()},
+\code{\link{coverage_test}()},
 \code{\link{gaussian_score}()},
 \code{\link{ksd_test}()}
 }

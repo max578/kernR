@@ -19,11 +19,12 @@ reference:
   - hsic_test_nystrom
   - plot.kernel_test_result
 
-- title: Goodness-of-fit and concordance
-  desc: One-sample kernel Stein discrepancy against a score-specified target, and a k-sample concordance test over ensembles.
+- title: Goodness-of-fit, concordance, and calibration
+  desc: One-sample kernel Stein discrepancy, a k-sample concordance test over ensembles, and a graded coverage / calibration diagnostic.
   contents:
   - ksd_test
   - concordance_test
+  - coverage_test
   - gaussian_score
   - numeric_score
 

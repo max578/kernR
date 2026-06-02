@@ -11,5 +11,10 @@
     get("mmd_ppc.pesto_ensemble_manifest", envir = ns),
     envir = ns
   )
+  registerS3method(
+    "coverage_test", "PESTO::pesto_ensemble_manifest",
+    get("coverage_test.pesto_ensemble_manifest", envir = ns),
+    envir = ns
+  )
   invisible()
 }
