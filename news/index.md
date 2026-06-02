@@ -1,5 +1,57 @@
 # Changelog
 
+## kernR 0.4.0
+
+### New features
+
+- New
+  [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md):
+  a one-sample kernel Stein discrepancy goodness-of-fit test. Where
+  [`mmd_test()`](https://max578.github.io/kernR/reference/mmd_test.md)
+  compares two samples,
+  [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md)
+  compares a sample against a *distribution* supplied through its score
+  (the gradient of its log density), so the target may be unnormalised
+  and no reference sample is needed. The calibration framing is direct –
+  given posterior or ensemble draws and the score of the distribution
+  they claim to represent, the test asks whether the draws actually
+  follow it. It is sensitive to mean, variance, and tail
+  mis-specification, and calibrates the degenerate U-statistic null with
+  a wild bootstrap (Chwialkowski et al., 2016).
+- The default base kernel is the inverse multi-quadric (IMQ), which
+  detects non-convergence in regimes where the Gaussian kernel is blind
+  as dimension grows (Gorham & Mackey, 2017); the Gaussian (RBF) base
+  kernel remains available via `kernel = "rbf"`.
+- New
+  [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md):
+  a score-function factory for a multivariate-normal target, for use as
+  the `score` argument of
+  [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md).
+- New
+  [`concordance_test()`](https://max578.github.io/kernR/reference/concordance_test.md):
+  a kernel k-sample concordance test asking whether several samples –
+  posterior draws from different inference engines, or scenario
+  ensembles from different simulators – come from a common distribution.
+  The statistic is the summed pairwise Maximum Mean Discrepancy with a
+  single joint-permutation null (so the family-wise error is
+  controlled), and the result carries the full pairwise discrepancy
+  matrix, so a rejection localises *which* source diverges and on which
+  margin.
+- New
+  [`numeric_score()`](https://max578.github.io/kernR/reference/numeric_score.md):
+  a finite-difference score adapter that turns any (possibly
+  unnormalised) log density into the score
+  [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md)
+  needs, so a target need only be expressible as a log-density function,
+  not hand-differentiated.
+- New vignette *Calibration and concordance: kernR’s validation layer*
+  tying
+  [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md),
+  [`concordance_test()`](https://max578.github.io/kernR/reference/concordance_test.md),
+  and
+  [`numeric_score()`](https://max578.github.io/kernR/reference/numeric_score.md)
+  together.
+
 ## kernR 0.3.1
 
 ### Testing

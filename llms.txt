@@ -162,6 +162,20 @@ acceleration.
 - [`plot(`*`<kernel_test_result>`*`)`](https://max578.github.io/kernR/reference/plot.kernel_test_result.md)
   : Plot a Kernel Test Result
 
+## Goodness-of-fit and concordance
+
+One-sample kernel Stein discrepancy against a score-specified target,
+and a k-sample concordance test over ensembles.
+
+- [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md) :
+  Kernel Stein Discrepancy Goodness-of-Fit Test
+- [`concordance_test()`](https://max578.github.io/kernR/reference/concordance_test.md)
+  : Kernel k-sample Concordance Test
+- [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md)
+  : Score function for a multivariate normal target
+- [`numeric_score()`](https://max578.github.io/kernR/reference/numeric_score.md)
+  : Finite-difference score from a log-density
+
 ## Causal association (bd-HSIC)
 
 Backdoor-adjusted HSIC for testing causal association after confounder
@@ -285,6 +299,11 @@ Latin-hypercube design helper.
   DR-DETT)](https://max578.github.io/kernR/articles/kernR-drtest.md):
 - [Hierarchical and Nested
   Data](https://max578.github.io/kernR/articles/kernR-hierarchical.md):
+
+### Calibration and validation
+
+- [Calibration and concordance: kernR's validation
+  layer](https://max578.github.io/kernR/articles/kernR-calibration.md):
 
 ### Sensitivity and identifiability
 

@@ -11,6 +11,11 @@
 - [Hierarchical and Nested
   Data](https://max578.github.io/kernR/articles/kernR-hierarchical.md):
 
+### Calibration and validation
+
+- [Calibration and concordance: kernR's validation
+  layer](https://max578.github.io/kernR/articles/kernR-calibration.md):
+
 ### Sensitivity and identifiability
 
 - [Pre-IES Identifiability Screening with

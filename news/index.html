@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,18 @@
       <small>Source: <a href="https://github.com/max578/kernR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.0" id="kernr-040">kernR 0.4.0<a class="anchor" aria-label="anchor" href="#kernr-040"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-4-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-4-0"></a></h3>
+<ul><li>New <code><a href="../reference/ksd_test.html">ksd_test()</a></code>: a one-sample kernel Stein discrepancy goodness-of-fit test. Where <code><a href="../reference/mmd_test.html">mmd_test()</a></code> compares two samples, <code><a href="../reference/ksd_test.html">ksd_test()</a></code> compares a sample against a <em>distribution</em> supplied through its score (the gradient of its log density), so the target may be unnormalised and no reference sample is needed. The calibration framing is direct – given posterior or ensemble draws and the score of the distribution they claim to represent, the test asks whether the draws actually follow it. It is sensitive to mean, variance, and tail mis-specification, and calibrates the degenerate U-statistic null with a wild bootstrap (Chwialkowski et al., 2016).</li>
+<li>The default base kernel is the inverse multi-quadric (IMQ), which detects non-convergence in regimes where the Gaussian kernel is blind as dimension grows (Gorham &amp; Mackey, 2017); the Gaussian (RBF) base kernel remains available via <code>kernel = "rbf"</code>.</li>
+<li>New <code><a href="../reference/gaussian_score.html">gaussian_score()</a></code>: a score-function factory for a multivariate-normal target, for use as the <code>score</code> argument of <code><a href="../reference/ksd_test.html">ksd_test()</a></code>.</li>
+<li>New <code><a href="../reference/concordance_test.html">concordance_test()</a></code>: a kernel k-sample concordance test asking whether several samples – posterior draws from different inference engines, or scenario ensembles from different simulators – come from a common distribution. The statistic is the summed pairwise Maximum Mean Discrepancy with a single joint-permutation null (so the family-wise error is controlled), and the result carries the full pairwise discrepancy matrix, so a rejection localises <em>which</em> source diverges and on which margin.</li>
+<li>New <code><a href="../reference/numeric_score.html">numeric_score()</a></code>: a finite-difference score adapter that turns any (possibly unnormalised) log density into the score <code><a href="../reference/ksd_test.html">ksd_test()</a></code> needs, so a target need only be expressible as a log-density function, not hand-differentiated.</li>
+<li>New vignette <em>Calibration and concordance: kernR’s validation layer</em> tying <code><a href="../reference/ksd_test.html">ksd_test()</a></code>, <code><a href="../reference/concordance_test.html">concordance_test()</a></code>, and <code><a href="../reference/numeric_score.html">numeric_score()</a></code> together.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.1" id="kernr-031">kernR 0.3.1<a class="anchor" aria-label="anchor" href="#kernr-031"></a></h2>
 <div class="section level3">
