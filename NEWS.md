@@ -1,4 +1,4 @@
-# kernR 0.4.0.9000 (development)
+# kernR 0.5.0
 
 ## Fidelity-provenance awareness when consuming PESTO manifests
 
