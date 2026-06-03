@@ -20,10 +20,12 @@ reference:
   - plot.kernel_test_result
 
 - title: Goodness-of-fit, concordance, and calibration
-  desc: One-sample kernel Stein discrepancy, a k-sample concordance test over ensembles, and a graded coverage / calibration diagnostic.
+  desc: One-sample kernel Stein discrepancy, a k-sample concordance test over ensembles, and a graded coverage / calibration diagnostic, with low-rank acceleration.
   contents:
   - ksd_test
+  - ksd_test_nystrom
   - concordance_test
+  - concordance_test_nystrom
   - coverage_test
   - gaussian_score
   - numeric_score
