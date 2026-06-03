@@ -81,14 +81,26 @@ print.kernel_spec <- function(x, ...) {
 
 #' Resolve Kernel Bandwidth
 #'
-#' If `kernel$bandwidth` is `"median"`, compute the median heuristic from
-#' the data. Otherwise return the fixed bandwidth.
+#' Resolves a `kernel_spec`'s bandwidth against data: when `kernel$bandwidth`
+#' is `"median"` (the default for RBF and Matern kernels) the median heuristic
+#' is computed from `x`; otherwise the fixed bandwidth is returned unchanged.
+#' This is the helper [kernel_matrix()] uses internally, exposed so that callers
+#' building kernel matrices by hand -- for example a custom HSIC statistic via
+#' [weighted_hsic_stat()] -- resolve the bandwidth exactly as the package does.
 #'
 #' @param kernel A `kernel_spec` object.
-#' @param x Numeric matrix (n x d).
+#' @param x Numeric matrix (`n` by `d`) of data used to compute the median
+#'   heuristic when `kernel$bandwidth` is `"median"`.
 #'
-#' @return A `kernel_spec` with resolved numeric bandwidth.
-#' @keywords internal
+#' @return A `kernel_spec` with a resolved numeric bandwidth.
+#'
+#' @examples
+#' x <- matrix(rnorm(40), ncol = 2)
+#' resolve_bandwidth(kernel_spec(), x)
+#'
+#' @seealso [kernel_spec()], [kernel_matrix()], [weighted_hsic_stat()]
+#' @family kernel primitives
+#' @export
 resolve_bandwidth <- function(kernel, x) {
   if (!identical(kernel$bandwidth, "median")) return(kernel)
 

@@ -30,6 +30,8 @@ dim(K)  # 50 x 50
 \seealso{
 Other kernel primitives: 
 \code{\link{kernel_spec}()},
-\code{\link{select_bandwidth}()}
+\code{\link{resolve_bandwidth}()},
+\code{\link{select_bandwidth}()},
+\code{\link{weighted_hsic_stat}()}
 }
 \concept{kernel primitives}

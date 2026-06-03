@@ -36,6 +36,8 @@ select_bandwidth(x, "median")
 \seealso{
 Other kernel primitives: 
 \code{\link{kernel_matrix}()},
-\code{\link{kernel_spec}()}
+\code{\link{kernel_spec}()},
+\code{\link{resolve_bandwidth}()},
+\code{\link{weighted_hsic_stat}()}
 }
 \concept{kernel primitives}

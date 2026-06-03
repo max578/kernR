@@ -2,6 +2,14 @@
 
 ## New features
 
+* New exported helpers `weighted_hsic_stat()` and `resolve_bandwidth()` expose
+  the kernel-matrix and weighted-HSIC primitives that underpin `bd_hsic_test()`.
+  `weighted_hsic_stat()` is a validated R wrapper over the internal compiled
+  engine; `resolve_bandwidth()` fills a `kernel_spec`'s median-heuristic
+  bandwidth from data. Together they let downstream methods (for example
+  theory-anchored causal inference) assemble a bd-HSIC-compatible statistic
+  against a custom reference distribution without reaching into kernR internals.
+
 * `bd_hsic_test()` now gates its verdict on the `proxymix` density-ratio
   backend's fit quality (C4). `fit_density_ratio(method = "proxymix")` surfaces
   a single `fit_quality` pass-through flag (`ok` / `status` / `reason`) reduced

@@ -9,13 +9,32 @@ resolve_bandwidth(kernel, x)
 \arguments{
 \item{kernel}{A \code{kernel_spec} object.}
 
-\item{x}{Numeric matrix (n x d).}
+\item{x}{Numeric matrix (\code{n} by \code{d}) of data used to compute the median
+heuristic when \code{kernel$bandwidth} is \code{"median"}.}
 }
 \value{
-A \code{kernel_spec} with resolved numeric bandwidth.
+A \code{kernel_spec} with a resolved numeric bandwidth.
 }
 \description{
-If \code{kernel$bandwidth} is \code{"median"}, compute the median heuristic from
-the data. Otherwise return the fixed bandwidth.
+Resolves a \code{kernel_spec}'s bandwidth against data: when \code{kernel$bandwidth}
+is \code{"median"} (the default for RBF and Matern kernels) the median heuristic
+is computed from \code{x}; otherwise the fixed bandwidth is returned unchanged.
+This is the helper \code{\link[=kernel_matrix]{kernel_matrix()}} uses internally, exposed so that callers
+building kernel matrices by hand -- for example a custom HSIC statistic via
+\code{\link[=weighted_hsic_stat]{weighted_hsic_stat()}} -- resolve the bandwidth exactly as the package does.
 }
-\keyword{internal}
+\examples{
+x <- matrix(rnorm(40), ncol = 2)
+resolve_bandwidth(kernel_spec(), x)
+
+}
+\seealso{
+\code{\link[=kernel_spec]{kernel_spec()}}, \code{\link[=kernel_matrix]{kernel_matrix()}}, \code{\link[=weighted_hsic_stat]{weighted_hsic_stat()}}
+
+Other kernel primitives: 
+\code{\link{kernel_matrix}()},
+\code{\link{kernel_spec}()},
+\code{\link{select_bandwidth}()},
+\code{\link{weighted_hsic_stat}()}
+}
+\concept{kernel primitives}
