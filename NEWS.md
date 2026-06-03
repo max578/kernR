@@ -1,5 +1,23 @@
 # kernR (development version)
 
+## New features
+
+* New `joint_coverage_test()`: a joint (multivariate) calibration diagnostic.
+  Where `coverage_test()` assesses each output dimension separately (marginal
+  calibration) and is blind to the dependence structure, this builds a
+  multivariate rank histogram -- each held-out observation is reduced, with the
+  ensemble, to one multivariate rank through a pre-rank function, and the
+  histogram is tested for uniformity. The default band-depth pre-rank
+  (Thorarinsdottir et al. 2016) is sensitive to correlation / dependence
+  miscalibration that marginal and average-rank methods miss; an ensemble with
+  correct margins but a wrong correlation -- which `coverage_test()` passes -- is
+  caught here. The average-rank pre-rank (Gneiting et al. 2008) gives the
+  familiar U-shape = under-dispersed reading. This is the natural validation for
+  PESTO 0.6.0's covariance inflation / localisation: it asks whether the
+  ensemble's *covariance*, not just its margins, is calibrated.
+
+## Dependencies
+
 * Raise the `PESTO` dependency floor to `>= 0.6.0`. PESTO 0.6.0 adds covariance
   inflation and localisation against ensemble under-dispersion and records
   per-iteration spread-ESS / inflation / localisation diagnostics in the

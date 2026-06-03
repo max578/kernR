@@ -27,6 +27,7 @@ reference:
   - concordance_test
   - concordance_test_nystrom
   - coverage_test
+  - joint_coverage_test
   - gaussian_score
   - numeric_score
 

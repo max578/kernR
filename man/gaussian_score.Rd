@@ -56,6 +56,7 @@ Other goodness-of-fit tests:
 \code{\link{concordance_test}()},
 \code{\link{concordance_test_nystrom}()},
 \code{\link{coverage_test}()},
+\code{\link{joint_coverage_test}()},
 \code{\link{ksd_test}()},
 \code{\link{ksd_test_nystrom}()},
 \code{\link{numeric_score}()}
