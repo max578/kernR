@@ -1,6 +1,6 @@
 Package: kernR
 Title: Kernel-Based Causal Distributional Testing
-Version: 0.7.0
+Version: 0.7.0.9000
 Authors@R: c(
     person("Max", "Moldovan", , "max.moldovan@adelaide.edu.au",
            role = c("aut", "cre", "cph"),
@@ -27,7 +27,7 @@ Imports:
     methods,
     Rcpp,
     stats,
-    PESTO (>= 0.4.1)
+    PESTO (>= 0.6.0)
 LinkingTo:
     Rcpp,
     RcppArmadillo
