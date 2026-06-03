@@ -224,7 +224,7 @@ print(res)
 #>   baseline      : baseline (n=60)
 #>   intervention  : intervention (n=60)
 #>   outputs tested: o1, o2, o3, o4
-#>   PESTO versions: baseline=0.4.1, intervention=0.4.1
+#>   PESTO versions: baseline=0.5.0, intervention=0.5.0
 #>   fidelity      : baseline=single, intervention=single
 #>   Verdict:        fail to reject (no distributional difference detected)
 #> 

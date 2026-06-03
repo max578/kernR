@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,7 +108,7 @@
       </dl></div><div class="section level2">
       <h2 id="goodness-of-fit-concordance-and-calibration">Goodness-of-fit, concordance, and calibration<a class="anchor" aria-label="anchor" href="#goodness-of-fit-concordance-and-calibration"></a></h2>
 
-      <div class="section-desc"><p>One-sample kernel Stein discrepancy, a k-sample concordance test over ensembles, and a graded coverage / calibration diagnostic.</p></div>
+      <div class="section-desc"><p>One-sample kernel Stein discrepancy, a k-sample concordance test over ensembles, and a graded coverage / calibration diagnostic, with low-rank acceleration.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -124,10 +124,24 @@
 
         <dt>
 
+          <code><a href="ksd_test_nystrom.html">ksd_test_nystrom()</a></code>
+
+        </dt>
+        <dd>Accelerated Kernel Stein Discrepancy Goodness-of-Fit Test (Nystrom)</dd>
+
+        <dt>
+
           <code><a href="concordance_test.html">concordance_test()</a></code>
 
         </dt>
         <dd>Kernel k-sample Concordance Test</dd>
+
+        <dt>
+
+          <code><a href="concordance_test_nystrom.html">concordance_test_nystrom()</a></code>
+
+        </dt>
+        <dd>Accelerated Kernel k-sample Concordance Test (Nystrom / RFF)</dd>
 
         <dt>
 

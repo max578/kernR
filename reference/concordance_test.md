@@ -18,7 +18,8 @@ concordance_test(
   kernel = kernel_spec(),
   n_permutations = 500L,
   alpha = 0.05,
-  seed = NULL
+  seed = NULL,
+  n_exact_max = 5000L
 )
 ```
 
@@ -49,6 +50,15 @@ concordance_test(
 - seed:
 
   Integer or `NULL`. Random seed for reproducibility.
+
+- n_exact_max:
+
+  Integer or `Inf`. Pooled-sample-size ceiling for the exact `O(n^2)`
+  test. Above it, the call is delegated to
+  [`concordance_test_nystrom()`](https://max578.github.io/kernR/reference/concordance_test_nystrom.md)
+  (with a message; the verdict object records
+  `approximation = "nystrom"`). `Inf` forces the exact test at any size.
+  Default `5000L`.
 
 ## Value
 
@@ -89,6 +99,16 @@ departs and on which margin. This is the cross-engine concordance role –
 a sample-based complement to the score-based
 [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md).
 
+The exact test materialises the pooled `n x n` kernel matrix (`O(n^2)`).
+To keep large ensembles tractable without a silent loss of exactness, a
+pooled sample with more than `n_exact_max` rows is delegated to
+[`concordance_test_nystrom()`](https://max578.github.io/kernR/reference/concordance_test_nystrom.md)
+– a low-rank approximation that is *announced* by a message and
+*recorded* in the returned object's `approximation` and `m` fields. Set
+`n_exact_max = Inf` to force the exact test, or call
+[`concordance_test_nystrom()`](https://max578.github.io/kernR/reference/concordance_test_nystrom.md)
+directly to control the approximation rank `m`.
+
 ## References
 
 Gretton, A., Borgwardt, K. M., Rasch, M. J., Scholkopf, B., & Smola, A.
@@ -102,9 +122,11 @@ Research*, 13, 723-773.
 [`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md)
 
 Other goodness-of-fit tests:
+[`concordance_test_nystrom()`](https://max578.github.io/kernR/reference/concordance_test_nystrom.md),
 [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md),
 [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md),
 [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md),
+[`ksd_test_nystrom()`](https://max578.github.io/kernR/reference/ksd_test_nystrom.md),
 [`numeric_score()`](https://max578.github.io/kernR/reference/numeric_score.md)
 
 ## Author

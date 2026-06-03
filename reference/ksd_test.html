@@ -17,7 +17,7 @@ unknown normalising constant."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,8 @@ unknown normalising constant.</p>
 <span>  bandwidth <span class="op">=</span> <span class="st">"median"</span>,</span>
 <span>  n_boot <span class="op">=</span> <span class="fl">1000L</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_exact_max <span class="op">=</span> <span class="fl">5000L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -119,6 +120,13 @@ Default <code>0.05</code>.</p></dd>
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Integer or <code>NULL</code>. Random seed for reproducibility.</p></dd>
 
+
+<dt id="arg-n-exact-max">n_exact_max<a class="anchor" aria-label="anchor" href="#arg-n-exact-max"></a></dt>
+<dd><p>Integer or <code>Inf</code>. Sample-size ceiling for the exact
+<code>O(n^2)</code> test. Above it, the call is delegated to <code><a href="ksd_test_nystrom.html">ksd_test_nystrom()</a></code>
+(with a message; the verdict object records <code>approximation = "nystrom"</code>).
+<code>Inf</code> forces the exact test at any size. Default <code>5000L</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -165,9 +173,14 @@ bandwidth <code>h</code> (RBF) default to the median heuristic over the sample.<
 <p>Reproducibility: the wild-bootstrap multipliers are drawn through R's RNG,
 so a non-<code>NULL</code> <code>seed</code> makes the p-value reproducible under the active RNG
 kind (the R default Mersenne-Twister unless changed by the caller).</p>
-<p>The current implementation materialises the <code>n x n</code> Stein-kernel matrix,
-so memory scales as <code>O(n^2)</code>; for very large samples, thin first or use
-the two-sample <code><a href="mmd_test.html">mmd_test()</a></code> against reference draws.</p>
+<p>The exact test materialises the <code>n x n</code> Stein-kernel matrix, so memory and
+compute scale as <code>O(n^2)</code>. To keep large samples tractable without a silent
+loss of exactness, a sample with more than <code>n_exact_max</code> rows is delegated
+to <code><a href="ksd_test_nystrom.html">ksd_test_nystrom()</a></code> – a low-rank approximation that is <em>announced</em> by a
+message and <em>recorded</em> in the returned object's <code>approximation</code> and <code>m</code>
+fields, so the result stays reproducible from the object. Set
+<code>n_exact_max = Inf</code> to force the exact <code>O(n^2)</code> test at any size, or call
+<code><a href="ksd_test_nystrom.html">ksd_test_nystrom()</a></code> directly to control the approximation rank <code>m</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -186,8 +199,10 @@ PMLR 70, 1292-1301.</p>
     <div class="dont-index"><p><code><a href="mmd_test.html">mmd_test()</a></code>, <code><a href="mmd_ppc.html">mmd_ppc()</a></code>, <code><a href="gaussian_score.html">gaussian_score()</a></code></p>
 <p>Other goodness-of-fit tests:
 <code><a href="concordance_test.html">concordance_test()</a></code>,
+<code><a href="concordance_test_nystrom.html">concordance_test_nystrom()</a></code>,
 <code><a href="coverage_test.html">coverage_test()</a></code>,
 <code><a href="gaussian_score.html">gaussian_score()</a></code>,
+<code><a href="ksd_test_nystrom.html">ksd_test_nystrom()</a></code>,
 <code><a href="numeric_score.html">numeric_score()</a></code></p></div>
     </div>
     <div class="section level2">

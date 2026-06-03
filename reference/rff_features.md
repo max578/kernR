@@ -78,7 +78,9 @@ machines. *NeurIPS*, 20.
 [`hsic_test_nystrom()`](https://max578.github.io/kernR/reference/hsic_test_nystrom.md)
 
 Other low-rank acceleration:
+[`concordance_test_nystrom()`](https://max578.github.io/kernR/reference/concordance_test_nystrom.md),
 [`hsic_test_nystrom()`](https://max578.github.io/kernR/reference/hsic_test_nystrom.md),
+[`ksd_test_nystrom()`](https://max578.github.io/kernR/reference/ksd_test_nystrom.md),
 [`nystrom_factor()`](https://max578.github.io/kernR/reference/nystrom_factor.md)
 
 ## Examples

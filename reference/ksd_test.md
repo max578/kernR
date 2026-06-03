@@ -18,7 +18,8 @@ ksd_test(
   bandwidth = "median",
   n_boot = 1000L,
   alpha = 0.05,
-  seed = NULL
+  seed = NULL,
+  n_exact_max = 5000L
 )
 ```
 
@@ -67,6 +68,15 @@ ksd_test(
 - seed:
 
   Integer or `NULL`. Random seed for reproducibility.
+
+- n_exact_max:
+
+  Integer or `Inf`. Sample-size ceiling for the exact `O(n^2)` test.
+  Above it, the call is delegated to
+  [`ksd_test_nystrom()`](https://max578.github.io/kernR/reference/ksd_test_nystrom.md)
+  (with a message; the verdict object records
+  `approximation = "nystrom"`). `Inf` forces the exact test at any size.
+  Default `5000L`.
 
 ## Value
 
@@ -124,11 +134,17 @@ RNG, so a non-`NULL` `seed` makes the p-value reproducible under the
 active RNG kind (the R default Mersenne-Twister unless changed by the
 caller).
 
-The current implementation materialises the `n x n` Stein-kernel matrix,
-so memory scales as `O(n^2)`; for very large samples, thin first or use
-the two-sample
-[`mmd_test()`](https://max578.github.io/kernR/reference/mmd_test.md)
-against reference draws.
+The exact test materialises the `n x n` Stein-kernel matrix, so memory
+and compute scale as `O(n^2)`. To keep large samples tractable without a
+silent loss of exactness, a sample with more than `n_exact_max` rows is
+delegated to
+[`ksd_test_nystrom()`](https://max578.github.io/kernR/reference/ksd_test_nystrom.md)
+– a low-rank approximation that is *announced* by a message and
+*recorded* in the returned object's `approximation` and `m` fields, so
+the result stays reproducible from the object. Set `n_exact_max = Inf`
+to force the exact `O(n^2)` test at any size, or call
+[`ksd_test_nystrom()`](https://max578.github.io/kernR/reference/ksd_test_nystrom.md)
+directly to control the approximation rank `m`.
 
 ## References
 
@@ -152,8 +168,10 @@ PMLR 70, 1292-1301.
 
 Other goodness-of-fit tests:
 [`concordance_test()`](https://max578.github.io/kernR/reference/concordance_test.md),
+[`concordance_test_nystrom()`](https://max578.github.io/kernR/reference/concordance_test_nystrom.md),
 [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md),
 [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md),
+[`ksd_test_nystrom()`](https://max578.github.io/kernR/reference/ksd_test_nystrom.md),
 [`numeric_score()`](https://max578.github.io/kernR/reference/numeric_score.md)
 
 ## Author

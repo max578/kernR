@@ -49,8 +49,10 @@ International Conference on Machine Learning*, PMLR 48, 276-284.
 
 Other goodness-of-fit tests:
 [`concordance_test()`](https://max578.github.io/kernR/reference/concordance_test.md),
+[`concordance_test_nystrom()`](https://max578.github.io/kernR/reference/concordance_test_nystrom.md),
 [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md),
 [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md),
+[`ksd_test_nystrom()`](https://max578.github.io/kernR/reference/ksd_test_nystrom.md),
 [`numeric_score()`](https://max578.github.io/kernR/reference/numeric_score.md)
 
 ## Author

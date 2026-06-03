@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,15 @@
       <small>Source: <a href="https://github.com/max578/kernR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.0" id="kernr-070">kernR 0.7.0<a class="anchor" aria-label="anchor" href="#kernr-070"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-7-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-7-0"></a></h3>
+<ul><li><p>New <code><a href="../reference/concordance_test_nystrom.html">concordance_test_nystrom()</a></code>: a low-rank counterpart to <code><a href="../reference/concordance_test.html">concordance_test()</a></code> for large ensembles. The pooled sample is factorised once – by the Nystrom method (default) or random Fourier features – and the summed pairwise unbiased MMD and its joint-permutation null are computed from the <code>n x m</code> factor in <code>O(n m)</code> per permutation rather than <code>O(n^2)</code>, with the rank <code>m</code> controlling the speed / accuracy trade-off. The verdict object and the pairwise discrepancy matrix that localises the offending source are identical to the exact test.</p></li>
+<li><p>New <code><a href="../reference/ksd_test_nystrom.html">ksd_test_nystrom()</a></code>: a low-rank counterpart to <code><a href="../reference/ksd_test.html">ksd_test()</a></code> for large samples. The <code>n x n</code> Stein-kernel matrix is never materialised; it is replaced by a Nystrom factor with which the kernel Stein discrepancy and its wild-bootstrap null are computed in <code>O(n m)</code>. Because the Langevin Stein kernel is itself positive semi-definite, the factorised kernel is a valid Stein kernel in its own right, so the accelerated test is the exact procedure applied to a rank-<code>m</code> kernel: the degenerate-U-statistic calibration is preserved (empirical Type-I error stays at the nominal level), and the approximation trades statistical power – not test validity – for speed.</p></li>
+<li><p><code><a href="../reference/ksd_test.html">ksd_test()</a></code> and <code><a href="../reference/concordance_test.html">concordance_test()</a></code> gain an <code>n_exact_max</code> argument (default <code>5000</code>). Above this sample-size ceiling the call is delegated to the low-rank counterpart, so a large sample stays tractable without an <code>O(n^2)</code> blow-up. The switch is never silent: it is announced by a message, recorded in the returned object (<code>approximation</code> and <code>m</code>, so the result is reproducible from the object), and escapable with <code>n_exact_max = Inf</code> to force the exact test at any size.</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.0" id="kernr-060">kernR 0.6.0<a class="anchor" aria-label="anchor" href="#kernr-060"></a></h2>
 <div class="section level3">

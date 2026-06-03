@@ -58,9 +58,11 @@ or a hand-written score; `numeric_score()` is the general fallback.
 
 Other goodness-of-fit tests:
 [`concordance_test()`](https://max578.github.io/kernR/reference/concordance_test.md),
+[`concordance_test_nystrom()`](https://max578.github.io/kernR/reference/concordance_test_nystrom.md),
 [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md),
 [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md),
-[`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md)
+[`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md),
+[`ksd_test_nystrom()`](https://max578.github.io/kernR/reference/ksd_test_nystrom.md)
 
 ## Author
 

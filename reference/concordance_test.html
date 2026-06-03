@@ -19,7 +19,7 @@ is controlled and the overall verdict is one calibrated p-value."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,8 @@ is controlled and the overall verdict is one calibrated p-value.</p>
 <span>  kernel <span class="op">=</span> <span class="fu"><a href="kernel_spec.html">kernel_spec</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  n_permutations <span class="op">=</span> <span class="fl">500L</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_exact_max <span class="op">=</span> <span class="fl">5000L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -102,6 +103,14 @@ Default <code>0.05</code>.</p></dd>
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Integer or <code>NULL</code>. Random seed for reproducibility.</p></dd>
+
+
+<dt id="arg-n-exact-max">n_exact_max<a class="anchor" aria-label="anchor" href="#arg-n-exact-max"></a></dt>
+<dd><p>Integer or <code>Inf</code>. Pooled-sample-size ceiling for the
+exact <code>O(n^2)</code> test. Above it, the call is delegated to
+<code><a href="concordance_test_nystrom.html">concordance_test_nystrom()</a></code> (with a message; the verdict object records
+<code>approximation = "nystrom"</code>). <code>Inf</code> forces the exact test at any size.
+Default <code>5000L</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -136,6 +145,13 @@ rejection can be read down to the offending pair: convergence across sources
 is corroborating evidence, and divergence localises which source departs and
 on which margin. This is the cross-engine concordance role – a sample-based
 complement to the score-based <code><a href="ksd_test.html">ksd_test()</a></code>.</p>
+<p>The exact test materialises the pooled <code>n x n</code> kernel matrix (<code>O(n^2)</code>). To
+keep large ensembles tractable without a silent loss of exactness, a pooled
+sample with more than <code>n_exact_max</code> rows is delegated to
+<code><a href="concordance_test_nystrom.html">concordance_test_nystrom()</a></code> – a low-rank approximation that is <em>announced</em>
+by a message and <em>recorded</em> in the returned object's <code>approximation</code> and <code>m</code>
+fields. Set <code>n_exact_max = Inf</code> to force the exact test, or call
+<code><a href="concordance_test_nystrom.html">concordance_test_nystrom()</a></code> directly to control the approximation rank <code>m</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -147,9 +163,11 @@ complement to the score-based <code><a href="ksd_test.html">ksd_test()</a></code
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="mmd_test.html">mmd_test()</a></code>, <code><a href="ksd_test.html">ksd_test()</a></code>, <code><a href="mmd_ppc.html">mmd_ppc()</a></code></p>
 <p>Other goodness-of-fit tests:
+<code><a href="concordance_test_nystrom.html">concordance_test_nystrom()</a></code>,
 <code><a href="coverage_test.html">coverage_test()</a></code>,
 <code><a href="gaussian_score.html">gaussian_score()</a></code>,
 <code><a href="ksd_test.html">ksd_test()</a></code>,
+<code><a href="ksd_test_nystrom.html">ksd_test_nystrom()</a></code>,
 <code><a href="numeric_score.html">numeric_score()</a></code></p></div>
     </div>
     <div class="section level2">

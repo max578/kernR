@@ -33,6 +33,7 @@
 <url><loc>https://max578.github.io/kernR/reference/compute_dr_date_stat.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/compute_dr_dett_stat.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/concordance_test.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/concordance_test_nystrom.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/coverage_test.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/cross_fit_propensity.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/cv_ridge_lambda.html</loc></url>
@@ -62,7 +63,9 @@
 <url><loc>https://max578.github.io/kernR/reference/kernel_matrix.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/kernel_spec.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/ksd_test.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/ksd_test_nystrom.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/ksd_wild_bootstrap_cpp.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/ksd_wild_bootstrap_factor_cpp.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/lhs_design.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/linear_kernel_matrix_cpp.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/matern_kernel_matrix_cpp.html</loc></url>
@@ -94,7 +97,9 @@
 <url><loc>https://max578.github.io/kernR/reference/rulsif_solve_cpp.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/select_bandwidth.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/stein_kernel_imq_cpp.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/stein_kernel_imq_cross_cpp.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/stein_kernel_rbf_cpp.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/stein_kernel_rbf_cross_cpp.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/stratified_permute_cpp.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/validate_input.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/weighted_hsic_stat_cpp.html</loc></url>

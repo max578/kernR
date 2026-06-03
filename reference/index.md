@@ -28,12 +28,17 @@ acceleration.
 ## Goodness-of-fit, concordance, and calibration
 
 One-sample kernel Stein discrepancy, a k-sample concordance test over
-ensembles, and a graded coverage / calibration diagnostic.
+ensembles, and a graded coverage / calibration diagnostic, with low-rank
+acceleration.
 
 - [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md) :
   Kernel Stein Discrepancy Goodness-of-Fit Test
+- [`ksd_test_nystrom()`](https://max578.github.io/kernR/reference/ksd_test_nystrom.md)
+  : Accelerated Kernel Stein Discrepancy Goodness-of-Fit Test (Nystrom)
 - [`concordance_test()`](https://max578.github.io/kernR/reference/concordance_test.md)
   : Kernel k-sample Concordance Test
+- [`concordance_test_nystrom()`](https://max578.github.io/kernR/reference/concordance_test_nystrom.md)
+  : Accelerated Kernel k-sample Concordance Test (Nystrom / RFF)
 - [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md)
   : Coverage / Calibration Diagnostic for a Predictive Ensemble
 - [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md)
