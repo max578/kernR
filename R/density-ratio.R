@@ -40,7 +40,11 @@
 #'   `density_ratio_fit_<method>` as the dispatch class). Carries:
 #'   `method`, the backend-specific fit (`model` for classifiers;
 #'   `fit_joint` + `fit_marg` for proxymix), `diagnostics`,
-#'   `n_train`, `ncol_x`, `ncol_z`, `seed`.
+#'   `n_train`, `ncol_x`, `ncol_z`, `seed`. For `method = "proxymix"` it
+#'   additionally carries `fit_quality` -- a single-verdict
+#'   pass-through flag (`ok`, `status`, `reason`, per-GMM convergence)
+#'   that [bd_hsic_test()] gates its verdict on when a mixture proxy
+#'   fails to converge.
 #' @seealso [predict_density_ratio()], [estimate_density_ratio()],
 #'   [bd_hsic_test()].
 #' @examples
@@ -130,6 +134,27 @@ fit_density_ratio <- function(x, z,
   )
 }
 
+# Fit-quality pass-through flag (C4). Reduces the per-GMM convergence
+# diagnostics to a single verdict that downstream consumers
+# (e.g. [bd_hsic_test()]) can gate on, mirroring the ESS-floor gate: a
+# density-ratio proxy that did not converge yields unreliable weights, and
+# any verdict built on them should be flagged rather than reported as if
+# trustworthy. Pure and side-effect-free so it is unit-testable in isolation.
+.proxymix_fit_quality <- function(joint_converged, marg_converged) {
+  ok <- isTRUE(joint_converged) && isTRUE(marg_converged)
+  list(
+    ok     = ok,
+    status = if (ok) "ok" else "degraded",
+    reason = if (ok) NA_character_ else sprintf(
+      paste0("proxymix density-ratio proxy did not converge ",
+             "(joint_converged = %s, marg_converged = %s)"),
+      joint_converged, marg_converged
+    ),
+    joint_converged = isTRUE(joint_converged),
+    marg_converged  = isTRUE(marg_converged)
+  )
+}
+
 .fit_density_ratio_proxymix <- function(x, z, n_components, seed) {
   if (!requireNamespace("proxymix", quietly = TRUE)) {
     stop("method = \"proxymix\" requires the `proxymix` package ",
@@ -161,6 +186,9 @@ fit_density_ratio <- function(x, z,
     joint_iterations  = fit_joint@iterations,
     marg_iterations   = fit_marg@iterations
   )
+  fit_quality <- .proxymix_fit_quality(fit_joint@converged,
+                                       fit_marg@converged)
+  diagnostics$fit_quality <- fit_quality
   structure(
     list(
       method       = "proxymix",
@@ -171,6 +199,7 @@ fit_density_ratio <- function(x, z,
       ncol_x       = ncol(x),
       ncol_z       = ncol(z),
       diagnostics  = diagnostics,
+      fit_quality  = fit_quality,
       seed         = seed
     ),
     class = c("density_ratio_fit_proxymix", "density_ratio_fit")
@@ -283,6 +312,9 @@ print.density_ratio_fit <- function(x, ...) {
         "  marg BIC: ",
         formatC(x$diagnostics$marg_bic,  digits = 3, format = "g"),
         "\n", sep = "")
+    cat("  fit_quality: ", x$fit_quality$status,
+        if (!isTRUE(x$fit_quality$ok)) paste0(" (", x$fit_quality$reason, ")")
+        else "", "\n", sep = "")
   }
   invisible(x)
 }

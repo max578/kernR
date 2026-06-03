@@ -2,6 +2,14 @@
 
 ## New features
 
+* `bd_hsic_test()` now gates its verdict on the `proxymix` density-ratio
+  backend's fit quality (C4). `fit_density_ratio(method = "proxymix")` surfaces
+  a single `fit_quality` pass-through flag (`ok` / `status` / `reason`) reduced
+  from per-GMM convergence; when a mixture proxy fails to converge,
+  `bd_hsic_test()` warns and sets `result$density_ratio_warning = TRUE` (`FALSE`
+  for clean fits and all other backends). Mirrors the existing ESS-floor gate:
+  an untrustworthy verdict is flagged, never reported silently.
+
 * New `joint_coverage_test()`: a joint (multivariate) calibration diagnostic.
   Where `coverage_test()` assesses each output dimension separately (marginal
   calibration) and is blind to the dependence structure, this builds a

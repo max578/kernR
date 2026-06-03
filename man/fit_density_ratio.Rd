@@ -34,7 +34,11 @@ An object of class \code{density_ratio_fit} (plus
 \verb{density_ratio_fit_<method>} as the dispatch class). Carries:
 \code{method}, the backend-specific fit (\code{model} for classifiers;
 \code{fit_joint} + \code{fit_marg} for proxymix), \code{diagnostics},
-\code{n_train}, \code{ncol_x}, \code{ncol_z}, \code{seed}.
+\code{n_train}, \code{ncol_x}, \code{ncol_z}, \code{seed}. For \code{method = "proxymix"} it
+additionally carries \code{fit_quality} -- a single-verdict
+pass-through flag (\code{ok}, \code{status}, \code{reason}, per-GMM convergence)
+that \code{\link[=bd_hsic_test]{bd_hsic_test()}} gates its verdict on when a mixture proxy
+fails to converge.
 }
 \description{
 Trains a density-ratio estimator for the do-null reweighting

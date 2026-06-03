@@ -148,6 +148,17 @@ diagnostics (see \code{?fit_density_ratio} Value; proxymix exposes BIC,
 AIC, log-likelihood, convergence per GMM).
 }
 
+\section{proxymix fit-quality gate}{
+
+For \code{density_ratio = "proxymix"}, the backend surfaces a single
+\code{fit_quality} verdict from its per-GMM convergence diagnostics. If a
+mixture proxy fails to converge, the density-ratio weights are
+unreliable; the test then emits a warning and sets
+\code{result$density_ratio_warning = TRUE} (it is \code{FALSE} for a clean fit
+and for all other backends). This mirrors the ESS-floor gate:
+an untrustworthy verdict is flagged, never reported silently.
+}
+
 \examples{
 set.seed(42)
 n <- 300
