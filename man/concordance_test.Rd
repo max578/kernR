@@ -9,7 +9,8 @@ concordance_test(
   kernel = kernel_spec(),
   n_permutations = 500L,
   alpha = 0.05,
-  seed = NULL
+  seed = NULL,
+  n_exact_max = 5000L
 )
 }
 \arguments{
@@ -29,6 +30,12 @@ Default \code{500}.}
 Default \code{0.05}.}
 
 \item{seed}{Integer or \code{NULL}. Random seed for reproducibility.}
+
+\item{n_exact_max}{Integer or \code{Inf}. Pooled-sample-size ceiling for the
+exact \code{O(n^2)} test. Above it, the call is delegated to
+\code{\link[=concordance_test_nystrom]{concordance_test_nystrom()}} (with a message; the verdict object records
+\code{approximation = "nystrom"}). \code{Inf} forces the exact test at any size.
+Default \code{5000L}.}
 }
 \value{
 An object of class \code{c("concordance_test", "kernel_test_result")}
@@ -59,6 +66,14 @@ rejection can be read down to the offending pair: convergence across sources
 is corroborating evidence, and divergence localises which source departs and
 on which margin. This is the cross-engine concordance role -- a sample-based
 complement to the score-based \code{\link[=ksd_test]{ksd_test()}}.
+
+The exact test materialises the pooled \verb{n x n} kernel matrix (\code{O(n^2)}). To
+keep large ensembles tractable without a silent loss of exactness, a pooled
+sample with more than \code{n_exact_max} rows is delegated to
+\code{\link[=concordance_test_nystrom]{concordance_test_nystrom()}} -- a low-rank approximation that is \emph{announced}
+by a message and \emph{recorded} in the returned object's \code{approximation} and \code{m}
+fields. Set \code{n_exact_max = Inf} to force the exact test, or call
+\code{\link[=concordance_test_nystrom]{concordance_test_nystrom()}} directly to control the approximation rank \code{m}.
 }
 \examples{
 set.seed(1)
@@ -88,9 +103,11 @@ Gretton, A., Borgwardt, K. M., Rasch, M. J., Scholkopf, B., & Smola, A.
 \code{\link[=mmd_test]{mmd_test()}}, \code{\link[=ksd_test]{ksd_test()}}, \code{\link[=mmd_ppc]{mmd_ppc()}}
 
 Other goodness-of-fit tests: 
+\code{\link{concordance_test_nystrom}()},
 \code{\link{coverage_test}()},
 \code{\link{gaussian_score}()},
 \code{\link{ksd_test}()},
+\code{\link{ksd_test_nystrom}()},
 \code{\link{numeric_score}()}
 }
 \author{

@@ -59,9 +59,11 @@ ksd_test(x, score = numeric_score(ld), n_boot = 199L, seed = 1L)
 
 Other goodness-of-fit tests: 
 \code{\link{concordance_test}()},
+\code{\link{concordance_test_nystrom}()},
 \code{\link{coverage_test}()},
 \code{\link{gaussian_score}()},
-\code{\link{ksd_test}()}
+\code{\link{ksd_test}()},
+\code{\link{ksd_test_nystrom}()}
 }
 \author{
 Max Moldovan, \email{max.moldovan@adelaide.edu.au}

@@ -72,7 +72,9 @@ to speed up kernel machines. \emph{NeurIPS}, 13.
 \code{\link[=rff_features]{rff_features()}}, \code{\link[=hsic_test_nystrom]{hsic_test_nystrom()}}
 
 Other low-rank acceleration: 
+\code{\link{concordance_test_nystrom}()},
 \code{\link{hsic_test_nystrom}()},
+\code{\link{ksd_test_nystrom}()},
 \code{\link{rff_features}()}
 }
 \concept{low-rank acceleration}

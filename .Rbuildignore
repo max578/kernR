@@ -29,3 +29,6 @@
 ^\.claude$
 ^\.positai$
 ^\.cursor$
+^ledger$
+^paper$
+^_visual_inspection$

@@ -12,7 +12,8 @@ ksd_test(
   bandwidth = "median",
   n_boot = 1000L,
   alpha = 0.05,
-  seed = NULL
+  seed = NULL,
+  n_exact_max = 5000L
 )
 }
 \arguments{
@@ -42,6 +43,11 @@ Default \code{1000}.}
 Default \code{0.05}.}
 
 \item{seed}{Integer or \code{NULL}. Random seed for reproducibility.}
+
+\item{n_exact_max}{Integer or \code{Inf}. Sample-size ceiling for the exact
+\code{O(n^2)} test. Above it, the call is delegated to \code{\link[=ksd_test_nystrom]{ksd_test_nystrom()}}
+(with a message; the verdict object records \code{approximation = "nystrom"}).
+\code{Inf} forces the exact test at any size. Default \code{5000L}.}
 }
 \value{
 An object of class \code{c("ksd_test", "kernel_test_result")} carrying
@@ -85,9 +91,14 @@ Reproducibility: the wild-bootstrap multipliers are drawn through R's RNG,
 so a non-\code{NULL} \code{seed} makes the p-value reproducible under the active RNG
 kind (the R default Mersenne-Twister unless changed by the caller).
 
-The current implementation materialises the \verb{n x n} Stein-kernel matrix,
-so memory scales as \code{O(n^2)}; for very large samples, thin first or use
-the two-sample \code{\link[=mmd_test]{mmd_test()}} against reference draws.
+The exact test materialises the \verb{n x n} Stein-kernel matrix, so memory and
+compute scale as \code{O(n^2)}. To keep large samples tractable without a silent
+loss of exactness, a sample with more than \code{n_exact_max} rows is delegated
+to \code{\link[=ksd_test_nystrom]{ksd_test_nystrom()}} -- a low-rank approximation that is \emph{announced} by a
+message and \emph{recorded} in the returned object's \code{approximation} and \code{m}
+fields, so the result stays reproducible from the object. Set
+\code{n_exact_max = Inf} to force the exact \code{O(n^2)} test at any size, or call
+\code{\link[=ksd_test_nystrom]{ksd_test_nystrom()}} directly to control the approximation rank \code{m}.
 }
 \examples{
 set.seed(1)
@@ -127,8 +138,10 @@ PMLR 70, 1292-1301.
 
 Other goodness-of-fit tests: 
 \code{\link{concordance_test}()},
+\code{\link{concordance_test_nystrom}()},
 \code{\link{coverage_test}()},
 \code{\link{gaussian_score}()},
+\code{\link{ksd_test_nystrom}()},
 \code{\link{numeric_score}()}
 }
 \author{

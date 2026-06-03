@@ -140,6 +140,50 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// stein_kernel_imq_cross_cpp
+arma::mat stein_kernel_imq_cross_cpp(const arma::mat& X, const arma::mat& S, const arma::mat& Z, const arma::mat& Sm, double beta, double c2);
+RcppExport SEXP _kernR_stein_kernel_imq_cross_cpp(SEXP XSEXP, SEXP SSEXP, SEXP ZSEXP, SEXP SmSEXP, SEXP betaSEXP, SEXP c2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Sm(SmSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< double >::type c2(c2SEXP);
+    rcpp_result_gen = Rcpp::wrap(stein_kernel_imq_cross_cpp(X, S, Z, Sm, beta, c2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// stein_kernel_rbf_cross_cpp
+arma::mat stein_kernel_rbf_cross_cpp(const arma::mat& X, const arma::mat& S, const arma::mat& Z, const arma::mat& Sm, double h2);
+RcppExport SEXP _kernR_stein_kernel_rbf_cross_cpp(SEXP XSEXP, SEXP SSEXP, SEXP ZSEXP, SEXP SmSEXP, SEXP h2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Sm(SmSEXP);
+    Rcpp::traits::input_parameter< double >::type h2(h2SEXP);
+    rcpp_result_gen = Rcpp::wrap(stein_kernel_rbf_cross_cpp(X, S, Z, Sm, h2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ksd_wild_bootstrap_factor_cpp
+arma::vec ksd_wild_bootstrap_factor_cpp(const arma::mat& F, double tr, int n_boot);
+RcppExport SEXP _kernR_ksd_wild_bootstrap_factor_cpp(SEXP FSEXP, SEXP trSEXP, SEXP n_bootSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type F(FSEXP);
+    Rcpp::traits::input_parameter< double >::type tr(trSEXP);
+    Rcpp::traits::input_parameter< int >::type n_boot(n_bootSEXP);
+    rcpp_result_gen = Rcpp::wrap(ksd_wild_bootstrap_factor_cpp(F, tr, n_boot));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ksd_wild_bootstrap_cpp
 arma::vec ksd_wild_bootstrap_cpp(const arma::mat& H, int n_boot);
 RcppExport SEXP _kernR_ksd_wild_bootstrap_cpp(SEXP HSEXP, SEXP n_bootSEXP) {
@@ -242,6 +286,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_kernR_polynomial_kernel_matrix_cpp", (DL_FUNC) &_kernR_polynomial_kernel_matrix_cpp, 4},
     {"_kernR_stein_kernel_imq_cpp", (DL_FUNC) &_kernR_stein_kernel_imq_cpp, 4},
     {"_kernR_stein_kernel_rbf_cpp", (DL_FUNC) &_kernR_stein_kernel_rbf_cpp, 3},
+    {"_kernR_stein_kernel_imq_cross_cpp", (DL_FUNC) &_kernR_stein_kernel_imq_cross_cpp, 6},
+    {"_kernR_stein_kernel_rbf_cross_cpp", (DL_FUNC) &_kernR_stein_kernel_rbf_cross_cpp, 5},
+    {"_kernR_ksd_wild_bootstrap_factor_cpp", (DL_FUNC) &_kernR_ksd_wild_bootstrap_factor_cpp, 3},
     {"_kernR_ksd_wild_bootstrap_cpp", (DL_FUNC) &_kernR_ksd_wild_bootstrap_cpp, 2},
     {"_kernR_mmd2_unbiased_cpp", (DL_FUNC) &_kernR_mmd2_unbiased_cpp, 3},
     {"_kernR_mmd2_biased_cpp", (DL_FUNC) &_kernR_mmd2_biased_cpp, 3},

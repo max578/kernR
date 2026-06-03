@@ -124,9 +124,14 @@ gaussian_score <- function(mean = NULL, sigma = NULL) {
 #' so a non-`NULL` `seed` makes the p-value reproducible under the active RNG
 #' kind (the R default Mersenne-Twister unless changed by the caller).
 #'
-#' The current implementation materialises the `n x n` Stein-kernel matrix,
-#' so memory scales as `O(n^2)`; for very large samples, thin first or use
-#' the two-sample [mmd_test()] against reference draws.
+#' The exact test materialises the `n x n` Stein-kernel matrix, so memory and
+#' compute scale as `O(n^2)`. To keep large samples tractable without a silent
+#' loss of exactness, a sample with more than `n_exact_max` rows is delegated
+#' to [ksd_test_nystrom()] -- a low-rank approximation that is *announced* by a
+#' message and *recorded* in the returned object's `approximation` and `m`
+#' fields, so the result stays reproducible from the object. Set
+#' `n_exact_max = Inf` to force the exact `O(n^2)` test at any size, or call
+#' [ksd_test_nystrom()] directly to control the approximation rank `m`.
 #'
 #' @param x Numeric vector, matrix, or data.frame. The `n x d` sample to
 #'   test, one observation per row. At least five rows are required.
@@ -147,6 +152,10 @@ gaussian_score <- function(mean = NULL, sigma = NULL) {
 #' @param alpha Numeric in `(0, 1)`. Significance level for the verdict.
 #'   Default `0.05`.
 #' @param seed Integer or `NULL`. Random seed for reproducibility.
+#' @param n_exact_max Integer or `Inf`. Sample-size ceiling for the exact
+#'   `O(n^2)` test. Above it, the call is delegated to [ksd_test_nystrom()]
+#'   (with a message; the verdict object records `approximation = "nystrom"`).
+#'   `Inf` forces the exact test at any size. Default `5000L`.
 #'
 #' @returns An object of class `c("ksd_test", "kernel_test_result")` carrying
 #'   the standard `kernel_test_result` fields plus:
@@ -204,7 +213,8 @@ ksd_test <- function(x,
                      bandwidth = "median",
                      n_boot = 1000L,
                      alpha = 0.05,
-                     seed = NULL) {
+                     seed = NULL,
+                     n_exact_max = 5000L) {
   cl <- match.call()
   kernel <- match.arg(kernel)
 
@@ -212,6 +222,25 @@ ksd_test <- function(x,
   storage.mode(x) <- "double"
   .check_ksd_input(x, kernel, beta, n_boot, alpha)
   n_boot <- as.integer(n_boot)
+
+  # Auto-switch to the low-rank test above n_exact_max: announced (message),
+  # recorded (approximation / m in the object), and escapable (Inf). See the
+  # Details section.
+  if (!is.numeric(n_exact_max) || length(n_exact_max) != 1L ||
+      is.na(n_exact_max) || n_exact_max < 1) {
+    stop("`n_exact_max` must be a single positive number or `Inf`.",
+         call. = FALSE)
+  }
+  if (nrow(x) > n_exact_max) {
+    m_auto <- 100L
+    message("ksd_test(): n = ", nrow(x), " > n_exact_max = ", n_exact_max,
+            "; delegating to ksd_test_nystrom(m = ", m_auto, "). Call ",
+            "ksd_test_nystrom() to control the rank, or set ",
+            "n_exact_max = Inf to force the exact O(n^2) test.")
+    return(ksd_test_nystrom(x, score = score, kernel = kernel, beta = beta,
+                            bandwidth = bandwidth, m = m_auto, n_boot = n_boot,
+                            alpha = alpha, seed = seed))
+  }
 
   # Resolve the score and bandwidth --------------------------------------
   score_matrix <- .resolve_score(score, x)
@@ -257,6 +286,209 @@ ksd_test <- function(x,
       beta = if (identical(kernel, "imq")) beta else NA_real_,
       bandwidth = bw,
       dimension = d,
+      surprise_bits = -log2(p_value),
+      alpha = alpha,
+      reject = p_value <= alpha,
+      call = cl
+    ),
+    class = c("ksd_test", "kernel_test_result")
+  )
+}
+
+# Accelerated (low-rank) KSD -------------------------------------------------
+
+#' Internal: Nystrom factor of the Stein-kernel matrix
+#'
+#' Builds an `n x m` factor `F` with \eqn{F F^\top \approx U}, where `U` is the
+#' Langevin Stein-kernel matrix `u_p(x_i, x_j)`. Because the Stein kernel is
+#' itself positive semi-definite, this is an ordinary Nystrom factorisation --
+#' but it cannot reuse [nystrom_factor()], which is unaware of the score: the
+#' landmark and cross blocks need the score evaluated at the landmark points
+#' too. The construction mirrors [nystrom_factor()]: sample `m` landmarks,
+#' build the `m x m` landmark Stein block `W` and the `n x m` cross block `C`,
+#' stabilise `W` with a ridge, Cholesky-factor, and return
+#' \eqn{F = C W_\epsilon^{-1/2}}.
+#'
+#' @param x Numeric `n x d` sample matrix.
+#' @param score_matrix Numeric `n x d` score evaluated at `x`.
+#' @param kernel `"imq"` or `"rbf"`.
+#' @param beta IMQ exponent (ignored for RBF).
+#' @param bw Resolved bandwidth (IMQ offset `c` or RBF bandwidth `h`).
+#' @param m Requested rank; capped at `n - 1`.
+#' @param regularise Ridge added to `W` before the Cholesky.
+#' @returns A list with `F` (the `n x m` factor) and `m` (effective rank).
+#' @noRd
+#' @keywords internal
+.stein_nystrom_factor <- function(x, score_matrix, kernel, beta, bw, m,
+                                  regularise) {
+  n <- nrow(x)
+  m <- as.integer(m)
+  if (m >= n) m <- n - 1L
+  bw2 <- bw * bw
+
+  landmarks <- sort(sample.int(n, m))
+  xm <- x[landmarks, , drop = FALSE]
+  sm <- score_matrix[landmarks, , drop = FALSE]
+
+  if (identical(kernel, "imq")) {
+    W <- stein_kernel_imq_cpp(xm, sm, beta, bw2)
+    C <- stein_kernel_imq_cross_cpp(x, score_matrix, xm, sm, beta, bw2)
+  } else {
+    W <- stein_kernel_rbf_cpp(xm, sm, bw2)
+    C <- stein_kernel_rbf_cross_cpp(x, score_matrix, xm, sm, bw2)
+  }
+
+  W_reg <- W + regularise * diag(m)
+  L <- tryCatch(
+    chol(W_reg),
+    error = function(e) {
+      chol(W + max(regularise * 1e3, 1e-3) * diag(m))
+    }
+  )
+  # chol() returns upper U with W = U^T U; F = C U^{-1}, i.e. F^T = U^{-T} C^T.
+  Fmat <- t(backsolve(L, t(C), transpose = TRUE))
+  list(F = Fmat, m = m)
+}
+
+#' Accelerated Kernel Stein Discrepancy Goodness-of-Fit Test (Nystrom)
+#'
+#' Low-rank counterpart to [ksd_test()] for large samples. The `n x n`
+#' Stein-kernel matrix is never materialised: it is replaced by a Nystrom
+#' factor `F` (`n x m`, `m << n`) with \eqn{F F^\top \approx U}, and both the
+#' KSD U-statistic and its wild-bootstrap null are computed from `F` in
+#' `O(n m)` rather than `O(n^2)`. Because the Langevin Stein kernel is itself
+#' positive semi-definite, \eqn{F F^\top} is a valid Stein kernel in its own
+#' right, so this is exactly the [ksd_test()] procedure applied to the rank-`m`
+#' kernel \eqn{F F^\top}: the wild-bootstrap calibration of the degenerate
+#' U-statistic null is preserved, and the approximation trades statistical
+#' power -- not test validity -- for speed.
+#'
+#' Currently Nystrom-only. Random-Fourier-feature factorisation of the Stein
+#' kernel requires the analytic Fourier derivatives of the base kernel and is
+#' deferred; the `method` argument is reserved for that extension.
+#'
+#' Use [ksd_test()] for exact results at moderate `n`; reach for this when the
+#' `O(n^2)` Stein matrix is the bottleneck. The verdict object and its fields
+#' match [ksd_test()] plus `approximation` and `m`.
+#'
+#' @inheritParams ksd_test
+#' @param method Character. Factorisation method; currently `"nystrom"` only.
+#' @param m Integer. Number of Nystrom landmarks (the approximation rank);
+#'   capped at `n - 1`. Larger `m` improves power at higher cost. Default
+#'   `100L`.
+#' @param regularise Small positive numeric. Ridge added to the landmark
+#'   Stein block before its Cholesky, for numerical stability. Default `1e-6`.
+#'
+#' @returns An object of class `c("ksd_test", "kernel_test_result")` carrying
+#'   the same fields as [ksd_test()] plus:
+#'   \describe{
+#'     \item{approximation}{`"nystrom"`.}
+#'     \item{m}{Effective rank used for the factorisation.}
+#'   }
+#'
+#' @references
+#' Liu, Q., Lee, J. D., & Jordan, M. I. (2016). A kernelized Stein discrepancy
+#' for goodness-of-fit tests. *ICML*, PMLR 48, 276-284.
+#'
+#' Chwialkowski, K., Strathmann, H., & Gretton, A. (2016). A kernel test of
+#' goodness of fit. *ICML*, PMLR 48, 2606-2615.
+#'
+#' Williams, C. K. I., & Seeger, M. (2001). Using the Nystrom method to speed
+#' up kernel machines. *NeurIPS*, 13.
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' x_ok  <- matrix(stats::rnorm(4000L), ncol = 2L)
+#' fit_ok <- ksd_test_nystrom(x_ok, m = 80L, n_boot = 199L, seed = 1L)
+#' fit_ok
+#'
+#' x_bad <- x_ok + 1
+#' ksd_test_nystrom(x_bad, m = 80L, n_boot = 199L, seed = 1L)
+#' }
+#'
+#' @seealso [ksd_test()], [nystrom_factor()], [hsic_test_nystrom()],
+#'   [concordance_test_nystrom()]
+#' @family goodness-of-fit tests
+#' @family low-rank acceleration
+#' @author Max Moldovan, \email{max.moldovan@@adelaide.edu.au}
+#' @export
+ksd_test_nystrom <- function(x,
+                             score = NULL,
+                             kernel = c("imq", "rbf"),
+                             beta = -0.5,
+                             bandwidth = "median",
+                             method = c("nystrom"),
+                             m = 100L,
+                             n_boot = 1000L,
+                             alpha = 0.05,
+                             seed = NULL,
+                             regularise = 1e-6) {
+  cl <- match.call()
+  kernel <- match.arg(kernel)
+  method <- match.arg(method)
+
+  x <- as.matrix(x)
+  storage.mode(x) <- "double"
+  .check_ksd_input(x, kernel, beta, n_boot, alpha)
+  n <- nrow(x)
+  if (n < 10L) {
+    stop("`ksd_test_nystrom()` needs at least 10 observations; use ",
+         "`ksd_test()` for small samples.", call. = FALSE)
+  }
+  m <- as.integer(m)
+  if (length(m) != 1L || is.na(m) || m < 2L) {
+    stop("`m` must be an integer >= 2.", call. = FALSE)
+  }
+  if (!is.numeric(regularise) || regularise < 0) {
+    stop("`regularise` must be a non-negative numeric.", call. = FALSE)
+  }
+  n_boot <- as.integer(n_boot)
+
+  score_matrix <- .resolve_score(score, x)
+  bw <- .ksd_bandwidth(bandwidth, x)
+  d <- ncol(x)
+
+  if (!is.null(seed)) set.seed(seed)
+
+  # Nystrom factor of the Stein-kernel matrix ----------------------------
+  fac <- .stein_nystrom_factor(x, score_matrix, kernel, beta, bw, m,
+                               regularise)
+  Fmat <- fac$F
+
+  # U-statistic and wild-bootstrap null from the factor ------------------
+  # sum_{i != j} (FF^t)_{ij} = ||colSums(F)||^2 - tr(FF^t); tr = sum(F^2).
+  tr <- sum(Fmat * Fmat)
+  col_sums <- colSums(Fmat)
+  denom <- as.numeric(n) * (n - 1)
+  stat_obs <- (sum(col_sums * col_sums) - tr) / denom
+
+  null_dist <- ksd_wild_bootstrap_factor_cpp(Fmat, tr, n_boot)
+  p_value <- (1 + sum(null_dist >= stat_obs)) / (1 + n_boot)
+
+  kernel_x <- structure(
+    list(type = kernel, bandwidth = bw),
+    class = "kernel_spec"
+  )
+
+  structure(
+    list(
+      statistic = stat_obs,
+      p_value = p_value,
+      method = paste0("KSD (", method, ")"),
+      n = n,
+      n_permutations = n_boot,
+      null_distribution = as.numeric(null_dist),
+      ess = NA_real_,
+      weights = NULL,
+      kernel_x = kernel_x,
+      kernel_y = NULL,
+      stein_kernel = kernel,
+      beta = if (identical(kernel, "imq")) beta else NA_real_,
+      bandwidth = bw,
+      dimension = d,
+      approximation = method,
+      m = fac$m,
       surprise_bits = -log2(p_value),
       alpha = alpha,
       reject = p_value <= alpha,

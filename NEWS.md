@@ -1,3 +1,34 @@
+# kernR 0.7.0
+
+## New features
+
+* New `concordance_test_nystrom()`: a low-rank counterpart to
+  `concordance_test()` for large ensembles. The pooled sample is factorised
+  once -- by the Nystrom method (default) or random Fourier features -- and the
+  summed pairwise unbiased MMD and its joint-permutation null are computed from
+  the `n x m` factor in `O(n m)` per permutation rather than `O(n^2)`, with the
+  rank `m` controlling the speed / accuracy trade-off. The verdict object and
+  the pairwise discrepancy matrix that localises the offending source are
+  identical to the exact test.
+
+* New `ksd_test_nystrom()`: a low-rank counterpart to `ksd_test()` for large
+  samples. The `n x n` Stein-kernel matrix is never materialised; it is
+  replaced by a Nystrom factor with which the kernel Stein discrepancy and its
+  wild-bootstrap null are computed in `O(n m)`. Because the Langevin Stein
+  kernel is itself positive semi-definite, the factorised kernel is a valid
+  Stein kernel in its own right, so the accelerated test is the exact procedure
+  applied to a rank-`m` kernel: the degenerate-U-statistic calibration is
+  preserved (empirical Type-I error stays at the nominal level), and the
+  approximation trades statistical power -- not test validity -- for speed.
+
+* `ksd_test()` and `concordance_test()` gain an `n_exact_max` argument
+  (default `5000`). Above this sample-size ceiling the call is delegated to the
+  low-rank counterpart, so a large sample stays tractable without an `O(n^2)`
+  blow-up. The switch is never silent: it is announced by a message, recorded
+  in the returned object (`approximation` and `m`, so the result is
+  reproducible from the object), and escapable with `n_exact_max = Inf` to
+  force the exact test at any size.
+
 # kernR 0.6.0
 
 ## New features
