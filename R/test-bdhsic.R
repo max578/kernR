@@ -67,6 +67,15 @@
 #' diagnostics (see `?fit_density_ratio` Value; proxymix exposes BIC,
 #' AIC, log-likelihood, convergence per GMM).
 #'
+#' @section proxymix fit-quality gate:
+#' For `density_ratio = "proxymix"`, the backend surfaces a single
+#' `fit_quality` verdict from its per-GMM convergence diagnostics. If a
+#' mixture proxy fails to converge, the density-ratio weights are
+#' unreliable; the test then emits a warning and sets
+#' `result$density_ratio_warning = TRUE` (it is `FALSE` for a clean fit
+#' and for all other backends). This mirrors the ESS-floor gate:
+#' an untrustworthy verdict is flagged, never reported silently.
+#'
 #' @return An object of class `"kernel_test_result"`. When `cluster_id`
 #'   is supplied, the result additionally carries:
 #'   \describe{
@@ -178,6 +187,7 @@ bd_hsic_test <- function(x, y, z,
   # estimator on the training split, predict on the held-out test
   # split. Closes the P0 #2 sample-split leak surfaced by the
   # 2026-05-16 critical review.
+  dr_quality_warning <- FALSE
   if (density_ratio == "rulsif") {
     dr <- estimate_rulsif(x[idx_train, , drop = FALSE],
       x[idx_test, , drop = FALSE],
@@ -191,6 +201,23 @@ bd_hsic_test <- function(x, y, z,
       z = z[idx_train, , drop = FALSE],
       method = density_ratio
     )
+    # proxymix fit-quality gate (C4). The proxymix backend surfaces a
+    # `fit_quality` pass-through flag from its per-GMM convergence
+    # diagnostics. When a mixture proxy did not converge, the density-ratio
+    # weights -- and any verdict built on them -- are unreliable. Mirror the
+    # ESS-floor gate: warn loudly and flag on the result rather than report
+    # a finite-but-untrustworthy p-value silently.
+    if (density_ratio == "proxymix" &&
+        !is.null(dr_fit$fit_quality) && !isTRUE(dr_fit$fit_quality$ok)) {
+      warning(
+        "bd_hsic_test(): ", dr_fit$fit_quality$reason,
+        ". The density-ratio weights are unreliable; the resulting ",
+        "p-value is not a trustworthy verdict. Increase n, raise ",
+        "proxymix_components, or switch the density_ratio backend.",
+        call. = FALSE
+      )
+      dr_quality_warning <- TRUE
+    }
     weights <- predict_density_ratio(
       dr_fit,
       new_x = x[idx_test, , drop = FALSE],
@@ -302,6 +329,7 @@ bd_hsic_test <- function(x, y, z,
       ess_warning = ess_warning,
       min_ess_fraction = min_ess_fraction,
       density_ratio_fit = dr_fit,
+      density_ratio_warning = dr_quality_warning,
       weights = weights,
       kernel_x = kernel_x,
       kernel_y = kernel_y,
