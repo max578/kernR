@@ -1,5 +1,17 @@
 # Changelog
 
+## kernR (development version)
+
+- Raise the `PESTO` dependency floor to `>= 0.6.0`. PESTO 0.6.0 adds
+  covariance inflation and localisation against ensemble
+  under-dispersion and records per-iteration spread-ESS / inflation /
+  localisation diagnostics in the ensemble manifest; the C2
+  manifest-consumption surface
+  ([`dr_date_scenario()`](https://max578.github.io/kernR/reference/dr_date_scenario.md),
+  [`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md),
+  [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md))
+  is verified against it.
+
 ## kernR 0.7.0
 
 ### New features

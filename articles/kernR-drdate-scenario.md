@@ -115,8 +115,8 @@ m_baseline
 #>   method        : ies_callback  (noptmax=3)
 #>   ensemble      : 60 realisations x 2 parameters | 4 observations
 #>   failure rate  : 0.00%
-#>   pesto version : 0.5.0  apsim: NA
-#>   timestamp     : 2026-06-03T00:22:06+0000
+#>   pesto version : 0.6.0.9000  apsim: NA
+#>   timestamp     : 2026-06-03T01:07:38+0000
 #>   data hash     : sha256:vignette_baseline
 ```
 
@@ -152,7 +152,7 @@ print(res)
 #>   baseline      : wagga_baseline_2026 (n=60)
 #>   intervention  : wagga_stubble_2026 (n=60)
 #>   outputs tested: o1, o2, o3, o4
-#>   PESTO versions: baseline=0.5.0, intervention=0.5.0
+#>   PESTO versions: baseline=0.6.0.9000, intervention=0.6.0.9000
 #>   fidelity      : baseline=single, intervention=single
 #>   Verdict:        REJECT (distributions differ; intervention has effect)
 ```
@@ -283,7 +283,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] PESTO_0.5.0 kernR_0.7.0
+#> [1] PESTO_0.6.0.9000 kernR_0.7.0.9000
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.51         rlang_1.2.0       

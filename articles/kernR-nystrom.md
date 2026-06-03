@@ -106,8 +106,8 @@ For larger `n`, the gap widens:
 
 benchmark_hsic(n = 1500L, m = 100L)
 #>      n   m            method elapsed_s p_value
-#> 1 1500 100 hsic_test (exact)     1.242    0.02
-#> 2 1500 100           nystrom     0.135    0.02
+#> 1 1500 100 hsic_test (exact)     1.241    0.02
+#> 2 1500 100           nystrom     0.137    0.02
 #> 3 1500 100               rff     0.133    0.02
 ```
 

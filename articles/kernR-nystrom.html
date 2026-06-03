@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -176,8 +176,8 @@ accelerated HSIC test.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">benchmark_hsic</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">1500L</span>, m <span class="op">=</span> <span class="fl">100L</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      n   m            method elapsed_s p_value</span></span>
-<span><span class="co">#&gt; 1 1500 100 hsic_test (exact)     1.242    0.02</span></span>
-<span><span class="co">#&gt; 2 1500 100           nystrom     0.135    0.02</span></span>
+<span><span class="co">#&gt; 1 1500 100 hsic_test (exact)     1.241    0.02</span></span>
+<span><span class="co">#&gt; 2 1500 100           nystrom     0.137    0.02</span></span>
 <span><span class="co">#&gt; 3 1500 100               rff     0.133    0.02</span></span></code></pre></div>
 <p>The verdict (reject vs accept) agrees across exact and approximate
 tests at moderate <code>m</code>; the approximation is for speed, not
