@@ -25,8 +25,11 @@ dr_date_scenario(
 scenario.}
 
 \item{intervention}{A \code{pesto_ensemble_manifest} (S7) -- the
-alternative scenario. Must share \code{pesto_version} (major.minor) plus
-parameter and observation schemas with \code{baseline}.}
+alternative scenario. Must share \code{pesto_version} (major.minor) and,
+when both manifests record them, the APSIM major version and the
+\code{obs_schema} unit/quantity for each shared output, plus parameter and
+observation schemas with \code{baseline}. A mismatch on any of these is
+refused rather than silently compared (Independent Oracle Principle).}
 
 \item{output}{Optional character vector of observation column names
 to test against. Defaults to all numeric output columns shared by

@@ -99,3 +99,41 @@ plot.kernel_test_result <- function(x, ...) {
 
   invisible(x)
 }
+
+#' @export
+print.taci_result <- function(x, ...) {
+  cat("TACI mechanism-consistency test\n")
+  if (!is.null(x$treatment_type)) {
+    cat(sprintf("  treatment: %s%s\n", x$treatment_type,
+                if (identical(x$treatment_type, "continuous")) {
+                  sprintf(" (H0 baseline = %.4g)", x$baseline)
+                } else {
+                  ""
+                }))
+  }
+  cat(sprintf("  statistic: %s bd-HSIC%s\n",
+              if (isTRUE(x$adjusted)) "backdoor-ADJUSTED" else "unadjusted",
+              if (isTRUE(x$adjusted)) {
+                sprintf(" (density_ratio = %s)", x$density_ratio)
+              } else {
+                ""
+              }))
+  cat(sprintf("  observed bd-HSIC: %.4g\n", x$observed_statistic))
+  cat(sprintf("  H0 tail p-value:  %.3f  (in tail: %s)\n", x$p_h0, x$in_tail))
+  cat(sprintf("  H1 central [%.4g, %.4g]  obs at H1 pctile %.2f  consistent: %s%s\n",
+              x$h1_interval[1], x$h1_interval[2], x$h1_percentile,
+              x$h1_consistent, if (isTRUE(x$borderline)) "  [BORDERLINE]" else ""))
+  cat(sprintf("  DECISION: %s%s\n", toupper(x$decision),
+              if (isTRUE(x$borderline)) " (borderline -- label is fragile)" else ""))
+  if (!is.null(x$grounding)) {
+    cat(sprintf("  GROUNDING: %s%s\n", x$grounding,
+                if (identical(x$grounding, "[unverified]"))
+                  " (mechanism provenance not declared -- verdict not grounded)"
+                else ""))
+  }
+  if (!isTRUE(x$posterior_adequacy$ok)) {
+    cat(sprintf("  [!] posterior-adequacy WARNING: %s\n",
+                x$posterior_adequacy$reason))
+  }
+  invisible(x)
+}

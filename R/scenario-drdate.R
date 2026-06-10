@@ -25,8 +25,11 @@
 #' @param baseline A `pesto_ensemble_manifest` (S7) -- the reference
 #'   scenario.
 #' @param intervention A `pesto_ensemble_manifest` (S7) -- the
-#'   alternative scenario. Must share `pesto_version` (major.minor) plus
-#'   parameter and observation schemas with `baseline`.
+#'   alternative scenario. Must share `pesto_version` (major.minor) and,
+#'   when both manifests record them, the APSIM major version and the
+#'   `obs_schema` unit/quantity for each shared output, plus parameter and
+#'   observation schemas with `baseline`. A mismatch on any of these is
+#'   refused rather than silently compared (Independent Oracle Principle).
 #' @param output Optional character vector of observation column names
 #'   to test against. Defaults to all numeric output columns shared by
 #'   the two manifests (the `real_name` column is excluded). Pass a
@@ -233,6 +236,67 @@ dr_date_scenario <- function(baseline, intervention,
          ". Compare only within the same major.minor.", call. = FALSE)
   }
 
+  # APSIM major-version refusal (FX-3). A different APSIM major behind an
+  # otherwise-identical manifest schema is a silent coefficient-drift hazard
+  # (2024 vs 2026 coefficients, identical column names), so we refuse the way
+  # we do on `pesto_version`. NA on either side (a non-APSIM forward model)
+  # skips the check.
+  ab <- baseline@apsim_version
+  ai <- intervention@apsim_version
+  if (!is.na(ab) && !is.na(ai) && .apsim_major(ab) != .apsim_major(ai)) {
+    stop("Manifests were built against incompatible APSIM majors: baseline=",
+         ab, "; intervention=", ai,
+         ". A different APSIM major can change coefficients behind an ",
+         "identical manifest schema; refusing to compare.", call. = FALSE)
+  }
+
+  # obs_schema correspondence (FX-2 enforcement at the V1 consumer). When BOTH
+  # manifests carry a grounded semantic descriptor, the shared output columns
+  # must agree on unit + quantity -- this is what turns a wrong-but-agreed
+  # convention from all-green into a hard refusal. Opt-in-by-presence: a
+  # pre-1.1.0 manifest with no obs_schema skips gracefully.
+  .assert_obs_schema_units(baseline, intervention)
+
+  invisible(NULL)
+}
+
+# Leading numeric version component, e.g. "2026" from "2026.5.8046.0".
+.apsim_major <- function(v) {
+  sub("^[^0-9]*([0-9]+).*$", "\\1", as.character(v))
+}
+
+# Read an obs_schema slot off a manifest, tolerating a pre-1.1.0 object that
+# lacks the property entirely (matching kernR's existing `@`-access pattern, so
+# no new S7 namespace dependency is introduced).
+.manifest_obs_schema <- function(m) {
+  tryCatch(m@obs_schema, error = function(e) NULL)
+}
+
+# Refuse if two manifests' shared output columns disagree on unit or quantity.
+# Mirrors the orchestra contract's .assert_obs_schema_correspondence(); kept as
+# a kernR-internal copy because the sourced contract layer is not a package
+# dependency (the provenance vocabulary mandates identical semantics, which
+# this preserves). No-op unless both sides carry an obs_schema.
+.assert_obs_schema_units <- function(baseline, intervention) {
+  ob <- .manifest_obs_schema(baseline)
+  oi <- .manifest_obs_schema(intervention)
+  if (is.null(ob) || is.null(oi)) return(invisible(NULL))
+  ab <- ob$outputs; ai <- oi$outputs
+  if (is.null(ab) || is.null(ai)) return(invisible(NULL))
+  shared <- intersect(as.character(ab$name), as.character(ai$name))
+  for (col in shared) {
+    rb <- ab[ab$name == col, , drop = FALSE]
+    ri <- ai[ai$name == col, , drop = FALSE]
+    for (field in c("quantity", "unit")) {
+      vb <- as.character(rb[[field]]); vi <- as.character(ri[[field]])
+      if (!identical(vb, vi)) {
+        stop(sprintf(paste0("Manifest obs_schema disagrees on output '%s' %s ",
+                            "('%s' vs '%s'); refusing to compare ",
+                            "incommensurable quantities."),
+                     col, field, vb, vi), call. = FALSE)
+      }
+    }
+  }
   invisible(NULL)
 }
 
