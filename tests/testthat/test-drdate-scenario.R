@@ -217,3 +217,46 @@ test_that("print.dr_date_scenario emits expected verdict header", {
   expect_true(any(grepl("test_baseline", out)))
   expect_true(any(grepl("PESTO versions", out)))
 })
+
+# --- Independent Oracle Principle: grounding refusals (Phase-0 FX-2/FX-3) ----
+
+test_that(".validate_manifest_pair refuses an incompatible APSIM major (FX-3)", {
+  skip_unless_pesto()
+  pair <- .make_scenario_pair(intervention_shift = 0.3, seed = 7L)
+  b <- pair$baseline;     b@apsim_version <- "2024.1.7000.0"
+  i <- pair$intervention; i@apsim_version <- "2026.5.8046.0"
+  expect_error(kernR:::.validate_manifest_pair(b, i),
+               "incompatible APSIM majors")
+  # Same major passes the APSIM gate.
+  b2 <- pair$baseline;     b2@apsim_version <- "2024.1.7000.0"
+  i2 <- pair$intervention; i2@apsim_version <- "2024.9.9999.0"
+  expect_silent(kernR:::.validate_manifest_pair(b2, i2))
+})
+
+test_that(".validate_manifest_pair refuses an obs_schema unit disagreement (FX-2)", {
+  skip_unless_pesto()
+  skip_if_not_installed("PESTO", minimum_version = "0.6.0.9000")
+  pair <- .make_scenario_pair(intervention_shift = 0.3, seed = 8L)
+  os_t  <- PESTO::pesto_obs_schema(
+    outputs = data.frame(name = paste0("o", 1:4),
+                         quantity = rep("grain_yield", 4),
+                         unit = rep("t/ha", 4), stringsAsFactors = FALSE))
+  os_kg <- PESTO::pesto_obs_schema(
+    outputs = data.frame(name = paste0("o", 1:4),
+                         quantity = rep("grain_yield", 4),
+                         unit = c("kg/ha", rep("t/ha", 3)),  # 1000x wrong on o1
+                         stringsAsFactors = FALSE))
+  b <- pair$baseline;     b@obs_schema <- os_t
+  i <- pair$intervention; i@obs_schema <- os_kg
+  expect_error(kernR:::.validate_manifest_pair(b, i), "disagrees on output")
+  # Matching schemas pass.
+  i2 <- pair$intervention; i2@obs_schema <- os_t
+  expect_silent(kernR:::.validate_manifest_pair(b, i2))
+})
+
+test_that(".validate_manifest_pair is a graceful no-op without obs_schema/apsim", {
+  skip_unless_pesto()
+  pair <- .make_scenario_pair(intervention_shift = 0.3, seed = 9L)
+  expect_silent(kernR:::.validate_manifest_pair(pair$baseline,
+                                                pair$intervention))
+})

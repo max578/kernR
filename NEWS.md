@@ -2,6 +2,34 @@
 
 ## New features
 
+* `taci_test()` gained `mechanism_provenance` / `posterior_provenance`
+  arguments and now labels its verdict's grounding (Independent Oracle
+  Principle): TACI builds its entire reference band from the caller-supplied
+  `mechanism`, which it cannot itself verify against reality, so the result
+  carries a `grounding` token (`"grounded"` only when `mechanism_provenance` is
+  declared, else `"[unverified]"`) and a human-facing `verdict` string suffixed
+  `[unverified]` when un-grounded. The three-way `decision` enum is unchanged
+  (consumers unaffected); the grounding is pure metadata.
+
+* `dr_date_scenario()` now grounds a scenario comparison against the
+  Independent Oracle Principle: `.validate_manifest_pair()` refuses a pair built
+  against incompatible APSIM major versions (a silent coefficient-drift hazard
+  behind an identical schema) and, when both manifests carry a
+  `pesto_ensemble_manifest` `obs_schema` (PESTO schema 1.1.0+), refuses when a
+  shared output column disagrees on unit or quantity. Opt-in-by-presence: a
+  pre-1.1.0 manifest with no `obs_schema` skips the unit check gracefully.
+
+* New exported `taci_test()` implements theory-anchored causal inference: a
+  mechanism-consistency test that asks whether an observed treatment effect
+  agrees with the effect a calibrated mechanistic model predicts. The reference
+  distribution is built from the model's own posterior-predictive draws rather
+  than a permutation null, and the statistic is the same weighted bd-HSIC the
+  `bd_hsic_test()` engine uses, so the verdict is three-way -- consistent with
+  the model-implied effect, an effect the model does not predict, or no effect.
+  A posterior-adequacy guard flags a degenerate H1 band when the posterior pins
+  the model-implied effect too precisely. Backdoor adjustment reuses the
+  density-ratio machinery; binary and continuous treatments are both supported.
+
 * New exported helpers `weighted_hsic_stat()` and `resolve_bandwidth()` expose
   the kernel-matrix and weighted-HSIC primitives that underpin `bd_hsic_test()`.
   `weighted_hsic_stat()` is a validated R wrapper over the internal compiled

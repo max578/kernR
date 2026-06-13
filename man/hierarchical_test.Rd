@@ -97,6 +97,7 @@ print(result)
 \seealso{
 Other causal association tests: 
 \code{\link{bd_hsic_test}()},
-\code{\link{kernel_causal_test}()}
+\code{\link{kernel_causal_test}()},
+\code{\link{taci_test}()}
 }
 \concept{causal association tests}
