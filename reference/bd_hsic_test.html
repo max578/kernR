@@ -13,7 +13,7 @@ that standard linear methods miss."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -210,6 +210,12 @@ clusters can inflate Type I error when cluster effects exist.</p>
 <p>Unlike PDS or Double ML, bd-HSIC can detect non-linear causal effects
 (e.g., U-shaped relationships) where the treatment affects higher
 moments of the outcome but not necessarily the mean.</p>
+<p><strong>Small samples.</strong> The minimum sample size is <code>6</code> (the train/test split
+must leave at least two test observations for the weighted HSIC and two
+propensity clusters). Small-N field trials are supported, but reliability
+is not guaranteed by size alone: the ESS-floor gate (<code>min_ess_fraction</code>)
+will warn when a small or poorly-overlapping sample yields a weighted
+statistic dominated by a handful of high-weight points.</p>
     </div>
     <div class="section level2">
     <h2 id="train-test-split-">Train/test split (0.0.0.9014)<a class="anchor" aria-label="anchor" href="#train-test-split-"></a></h2>
@@ -228,6 +234,18 @@ diagnostics (see <code><a href="fit_density_ratio.html">?fit_density_ratio</a></
 AIC, log-likelihood, convergence per GMM).</p>
     </div>
     <div class="section level2">
+    <h2 id="proxymix-fit-quality-gate">proxymix fit-quality gate<a class="anchor" aria-label="anchor" href="#proxymix-fit-quality-gate"></a></h2>
+
+
+<p>For <code>density_ratio = "proxymix"</code>, the backend surfaces a single
+<code>fit_quality</code> verdict from its per-GMM convergence diagnostics. If a
+mixture proxy fails to converge, the density-ratio weights are
+unreliable; the test then emits a warning and sets
+<code>result$density_ratio_warning = TRUE</code> (it is <code>FALSE</code> for a clean fit
+and for all other backends). This mirrors the ESS-floor gate:
+an untrustworthy verdict is flagged, never reported silently.</p>
+    </div>
+    <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Hu, R., Sejdinovic, D., &amp; Evans, R. J. (2024). A kernel test for
 causal association via noise contrastive backdoor adjustment. <em>JMLR</em>,
@@ -237,7 +255,8 @@ causal association via noise contrastive backdoor adjustment. <em>JMLR</em>,
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Other causal association tests:
 <code><a href="hierarchical_test.html">hierarchical_test()</a></code>,
-<code><a href="kernel_causal_test.html">kernel_causal_test()</a></code></p></div>
+<code><a href="kernel_causal_test.html">kernel_causal_test()</a></code>,
+<code><a href="taci_test.html">taci_test()</a></code></p></div>
     </div>
 
     <div class="section level2">

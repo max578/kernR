@@ -50,7 +50,9 @@ An object of class `"kernel_spec"`.
 
 Other kernel primitives:
 [`kernel_matrix()`](https://max578.github.io/kernR/reference/kernel_matrix.md),
-[`select_bandwidth()`](https://max578.github.io/kernR/reference/select_bandwidth.md)
+[`resolve_bandwidth()`](https://max578.github.io/kernR/reference/resolve_bandwidth.md),
+[`select_bandwidth()`](https://max578.github.io/kernR/reference/select_bandwidth.md),
+[`weighted_hsic_stat()`](https://max578.github.io/kernR/reference/weighted_hsic_stat.md)
 
 ## Examples
 

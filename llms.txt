@@ -139,7 +139,8 @@ should be aware of this boundary.
 
 ## Kernel primitives
 
-Kernel specifications, Gram matrices, and bandwidth selection.
+Kernel specifications, Gram matrices, bandwidth selection, and the
+weighted HSIC statistic.
 
 - [`kernel_spec()`](https://max578.github.io/kernR/reference/kernel_spec.md)
   : Create a Kernel Specification
@@ -147,6 +148,10 @@ Kernel specifications, Gram matrices, and bandwidth selection.
   : Compute a Kernel Matrix
 - [`select_bandwidth()`](https://max578.github.io/kernR/reference/select_bandwidth.md)
   : Select Kernel Bandwidth
+- [`resolve_bandwidth()`](https://max578.github.io/kernR/reference/resolve_bandwidth.md)
+  : Resolve Kernel Bandwidth
+- [`weighted_hsic_stat()`](https://max578.github.io/kernR/reference/weighted_hsic_stat.md)
+  : Weighted HSIC Statistic
 
 ## Independence and two-sample tests
 
@@ -178,6 +183,9 @@ acceleration.
   : Accelerated Kernel k-sample Concordance Test (Nystrom / RFF)
 - [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md)
   : Coverage / Calibration Diagnostic for a Predictive Ensemble
+- [`joint_coverage_test()`](https://max578.github.io/kernR/reference/joint_coverage_test.md)
+  : Joint (Multivariate) Calibration Diagnostic for a Predictive
+  Ensemble
 - [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md)
   : Score function for a multivariate normal target
 - [`numeric_score()`](https://max578.github.io/kernR/reference/numeric_score.md)
@@ -190,6 +198,27 @@ adjustment.
 
 - [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
   : Backdoor-HSIC Test for Causal Association
+
+## Theory-anchored causal inference (TACI)
+
+Mechanism-consistency testing against a calibrated process model, with
+grounding labelled per the Independent Oracle Principle.
+
+- [`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)
+  : Theory-anchored causal inference (TACI) mechanism-consistency test
+
+## Assimilative causal inference (ACI)
+
+The relative-entropy causal metric and the threshold-free causal
+influence range; consumed by kalmix.
+
+- [`relative_entropy()`](https://max578.github.io/kernR/reference/relative_entropy.md)
+  : Relative Entropy Between Two Gaussians (the ACI causal metric)
+- [`relative_entropy_ensemble()`](https://max578.github.io/kernR/reference/relative_entropy_ensemble.md)
+  : Relative Entropy Between Two Sample Ensembles (Gaussian
+  approximation)
+- [`cir_objective()`](https://max578.github.io/kernR/reference/cir_objective.md)
+  : Objective Causal Influence Range (threshold-free)
 
 ## Distributional treatment effects
 
@@ -286,6 +315,15 @@ contract.
   MMD Posterior-Predictive Check
 - [`pesto_ensemble()`](https://max578.github.io/kernR/reference/pesto_ensemble.md)
   : PESTO Ensemble Manifest (Constructor)
+
+## Tidiers
+
+broom-style one-row-per-term summaries of kernR verdict objects.
+
+- [`tidy(`*`<kernel_test_result>`*`)`](https://max578.github.io/kernR/reference/tidy.kernel_test_result.md)
+  : Tidy a kernR Test Result Into a One-Row-Per-Term Data Frame
+- [`tidy(`*`<taci_result>`*`)`](https://max578.github.io/kernR/reference/tidy.taci_result.md)
+  : Tidy a TACI Mechanism-Consistency Result
 
 ## Design
 

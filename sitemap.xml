@@ -28,6 +28,7 @@
 <url><loc>https://max578.github.io/kernR/reference/bd_hsic_test.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/bin_permute_treatment.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/centre_kernel_matrix.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/cir_objective.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/cluster_observations.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/cluster_permutation_hsic.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/compute_dr_date_stat.html</loc></url>
@@ -57,6 +58,7 @@
 <url><loc>https://max578.github.io/kernR/reference/hsic_test.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/hsic_test_nystrom.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/index.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/joint_coverage_test.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/kernR-package.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/kernel_causal_test.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/kernel_downscale.html</loc></url>
@@ -92,6 +94,9 @@
 <url><loc>https://max578.github.io/kernR/reference/predict_density_ratio.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/print.cme_fit.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/rbf_kernel_matrix_cpp.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/reexports.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/relative_entropy.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/relative_entropy_ensemble.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/resolve_bandwidth.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/rff_features.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/rulsif_solve_cpp.html</loc></url>
@@ -101,7 +106,11 @@
 <url><loc>https://max578.github.io/kernR/reference/stein_kernel_rbf_cpp.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/stein_kernel_rbf_cross_cpp.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/stratified_permute_cpp.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/taci_test.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/tidy.kernel_test_result.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/tidy.taci_result.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/validate_input.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/weighted_hsic_stat.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/weighted_hsic_stat_cpp.html</loc></url>
 </urlset>
 

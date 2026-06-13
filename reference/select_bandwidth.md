@@ -37,7 +37,9 @@ A positive numeric scalar.
 
 Other kernel primitives:
 [`kernel_matrix()`](https://max578.github.io/kernR/reference/kernel_matrix.md),
-[`kernel_spec()`](https://max578.github.io/kernR/reference/kernel_spec.md)
+[`kernel_spec()`](https://max578.github.io/kernR/reference/kernel_spec.md),
+[`resolve_bandwidth()`](https://max578.github.io/kernR/reference/resolve_bandwidth.md),
+[`weighted_hsic_stat()`](https://max578.github.io/kernR/reference/weighted_hsic_stat.md)
 
 ## Examples
 

@@ -41,7 +41,8 @@ An object of class `"kernel_test_result"`.
 
 Other causal association tests:
 [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md),
-[`hierarchical_test()`](https://max578.github.io/kernR/reference/hierarchical_test.md)
+[`hierarchical_test()`](https://max578.github.io/kernR/reference/hierarchical_test.md),
+[`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)
 
 ## Examples
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,7 +41,7 @@
     <div class="section level2">
       <h2 id="kernel-primitives">Kernel primitives<a class="anchor" aria-label="anchor" href="#kernel-primitives"></a></h2>
 
-      <div class="section-desc"><p>Kernel specifications, Gram matrices, and bandwidth selection.</p></div>
+      <div class="section-desc"><p>Kernel specifications, Gram matrices, bandwidth selection, and the weighted HSIC statistic.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -68,6 +68,20 @@
 
         </dt>
         <dd>Select Kernel Bandwidth</dd>
+
+        <dt>
+
+          <code><a href="resolve_bandwidth.html">resolve_bandwidth()</a></code>
+
+        </dt>
+        <dd>Resolve Kernel Bandwidth</dd>
+
+        <dt>
+
+          <code><a href="weighted_hsic_stat.html">weighted_hsic_stat()</a></code>
+
+        </dt>
+        <dd>Weighted HSIC Statistic</dd>
       </dl></div><div class="section level2">
       <h2 id="independence-and-two-sample-tests">Independence and two-sample tests<a class="anchor" aria-label="anchor" href="#independence-and-two-sample-tests"></a></h2>
 
@@ -152,6 +166,13 @@
 
         <dt>
 
+          <code><a href="joint_coverage_test.html">joint_coverage_test()</a></code>
+
+        </dt>
+        <dd>Joint (Multivariate) Calibration Diagnostic for a Predictive Ensemble</dd>
+
+        <dt>
+
           <code><a href="gaussian_score.html">gaussian_score()</a></code>
 
         </dt>
@@ -179,6 +200,52 @@
 
         </dt>
         <dd>Backdoor-HSIC Test for Causal Association</dd>
+      </dl></div><div class="section level2">
+      <h2 id="theory-anchored-causal-inference-taci-">Theory-anchored causal inference (TACI)<a class="anchor" aria-label="anchor" href="#theory-anchored-causal-inference-taci-"></a></h2>
+
+      <div class="section-desc"><p>Mechanism-consistency testing against a calibrated process model, with grounding labelled per the Independent Oracle Principle.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="taci_test.html">taci_test()</a></code>
+
+        </dt>
+        <dd>Theory-anchored causal inference (TACI) mechanism-consistency test</dd>
+      </dl></div><div class="section level2">
+      <h2 id="assimilative-causal-inference-aci-">Assimilative causal inference (ACI)<a class="anchor" aria-label="anchor" href="#assimilative-causal-inference-aci-"></a></h2>
+
+      <div class="section-desc"><p>The relative-entropy causal metric and the threshold-free causal influence range; consumed by kalmix.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="relative_entropy.html">relative_entropy()</a></code>
+
+        </dt>
+        <dd>Relative Entropy Between Two Gaussians (the ACI causal metric)</dd>
+
+        <dt>
+
+          <code><a href="relative_entropy_ensemble.html">relative_entropy_ensemble()</a></code>
+
+        </dt>
+        <dd>Relative Entropy Between Two Sample Ensembles (Gaussian approximation)</dd>
+
+        <dt>
+
+          <code><a href="cir_objective.html">cir_objective()</a></code>
+
+        </dt>
+        <dd>Objective Causal Influence Range (threshold-free)</dd>
       </dl></div><div class="section level2">
       <h2 id="distributional-treatment-effects">Distributional treatment effects<a class="anchor" aria-label="anchor" href="#distributional-treatment-effects"></a></h2>
 
@@ -438,6 +505,29 @@
 
         </dt>
         <dd>PESTO Ensemble Manifest (Constructor)</dd>
+      </dl></div><div class="section level2">
+      <h2 id="tidiers">Tidiers<a class="anchor" aria-label="anchor" href="#tidiers"></a></h2>
+
+      <div class="section-desc"><p>broom-style one-row-per-term summaries of kernR verdict objects.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="tidy.kernel_test_result.html">tidy(<i>&lt;kernel_test_result&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Tidy a kernR Test Result Into a One-Row-Per-Term Data Frame</dd>
+
+        <dt>
+
+          <code><a href="tidy.taci_result.html">tidy(<i>&lt;taci_result&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Tidy a TACI Mechanism-Consistency Result</dd>
       </dl></div><div class="section level2">
       <h2 id="design">Design<a class="anchor" aria-label="anchor" href="#design"></a></h2>
 

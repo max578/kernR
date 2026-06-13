@@ -15,7 +15,7 @@ over the pooled ensembles."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,8 +86,11 @@ scenario.</p></dd>
 
 <dt id="arg-intervention">intervention<a class="anchor" aria-label="anchor" href="#arg-intervention"></a></dt>
 <dd><p>A <code>pesto_ensemble_manifest</code> (S7) – the
-alternative scenario. Must share <code>pesto_version</code> (major.minor) plus
-parameter and observation schemas with <code>baseline</code>.</p></dd>
+alternative scenario. Must share <code>pesto_version</code> (major.minor) and,
+when both manifests record them, the APSIM major version and the
+<code>obs_schema</code> unit/quantity for each shared output, plus parameter and
+observation schemas with <code>baseline</code>. A mismatch on any of these is
+refused rather than silently compared (Independent Oracle Principle).</p></dd>
 
 
 <dt id="arg-output">output<a class="anchor" aria-label="anchor" href="#arg-output"></a></dt>

@@ -35,8 +35,11 @@ dr_date_scenario(
 - intervention:
 
   A `pesto_ensemble_manifest` (S7) – the alternative scenario. Must
-  share `pesto_version` (major.minor) plus parameter and observation
-  schemas with `baseline`.
+  share `pesto_version` (major.minor) and, when both manifests record
+  them, the APSIM major version and the `obs_schema` unit/quantity for
+  each shared output, plus parameter and observation schemas with
+  `baseline`. A mismatch on any of these is refused rather than silently
+  compared (Independent Oracle Principle).
 
 - output:
 

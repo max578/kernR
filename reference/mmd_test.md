@@ -52,7 +52,10 @@ An object of class `"kernel_test_result"` with components:
 
 - p_value:
 
-  Permutation p-value.
+  Permutation p-value. The field is named `p_value` (with an
+  underscore), **not** `p.value`; read `result$p_value`, or call
+  [`generics::tidy()`](https://generics.r-lib.org/reference/tidy.html)
+  for the `broom`-canonical `p.value` column.
 
 - method:
 

@@ -173,6 +173,14 @@ Unlike PDS or Double ML, bd-HSIC can detect non-linear causal effects
 (e.g., U-shaped relationships) where the treatment affects higher
 moments of the outcome but not necessarily the mean.
 
+**Small samples.** The minimum sample size is `6` (the train/test split
+must leave at least two test observations for the weighted HSIC and two
+propensity clusters). Small-N field trials are supported, but
+reliability is not guaranteed by size alone: the ESS-floor gate
+(`min_ess_fraction`) will warn when a small or poorly-overlapping sample
+yields a weighted statistic dominated by a handful of high-weight
+points.
+
 ## Train/test split (0.0.0.9014)
 
 The density-ratio estimator is now **fit on the train split and
@@ -192,6 +200,16 @@ The fitted density-ratio model is preserved on
 [`?fit_density_ratio`](https://max578.github.io/kernR/reference/fit_density_ratio.md)
 Value; proxymix exposes BIC, AIC, log-likelihood, convergence per GMM).
 
+## proxymix fit-quality gate
+
+For `density_ratio = "proxymix"`, the backend surfaces a single
+`fit_quality` verdict from its per-GMM convergence diagnostics. If a
+mixture proxy fails to converge, the density-ratio weights are
+unreliable; the test then emits a warning and sets
+`result$density_ratio_warning = TRUE` (it is `FALSE` for a clean fit and
+for all other backends). This mirrors the ESS-floor gate: an
+untrustworthy verdict is flagged, never reported silently.
+
 ## References
 
 Hu, R., Sejdinovic, D., & Evans, R. J. (2024). A kernel test for causal
@@ -202,7 +220,8 @@ association via noise contrastive backdoor adjustment. *JMLR*, 25(160),
 
 Other causal association tests:
 [`hierarchical_test()`](https://max578.github.io/kernR/reference/hierarchical_test.md),
-[`kernel_causal_test()`](https://max578.github.io/kernR/reference/kernel_causal_test.md)
+[`kernel_causal_test()`](https://max578.github.io/kernR/reference/kernel_causal_test.md),
+[`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)
 
 ## Examples
 

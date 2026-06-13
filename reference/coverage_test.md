@@ -156,6 +156,7 @@ Other goodness-of-fit tests:
 [`concordance_test()`](https://max578.github.io/kernR/reference/concordance_test.md),
 [`concordance_test_nystrom()`](https://max578.github.io/kernR/reference/concordance_test_nystrom.md),
 [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md),
+[`joint_coverage_test()`](https://max578.github.io/kernR/reference/joint_coverage_test.md),
 [`ksd_test()`](https://max578.github.io/kernR/reference/ksd_test.md),
 [`ksd_test_nystrom()`](https://max578.github.io/kernR/reference/ksd_test_nystrom.md),
 [`numeric_score()`](https://max578.github.io/kernR/reference/numeric_score.md)

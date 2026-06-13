@@ -55,7 +55,11 @@ An object of class `density_ratio_fit` (plus
 `density_ratio_fit_<method>` as the dispatch class). Carries: `method`,
 the backend-specific fit (`model` for classifiers; `fit_joint` +
 `fit_marg` for proxymix), `diagnostics`, `n_train`, `ncol_x`, `ncol_z`,
-`seed`.
+`seed`. For `method = "proxymix"` it additionally carries `fit_quality`
+– a single-verdict pass-through flag (`ok`, `status`, `reason`, per-GMM
+convergence) that
+[`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
+gates its verdict on when a mixture proxy fails to converge.
 
 ## Details
 

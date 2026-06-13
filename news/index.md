@@ -1,6 +1,152 @@
 # Changelog
 
-## kernR (development version)
+## kernR 0.8.0
+
+### New features
+
+- New exported
+  [`relative_entropy()`](https://max578.github.io/kernR/reference/relative_entropy.md),
+  [`relative_entropy_ensemble()`](https://max578.github.io/kernR/reference/relative_entropy_ensemble.md),
+  and
+  [`cir_objective()`](https://max578.github.io/kernR/reference/cir_objective.md):
+  the kernR-owned statistic of Assimilative Causal Inference (ACI;
+  Andreou, Chen & Bollt, *Nat. Commun.* 2026).
+  [`relative_entropy()`](https://max578.github.io/kernR/reference/relative_entropy.md)
+  computes the closed-form Kullback-Leibler divergence between two
+  Gaussians – the smoother-versus-filter posterior contrast that
+  identifies a hidden cause;
+  [`relative_entropy_ensemble()`](https://max578.github.io/kernR/reference/relative_entropy_ensemble.md)
+  is the moment-matched wrapper for posterior ensembles;
+  [`cir_objective()`](https://max578.github.io/kernR/reference/cir_objective.md)
+  reduces a divergence-versus-lag profile to a single threshold-free
+  causal influence range. The filter/smoother engine lives upstream
+  (kalmix / PESTO); kernR owns the distributional measure and the range
+  integral. This release unblocks kalmix v0.2.0, which consumes the ACI
+  statistic.
+
+- New [`tidy()`](https://generics.r-lib.org/reference/tidy.html) methods
+  for kernR verdict objects
+  ([`tidy.kernel_test_result()`](https://max578.github.io/kernR/reference/tidy.kernel_test_result.md),
+  [`tidy.taci_result()`](https://max578.github.io/kernR/reference/tidy.taci_result.md)),
+  registered against the `broom`-style
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) generic
+  (re-exported from `generics`). They return a stable one-row-per-term
+  `data.frame` so downstream code stops reaching into result fields by
+  name. The summary uses the `broom`-canonical `p.value` column (with a
+  dot), distinct from the result’s native `p_value` field (with an
+  underscore) – the exact mismatch that previously tripped two consuming
+  scripts. An `mmd_ppc` result additionally tidies its `surprise_bits`
+  and `reject`; a `taci_result` threads its `decision` and `grounding`
+  (Independent Oracle Principle).
+
+- [`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)
+  gained `mechanism_provenance` / `posterior_provenance` arguments and
+  now labels its verdict’s grounding (Independent Oracle Principle):
+  TACI builds its entire reference band from the caller-supplied
+  `mechanism`, which it cannot itself verify against reality, so the
+  result carries a `grounding` token (`"grounded"` only when
+  `mechanism_provenance` is declared, else `"[unverified]"`) and a
+  human-facing `verdict` string suffixed `[unverified]` when
+  un-grounded. The three-way `decision` enum is unchanged (consumers
+  unaffected); the grounding is pure metadata.
+
+- [`dr_date_scenario()`](https://max578.github.io/kernR/reference/dr_date_scenario.md)
+  now grounds a scenario comparison against the Independent Oracle
+  Principle: `.validate_manifest_pair()` refuses a pair built against
+  incompatible APSIM major versions (a silent coefficient-drift hazard
+  behind an identical schema) and, when both manifests carry a
+  `pesto_ensemble_manifest` `obs_schema` (PESTO schema 1.1.0+), refuses
+  when a shared output column disagrees on unit or quantity.
+  Opt-in-by-presence: a pre-1.1.0 manifest with no `obs_schema` skips
+  the unit check gracefully.
+
+- New exported
+  [`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)
+  implements theory-anchored causal inference: a mechanism-consistency
+  test that asks whether an observed treatment effect agrees with the
+  effect a calibrated mechanistic model predicts. The reference
+  distribution is built from the model’s own posterior-predictive draws
+  rather than a permutation null, and the statistic is the same weighted
+  bd-HSIC the
+  [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
+  engine uses, so the verdict is three-way – consistent with the
+  model-implied effect, an effect the model does not predict, or no
+  effect. A posterior-adequacy guard flags a degenerate H1 band when the
+  posterior pins the model-implied effect too precisely. Backdoor
+  adjustment reuses the density-ratio machinery; binary and continuous
+  treatments are both supported.
+
+- New exported helpers
+  [`weighted_hsic_stat()`](https://max578.github.io/kernR/reference/weighted_hsic_stat.md)
+  and
+  [`resolve_bandwidth()`](https://max578.github.io/kernR/reference/resolve_bandwidth.md)
+  expose the kernel-matrix and weighted-HSIC primitives that underpin
+  [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md).
+  [`weighted_hsic_stat()`](https://max578.github.io/kernR/reference/weighted_hsic_stat.md)
+  is a validated R wrapper over the internal compiled engine;
+  [`resolve_bandwidth()`](https://max578.github.io/kernR/reference/resolve_bandwidth.md)
+  fills a `kernel_spec`’s median-heuristic bandwidth from data. Together
+  they let downstream methods (for example theory-anchored causal
+  inference) assemble a bd-HSIC-compatible statistic against a custom
+  reference distribution without reaching into kernR internals.
+
+- [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
+  now gates its verdict on the `proxymix` density-ratio backend’s fit
+  quality (C4). `fit_density_ratio(method = "proxymix")` surfaces a
+  single `fit_quality` pass-through flag (`ok` / `status` / `reason`)
+  reduced from per-GMM convergence; when a mixture proxy fails to
+  converge,
+  [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
+  warns and sets `result$density_ratio_warning = TRUE` (`FALSE` for
+  clean fits and all other backends). Mirrors the existing ESS-floor
+  gate: an untrustworthy verdict is flagged, never reported silently.
+
+- New
+  [`joint_coverage_test()`](https://max578.github.io/kernR/reference/joint_coverage_test.md):
+  a joint (multivariate) calibration diagnostic. Where
+  [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md)
+  assesses each output dimension separately (marginal calibration) and
+  is blind to the dependence structure, this builds a multivariate rank
+  histogram – each held-out observation is reduced, with the ensemble,
+  to one multivariate rank through a pre-rank function, and the
+  histogram is tested for uniformity. The default band-depth pre-rank
+  (Thorarinsdottir et al. 2016) is sensitive to correlation / dependence
+  miscalibration that marginal and average-rank methods miss; an
+  ensemble with correct margins but a wrong correlation – which
+  [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md)
+  passes – is caught here. The average-rank pre-rank (Gneiting et
+  al. 2008) gives the familiar U-shape = under-dispersed reading. This
+  is the natural validation for PESTO 0.6.0’s covariance inflation /
+  localisation: it asks whether the ensemble’s *covariance*, not just
+  its margins, is calibrated.
+
+### Minor improvements and fixes
+
+- [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
+  no longer imposes a hard floor of 20 observations. Small-N field
+  trials (a handful of paddocks by seasons) are now accepted down to the
+  genuine mathematical minimum of `6` – the train/test split must leave
+  at least two test observations for the weighted HSIC and two
+  propensity clusters. The statistical risk a small sample carries is
+  surfaced by the existing ESS-floor reliability gate (a warning), not
+  refused outright.
+
+- Documented the verdict-object p-value accessor explicitly. The field
+  on a `kernel_test_result` (and on an `mmd_ppc`) is `p_value` with an
+  underscore, **not** `p.value`; the
+  [`?mmd_test`](https://max578.github.io/kernR/reference/mmd_test.md)
+  and [`?mmd_ppc`](https://max578.github.io/kernR/reference/mmd_ppc.md)
+  Value sections now say so and point at
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) for the
+  dotted `p.value` column.
+
+- Added a “declare mechanism provenance” worked example to
+  [`?taci_test`](https://max578.github.io/kernR/reference/taci_test.md),
+  showing how naming where the mechanism’s calibration came from
+  (`mechanism_provenance`) moves a verdict’s `grounding` from
+  `"[unverified]"` to `"grounded"` (Independent Oracle Principle).
+
+### Dependencies
 
 - Raise the `PESTO` dependency floor to `>= 0.6.0`. PESTO 0.6.0 adds
   covariance inflation and localisation against ensemble
@@ -11,6 +157,13 @@
   [`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md),
   [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md))
   is verified against it.
+
+- New `Imports: generics` – a small (`methods`-only) dependency
+  supplying the
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) generic the
+  new tidiers register against, so `broom::tidy()` and
+  [`generics::tidy()`](https://generics.r-lib.org/reference/tidy.html)
+  both dispatch to them.
 
 ## kernR 0.7.0
 

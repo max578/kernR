@@ -13,7 +13,7 @@ it to held-out rows, so train/test splits are honoured cleanly."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,7 +102,11 @@ when <code>method = "proxymix"</code>. Default <code>2L</code>.</p></dd>
 <code>density_ratio_fit_&lt;method&gt;</code> as the dispatch class). Carries:
 <code>method</code>, the backend-specific fit (<code>model</code> for classifiers;
 <code>fit_joint</code> + <code>fit_marg</code> for proxymix), <code>diagnostics</code>,
-<code>n_train</code>, <code>ncol_x</code>, <code>ncol_z</code>, <code>seed</code>.</p>
+<code>n_train</code>, <code>ncol_x</code>, <code>ncol_z</code>, <code>seed</code>. For <code>method = "proxymix"</code> it
+additionally carries <code>fit_quality</code> – a single-verdict
+pass-through flag (<code>ok</code>, <code>status</code>, <code>reason</code>, per-GMM convergence)
+that <code><a href="bd_hsic_test.html">bd_hsic_test()</a></code> gates its verdict on when a mixture proxy
+fails to converge.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

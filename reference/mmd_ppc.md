@@ -106,6 +106,12 @@ standard `kernel_test_result` fields plus:
   Carried through from `pesto_ensemble` input, when provided; otherwise
   `NULL`.
 
+The p-value lives on `result$p_value` (with an underscore), **not**
+`p.value`. For a flat one-row summary with the `broom`-canonical
+`p.value` column – plus `surprise_bits` and `reject` – call
+[`generics::tidy()`](https://generics.r-lib.org/reference/tidy.html) on
+the result.
+
 ## Details
 
 Use after an ensemble-smoother run (PESTO IES, EnKF, etc.) to ask: *does
