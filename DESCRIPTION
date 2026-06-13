@@ -1,6 +1,6 @@
 Package: kernR
 Title: Kernel-Based Causal Distributional Testing
-Version: 0.7.0.9000
+Version: 0.8.0
 Authors@R: c(
     person("Max", "Moldovan", , "max.moldovan@adelaide.edu.au",
            role = c("aut", "cre", "cph"),
@@ -24,6 +24,7 @@ Depends:
     R (>= 4.1.0)
 Imports:
     data.table,
+    generics,
     methods,
     Rcpp,
     stats,

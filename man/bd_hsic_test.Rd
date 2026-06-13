@@ -131,6 +131,13 @@ clusters can inflate Type I error when cluster effects exist.
 Unlike PDS or Double ML, bd-HSIC can detect non-linear causal effects
 (e.g., U-shaped relationships) where the treatment affects higher
 moments of the outcome but not necessarily the mean.
+
+\strong{Small samples.} The minimum sample size is \code{6} (the train/test split
+must leave at least two test observations for the weighted HSIC and two
+propensity clusters). Small-N field trials are supported, but reliability
+is not guaranteed by size alone: the ESS-floor gate (\code{min_ess_fraction})
+will warn when a small or poorly-overlapping sample yields a weighted
+statistic dominated by a handful of high-weight points.
 }
 \section{Train/test split (0.0.0.9014)}{
 

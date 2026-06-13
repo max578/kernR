@@ -13,7 +13,9 @@
 #' @return An object of class `"kernel_test_result"` with components:
 #'   \describe{
 #'     \item{statistic}{The observed MMD^2 statistic (unbiased).}
-#'     \item{p_value}{Permutation p-value.}
+#'     \item{p_value}{Permutation p-value. The field is named `p_value` (with
+#'       an underscore), **not** `p.value`; read `result$p_value`, or call
+#'       [tidy()] for the `broom`-canonical `p.value` column.}
 #'     \item{method}{`"MMD"`.}
 #'     \item{n}{Total sample size (n_x + n_y).}
 #'     \item{n_permutations}{Number of permutations used.}

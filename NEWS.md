@@ -1,6 +1,28 @@
-# kernR (development version)
+# kernR 0.8.0
 
 ## New features
+
+* New exported `relative_entropy()`, `relative_entropy_ensemble()`, and
+  `cir_objective()`: the kernR-owned statistic of Assimilative Causal Inference
+  (ACI; Andreou, Chen & Bollt, *Nat. Commun.* 2026). `relative_entropy()`
+  computes the closed-form Kullback-Leibler divergence between two Gaussians --
+  the smoother-versus-filter posterior contrast that identifies a hidden cause;
+  `relative_entropy_ensemble()` is the moment-matched wrapper for posterior
+  ensembles; `cir_objective()` reduces a divergence-versus-lag profile to a
+  single threshold-free causal influence range. The filter/smoother engine
+  lives upstream (kalmix / PESTO); kernR owns the distributional measure and the
+  range integral. This release unblocks kalmix v0.2.0, which consumes the ACI
+  statistic.
+
+* New `tidy()` methods for kernR verdict objects (`tidy.kernel_test_result()`,
+  `tidy.taci_result()`), registered against the `broom`-style `tidy()` generic
+  (re-exported from `generics`). They return a stable one-row-per-term
+  `data.frame` so downstream code stops reaching into result fields by name.
+  The summary uses the `broom`-canonical `p.value` column (with a dot),
+  distinct from the result's native `p_value` field (with an underscore) -- the
+  exact mismatch that previously tripped two consuming scripts. An `mmd_ppc`
+  result additionally tidies its `surprise_bits` and `reject`; a `taci_result`
+  threads its `decision` and `grounding` (Independent Oracle Principle).
 
 * `taci_test()` gained `mechanism_provenance` / `posterior_provenance`
   arguments and now labels its verdict's grounding (Independent Oracle
@@ -60,6 +82,25 @@
   PESTO 0.6.0's covariance inflation / localisation: it asks whether the
   ensemble's *covariance*, not just its margins, is calibrated.
 
+## Minor improvements and fixes
+
+* `bd_hsic_test()` no longer imposes a hard floor of 20 observations. Small-N
+  field trials (a handful of paddocks by seasons) are now accepted down to the
+  genuine mathematical minimum of `6` -- the train/test split must leave at
+  least two test observations for the weighted HSIC and two propensity
+  clusters. The statistical risk a small sample carries is surfaced by the
+  existing ESS-floor reliability gate (a warning), not refused outright.
+
+* Documented the verdict-object p-value accessor explicitly. The field on a
+  `kernel_test_result` (and on an `mmd_ppc`) is `p_value` with an underscore,
+  **not** `p.value`; the `?mmd_test` and `?mmd_ppc` Value sections now say so
+  and point at `tidy()` for the dotted `p.value` column.
+
+* Added a "declare mechanism provenance" worked example to `?taci_test`,
+  showing how naming where the mechanism's calibration came from
+  (`mechanism_provenance`) moves a verdict's `grounding` from `"[unverified]"`
+  to `"grounded"` (Independent Oracle Principle).
+
 ## Dependencies
 
 * Raise the `PESTO` dependency floor to `>= 0.6.0`. PESTO 0.6.0 adds covariance
@@ -67,6 +108,10 @@
   per-iteration spread-ESS / inflation / localisation diagnostics in the
   ensemble manifest; the C2 manifest-consumption surface
   (`dr_date_scenario()`, `mmd_ppc()`, `coverage_test()`) is verified against it.
+
+* New `Imports: generics` -- a small (`methods`-only) dependency supplying the
+  `tidy()` generic the new tidiers register against, so `broom::tidy()` and
+  `generics::tidy()` both dispatch to them.
 
 # kernR 0.7.0
 

@@ -112,6 +112,13 @@
 #' (e.g., U-shaped relationships) where the treatment affects higher
 #' moments of the outcome but not necessarily the mean.
 #'
+#' **Small samples.** The minimum sample size is `6` (the train/test split
+#' must leave at least two test observations for the weighted HSIC and two
+#' propensity clusters). Small-N field trials are supported, but reliability
+#' is not guaranteed by size alone: the ESS-floor gate (`min_ess_fraction`)
+#' will warn when a small or poorly-overlapping sample yields a weighted
+#' statistic dominated by a handful of high-weight points.
+#'
 #' @references
 #' Hu, R., Sejdinovic, D., & Evans, R. J. (2024). A kernel test for
 #' causal association via noise contrastive backdoor adjustment. *JMLR*,
@@ -148,9 +155,16 @@ bd_hsic_test <- function(x, y, z,
   permutation <- match.arg(permutation)
   n_permutations <- as.integer(n_permutations)
 
-  x <- validate_input(x, "x", min_n = 20)
-  y <- validate_input(y, "y", min_n = 20)
-  z <- validate_input(z, "z", min_n = 20)
+  # Small-N floor (A2). The earlier hard floor of 20 observations blocked
+  # legitimate small-N field trials (a handful of paddocks x seasons). The
+  # genuine mathematical floor is the train/test split needing at least two
+  # test observations for a weighted HSIC and two propensity clusters; we keep
+  # a conservative floor of 6 so the kernel and clustering machinery is well
+  # posed, and let the ESS-floor reliability gate (below) surface the
+  # statistical risk a small sample carries rather than refuse it outright.
+  x <- validate_input(x, "x", min_n = 6)
+  y <- validate_input(y, "y", min_n = 6)
+  z <- validate_input(z, "z", min_n = 6)
   n <- nrow(x)
 
   if (nrow(y) != n || nrow(z) != n) {

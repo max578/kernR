@@ -140,6 +140,24 @@ mitscherlich <- function(theta, X, t) {
 res <- taci_test(post, mitscherlich, X = matrix(1, n, 1),
                  treatment = nrate, outcome = yield, n_perm = 100, seed = 1)
 print(res)
+res$grounding            # "[unverified]" -- no mechanism provenance declared
+
+# Declaring mechanism provenance grounds the verdict (Independent Oracle
+# Principle). TACI builds its whole reference band from `mechanism`, which it
+# cannot itself check against reality; naming where the calibration came from
+# -- a citation, a fitted-model handle, or a PESTO manifest's run id and the
+# simulator version it was calibrated with -- moves `grounding` from
+# "[unverified]" to "grounded".
+res_grounded <- taci_test(
+  post, mitscherlich, X = matrix(1, n, 1),
+  treatment = nrate, outcome = yield, n_perm = 100, seed = 1,
+  mechanism_provenance = list(
+    run_id = "ies-2026-06-12-0042",
+    simulator = "APSIM NG 2024.6.7579",
+    reference = "Mitscherlich (1909) N-response form"
+  )
+)
+res_grounded$grounding   # "grounded"
 
 }
 \references{

@@ -117,6 +117,10 @@ print.pesto_ensemble <- function(x, ...) {
 #'     \item{pesto_metadata}{Carried through from `pesto_ensemble` input,
 #'       when provided; otherwise `NULL`.}
 #'   }
+#'   The p-value lives on `result$p_value` (with an underscore), **not**
+#'   `p.value`. For a flat one-row summary with the `broom`-canonical
+#'   `p.value` column -- plus `surprise_bits` and `reject` -- call
+#'   [tidy()] on the result.
 #'
 #' @references
 #' Gretton, A., Borgwardt, K. M., Rasch, M. J., Scholkopf, B., & Smola,

@@ -5,11 +5,13 @@ template:
 
 reference:
 - title: Kernel primitives
-  desc: Kernel specifications, Gram matrices, and bandwidth selection.
+  desc: Kernel specifications, Gram matrices, bandwidth selection, and the weighted HSIC statistic.
   contents:
   - kernel_spec
   - kernel_matrix
   - select_bandwidth
+  - resolve_bandwidth
+  - weighted_hsic_stat
 
 - title: Independence and two-sample tests
   desc: HSIC independence test and MMD two-sample test, with low-rank acceleration.
@@ -35,6 +37,18 @@ reference:
   desc: Backdoor-adjusted HSIC for testing causal association after confounder adjustment.
   contents:
   - bd_hsic_test
+
+- title: Theory-anchored causal inference (TACI)
+  desc: Mechanism-consistency testing against a calibrated process model, with grounding labelled per the Independent Oracle Principle.
+  contents:
+  - taci_test
+
+- title: Assimilative causal inference (ACI)
+  desc: The relative-entropy causal metric and the threshold-free causal influence range; consumed by kalmix.
+  contents:
+  - relative_entropy
+  - relative_entropy_ensemble
+  - cir_objective
 
 - title: Distributional treatment effects
   desc: Doubly robust kernel tests for distributional treatment effects, including a PESTO-scenario convenience.
@@ -91,6 +105,12 @@ reference:
   contents:
   - mmd_ppc
   - pesto_ensemble
+
+- title: Tidiers
+  desc: broom-style one-row-per-term summaries of kernR verdict objects.
+  contents:
+  - tidy.kernel_test_result
+  - tidy.taci_result
 
 - title: Design
   desc: Latin-hypercube design helper.

@@ -36,7 +36,24 @@ test_that("bd-HSIC does not reject under null", {
 
 test_that("bd-HSIC validates inputs", {
   expect_error(
-    bd_hsic_test(1:5, 1:10, matrix(1, 5, 2)),
-    "at least 20"
+    bd_hsic_test(1:5, 1:5, matrix(1, 5, 2)),
+    "at least 6"
   )
+})
+
+test_that("bd-HSIC accepts small-N field trials (A2: 20-obs floor dropped)", {
+  # A small multi-paddock trial: below the retired hard floor of 20, above the
+  # genuine mathematical minimum of 6. The test must run and return a valid
+  # p-value rather than refuse the sample outright.
+  set.seed(7)
+  n <- 14
+  z <- matrix(rnorm(n * 2), n, 2)
+  x <- z[, 1] + rnorm(n)
+  y <- 0.8 * x + z[, 2] + rnorm(n, sd = 0.3)
+
+  result <- suppressWarnings(
+    bd_hsic_test(x, y, z, n_permutations = 100, seed = 1)
+  )
+  expect_s3_class(result, "kernel_test_result")
+  expect_true(result$p_value >= 0 && result$p_value <= 1)
 })
