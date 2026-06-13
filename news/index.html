@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,13 @@
       <small>Source: <a href="https://github.com/max578/kernR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.8.1" id="kernr-081">kernR 0.8.1<a class="anchor" aria-label="anchor" href="#kernr-081"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-8-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-8-1"></a></h3>
+<ul><li>The <code>.validate_manifest_pair()</code> obs-schema test (<code>test-drdate-scenario.R</code>) now guards on whether the installed PESTO actually exports the development symbol <code>pesto_obs_schema</code>, rather than on a PESTO version string. A <code>.9000</code> development version cannot distinguish a PESTO build that exports the symbol from one that does not, so continuous integration – which installs PESTO from its published <code>Remotes</code> source – erroneously ran the test against a build lacking the symbol and reported an error. The test is now skipped where the capability is absent, in line with the federation rule that a member’s tests must not hard-fail on a sibling’s unreleased symbol. No package code changed.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.8.0" id="kernr-080">kernR 0.8.0<a class="anchor" aria-label="anchor" href="#kernr-080"></a></h2>
 <div class="section level3">

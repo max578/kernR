@@ -162,7 +162,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] kernR_0.8.0
+#> [1] kernR_0.8.1
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] mvnfast_0.2.8      Matrix_1.7-5       gtable_0.3.6       jsonlite_2.0.0    

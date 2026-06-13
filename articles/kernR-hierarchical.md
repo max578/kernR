@@ -145,7 +145,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] kernR_0.8.0
+#> [1] kernR_0.8.1
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.51         rlang_1.2.0       
