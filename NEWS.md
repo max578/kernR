@@ -1,3 +1,18 @@
+# kernR 0.8.1
+
+## Bug fixes
+
+* The `.validate_manifest_pair()` obs-schema test (`test-drdate-scenario.R`)
+  now guards on whether the installed PESTO actually exports the development
+  symbol `pesto_obs_schema`, rather than on a PESTO version string. A `.9000`
+  development version cannot distinguish a PESTO build that exports the symbol
+  from one that does not, so continuous integration -- which installs PESTO
+  from its published `Remotes` source -- erroneously ran the test against a
+  build lacking the symbol and reported an error. The test is now skipped where
+  the capability is absent, in line with the federation rule that a member's
+  tests must not hard-fail on a sibling's unreleased symbol. No package code
+  changed.
+
 # kernR 0.8.0
 
 ## New features

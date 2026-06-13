@@ -235,7 +235,12 @@ test_that(".validate_manifest_pair refuses an incompatible APSIM major (FX-3)", 
 
 test_that(".validate_manifest_pair refuses an obs_schema unit disagreement (FX-2)", {
   skip_unless_pesto()
-  skip_if_not_installed("PESTO", minimum_version = "0.6.0.9000")
+  # `pesto_obs_schema` is a development-only PESTO symbol; a `.9000` version
+  # string cannot distinguish a build that exports it from one that does not,
+  # so guard on the capability itself rather than the version (a member's
+  # tests must not hard-fail on a sibling's unreleased symbol).
+  skip_if_not("pesto_obs_schema" %in% getNamespaceExports("PESTO"),
+              "PESTO::pesto_obs_schema not exported by the installed PESTO")
   pair <- .make_scenario_pair(intervention_shift = 0.3, seed = 8L)
   os_t  <- PESTO::pesto_obs_schema(
     outputs = data.frame(name = paste0("o", 1:4),
