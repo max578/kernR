@@ -109,8 +109,8 @@ standard `kernel_test_result` fields plus:
 The p-value lives on `result$p_value` (with an underscore), **not**
 `p.value`. For a flat one-row summary with the `broom`-canonical
 `p.value` column – plus `surprise_bits` and `reject` – call
-[`generics::tidy()`](https://generics.r-lib.org/reference/tidy.html) on
-the result.
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) on the
+result.
 
 ## Details
 

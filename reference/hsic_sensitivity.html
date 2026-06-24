@@ -13,7 +13,7 @@ decomposition."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -234,6 +234,29 @@ HSIC-Sensitivity Index capture non-linear and distributional
 effects: a parameter that affects the variance, skewness, or tail
 of <code>Y</code> without shifting its mean is invisible to Sobol but visible
 to HSIC. The normalisation bounds each index to <code>[0, 1]</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="relationship-to-sobol-indices">Relationship to Sobol indices<a class="anchor" aria-label="anchor" href="#relationship-to-sobol-indices"></a></h2>
+
+
+<p>The HSIC-Sensitivity Index is a <em>dependence screen</em>, not a variance
+decomposition, and it is <strong>not a drop-in substitute for a Sobol
+index</strong>. A Sobol index apportions the variance of <code>Y</code>; the HSIC index
+measures how strongly <code>X_j</code> and <code>Y</code> are statistically dependent under
+the chosen kernels. Because the two answer different questions, their
+<em>rankings</em> of the inputs need not agree – and on a function with a
+strong additive-versus-interaction contrast they often will not. On
+the Ishigami function, for instance, <code>X_2</code> carries the largest
+first-order variance while <code>X_1</code> carries the strongest overall
+dependence (it drives both a main effect and the <code>X_1</code>-<code>X_3</code>
+interaction), so the HSIC ranking and the variance-based ranking
+differ by construction, not by error. Use the HSIC index when the goal
+is to detect <em>any</em> statistical influence – on the mean, variance,
+skewness, or tail of <code>Y</code> – and to screen a large parameter set for
+dependence. When the goal is specifically to apportion output variance
+(a first/total-order variance budget), use a variance-based estimator
+such as <code>sensitivity::sobolEff()</code> or <code>sensitivity::soboljansen()</code>; do
+not read an HSIC ranking as a Sobol ranking.</p>
 <p>Optional permutation p-values are computed for first-order indices
 (Benjamini-Hochberg-adjusted across the grid by default).</p>
 <p><strong>Total-order uncertainty quantification (<code>total_order_ci = TRUE</code>,

@@ -110,13 +110,13 @@ m_intervention <- pesto_ensemble_manifest(
   lambda_schedule = 1
 )
 m_baseline
-#> <pesto_ensemble_manifest> schema 1.0.0
+#> <pesto_ensemble_manifest> schema 1.1.0
 #>   run_id        : wagga_baseline_2026
 #>   method        : ies_callback  (noptmax=3)
 #>   ensemble      : 60 realisations x 2 parameters | 4 observations
 #>   failure rate  : 0.00%
-#>   pesto version : 0.6.0.9000  apsim: NA
-#>   timestamp     : 2026-06-13T22:42:53+0000
+#>   pesto version : 0.7.0  apsim: NA
+#>   timestamp     : 2026-06-24T04:39:37+0000
 #>   data hash     : sha256:vignette_baseline
 ```
 
@@ -152,7 +152,7 @@ print(res)
 #>   baseline      : wagga_baseline_2026 (n=60)
 #>   intervention  : wagga_stubble_2026 (n=60)
 #>   outputs tested: o1, o2, o3, o4
-#>   PESTO versions: baseline=0.6.0.9000, intervention=0.6.0.9000
+#>   PESTO versions: baseline=0.7.0, intervention=0.7.0
 #>   fidelity      : baseline=single, intervention=single
 #>   Verdict:        REJECT (distributions differ; intervention has effect)
 ```
@@ -283,11 +283,11 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] PESTO_0.6.0.9000 kernR_0.8.1     
+#> [1] PESTO_0.7.0 kernR_0.8.2
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.51         rlang_1.2.0       
-#>  [5] xfun_0.58          otel_0.2.0         generics_0.1.4     S7_0.2.2          
+#>  [5] xfun_0.59          otel_0.2.0         generics_0.1.4     S7_0.2.2          
 #>  [9] textshaping_1.0.5  jsonlite_2.0.0     data.table_1.18.4  glue_1.8.1        
 #> [13] htmltools_0.5.9    ragg_1.5.2         sass_0.4.10        scales_1.4.0      
 #> [17] rmarkdown_2.31     grid_4.6.0         evaluate_1.0.5     jquerylib_0.1.4   

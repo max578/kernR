@@ -189,13 +189,13 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] kernR_0.8.1
+#> [1] kernR_0.8.2
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.51         rlang_1.2.0       
-#>  [5] xfun_0.58          otel_0.2.0         generics_0.1.4     S7_0.2.2          
+#>  [5] xfun_0.59          otel_0.2.0         generics_0.1.4     S7_0.2.2          
 #>  [9] textshaping_1.0.5  jsonlite_2.0.0     data.table_1.18.4  glue_1.8.1        
-#> [13] htmltools_0.5.9    PESTO_0.6.0.9000   ragg_1.5.2         sass_0.4.10       
+#> [13] htmltools_0.5.9    PESTO_0.7.0        ragg_1.5.2         sass_0.4.10       
 #> [17] scales_1.4.0       rmarkdown_2.31     grid_4.6.0         evaluate_1.0.5    
 #> [21] jquerylib_0.1.4    fastmap_1.2.0      yaml_2.3.12        lifecycle_1.0.5   
 #> [25] compiler_4.6.0     RColorBrewer_1.1-3 fs_2.1.0           Rcpp_1.1.1-1.1    

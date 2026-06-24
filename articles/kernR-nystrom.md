@@ -95,9 +95,9 @@ benchmark_hsic <- function(n, m, B = 49L, seed = 1L) {
 
 benchmark_hsic(n = 500L,  m = 60L)
 #>     n  m            method elapsed_s p_value
-#> 1 500 60 hsic_test (exact)     0.096    0.02
-#> 2 500 60           nystrom     0.020    0.02
-#> 3 500 60               rff     0.017    0.02
+#> 1 500 60 hsic_test (exact)     0.100    0.02
+#> 2 500 60           nystrom     0.019    0.02
+#> 3 500 60               rff     0.018    0.02
 ```
 
 For larger `n`, the gap widens:
@@ -106,8 +106,8 @@ For larger `n`, the gap widens:
 
 benchmark_hsic(n = 1500L, m = 100L)
 #>      n   m            method elapsed_s p_value
-#> 1 1500 100 hsic_test (exact)     1.217    0.02
-#> 2 1500 100           nystrom     0.133    0.02
+#> 1 1500 100 hsic_test (exact)     1.129    0.02
+#> 2 1500 100           nystrom     0.134    0.02
 #> 3 1500 100               rff     0.131    0.02
 ```
 
