@@ -137,6 +137,27 @@ HSIC-Sensitivity Index capture non-linear and distributional
 effects: a parameter that affects the variance, skewness, or tail
 of \code{Y} without shifting its mean is invisible to Sobol but visible
 to HSIC. The normalisation bounds each index to \verb{[0, 1]}.
+}
+\section{Relationship to Sobol indices}{
+
+The HSIC-Sensitivity Index is a \emph{dependence screen}, not a variance
+decomposition, and it is \strong{not a drop-in substitute for a Sobol
+index}. A Sobol index apportions the variance of \code{Y}; the HSIC index
+measures how strongly \code{X_j} and \code{Y} are statistically dependent under
+the chosen kernels. Because the two answer different questions, their
+\emph{rankings} of the inputs need not agree -- and on a function with a
+strong additive-versus-interaction contrast they often will not. On
+the Ishigami function, for instance, \code{X_2} carries the largest
+first-order variance while \code{X_1} carries the strongest overall
+dependence (it drives both a main effect and the \code{X_1}-\code{X_3}
+interaction), so the HSIC ranking and the variance-based ranking
+differ by construction, not by error. Use the HSIC index when the goal
+is to detect \emph{any} statistical influence -- on the mean, variance,
+skewness, or tail of \code{Y} -- and to screen a large parameter set for
+dependence. When the goal is specifically to apportion output variance
+(a first/total-order variance budget), use a variance-based estimator
+such as \code{sensitivity::sobolEff()} or \code{sensitivity::soboljansen()}; do
+not read an HSIC ranking as a Sobol ranking.
 
 Optional permutation p-values are computed for first-order indices
 (Benjamini-Hochberg-adjusted across the grid by default).
@@ -187,6 +208,7 @@ designs; set \code{n_bootstrap} accordingly. Use the CI for honest
 uncertainty bars on the index magnitude; do not interpret it as a
 significance verdict.
 }
+
 \examples{
 \donttest{
 set.seed(1)

@@ -1,3 +1,18 @@
+# kernR 0.8.2
+
+## Documentation
+
+* `hsic_sensitivity()` gains a "Relationship to Sobol indices" section
+  making explicit that the HSIC-Sensitivity Index is a dependence screen,
+  not a variance decomposition, and that its input *ranking* need not
+  agree with a variance-based (Sobol) ranking -- on a function with a
+  strong additive-versus-interaction contrast (the Ishigami function is
+  the worked example) the two orderings differ by construction, not by
+  error. Readers are pointed to `sensitivity::sobolEff()` /
+  `sensitivity::soboljansen()` when a variance budget is the goal. No
+  code changed; this corrects an over-broad reading that an HSIC ranking
+  could stand in for a Sobol ranking.
+
 # kernR 0.8.1
 
 ## Bug fixes

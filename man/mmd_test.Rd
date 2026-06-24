@@ -32,7 +32,7 @@ An object of class \code{"kernel_test_result"} with components:
 \item{statistic}{The observed MMD^2 statistic (unbiased).}
 \item{p_value}{Permutation p-value. The field is named \code{p_value} (with
 an underscore), \strong{not} \code{p.value}; read \code{result$p_value}, or call
-\code{\link[generics:tidy]{generics::tidy()}} for the \code{broom}-canonical \code{p.value} column.}
+\code{\link[=tidy]{tidy()}} for the \code{broom}-canonical \code{p.value} column.}
 \item{method}{\code{"MMD"}.}
 \item{n}{Total sample size (n_x + n_y).}
 \item{n_permutations}{Number of permutations used.}

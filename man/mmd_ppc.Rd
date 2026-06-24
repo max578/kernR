@@ -64,7 +64,7 @@ when provided; otherwise \code{NULL}.}
 The p-value lives on \code{result$p_value} (with an underscore), \strong{not}
 \code{p.value}. For a flat one-row summary with the \code{broom}-canonical
 \code{p.value} column -- plus \code{surprise_bits} and \code{reject} -- call
-\code{\link[generics:tidy]{generics::tidy()}} on the result.
+\code{\link[=tidy]{tidy()}} on the result.
 }
 \description{
 Model-free verdict on whether a posterior-predictive ensemble is
