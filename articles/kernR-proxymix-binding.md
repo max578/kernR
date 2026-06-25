@@ -141,7 +141,7 @@ source.
 ``` r
 
 sessionInfo()
-#> R version 4.6.0 (2026-04-24)
+#> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.4 LTS
 #> 
@@ -166,15 +166,15 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] mvnfast_0.2.8      Matrix_1.7-5       gtable_0.3.6       jsonlite_2.0.0    
-#>  [5] compiler_4.6.0     ranger_0.18.0      Rcpp_1.1.1-1.1     jquerylib_0.1.4   
+#>  [5] compiler_4.6.1     ranger_0.18.0      Rcpp_1.1.1-1.1     jquerylib_0.1.4   
 #>  [9] systemfonts_1.3.2  scales_1.4.0       textshaping_1.0.5  yaml_2.3.12       
 #> [13] fastmap_1.2.0      lattice_0.22-9     ggplot2_4.0.3      R6_2.6.1          
-#> [17] generics_0.1.4     proxymix_0.11.2    knitr_1.51         desc_1.4.3        
+#> [17] generics_0.1.4     proxymix_0.11.4    knitr_1.51         desc_1.4.3        
 #> [21] bslib_0.11.0       RColorBrewer_1.1-3 rlang_1.2.0        cachem_1.1.0      
 #> [25] xfun_0.59          fs_2.1.0           sass_0.4.10        S7_0.2.2          
 #> [29] otel_0.2.0         cli_3.6.6          pkgdown_2.2.0      withr_3.0.3       
-#> [33] PESTO_0.7.0        digest_0.6.39      grid_4.6.0         xgboost_3.2.1.1   
+#> [33] PESTO_0.8.0        digest_0.6.39      grid_4.6.1         xgboost_3.2.1.1   
 #> [37] lifecycle_1.0.5    vctrs_0.7.3        evaluate_1.0.5     glue_1.8.1        
 #> [41] data.table_1.18.4  farver_2.1.2       ragg_1.5.2         rmarkdown_2.31    
-#> [45] tools_4.6.0        htmltools_0.5.9
+#> [45] tools_4.6.1        htmltools_0.5.9
 ```

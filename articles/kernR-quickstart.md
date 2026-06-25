@@ -170,7 +170,7 @@ line).
 ``` r
 
 sessionInfo()
-#> R version 4.6.0 (2026-04-24)
+#> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.4 LTS
 #> 
@@ -197,11 +197,11 @@ sessionInfo()
 #>  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.51         rlang_1.2.0       
 #>  [5] xfun_0.59          otel_0.2.0         generics_0.1.4     S7_0.2.2          
 #>  [9] textshaping_1.0.5  jsonlite_2.0.0     data.table_1.18.4  glue_1.8.1        
-#> [13] htmltools_0.5.9    PESTO_0.7.0        ragg_1.5.2         sass_0.4.10       
-#> [17] scales_1.4.0       rmarkdown_2.31     grid_4.6.0         evaluate_1.0.5    
+#> [13] htmltools_0.5.9    PESTO_0.8.0        ragg_1.5.2         sass_0.4.10       
+#> [17] scales_1.4.0       rmarkdown_2.31     grid_4.6.1         evaluate_1.0.5    
 #> [21] jquerylib_0.1.4    fastmap_1.2.0      yaml_2.3.12        lifecycle_1.0.5   
-#> [25] compiler_4.6.0     RColorBrewer_1.1-3 fs_2.1.0           Rcpp_1.1.1-1.1    
+#> [25] compiler_4.6.1     RColorBrewer_1.1-3 fs_2.1.0           Rcpp_1.1.1-1.1    
 #> [29] farver_2.1.2       systemfonts_1.3.2  digest_0.6.39      R6_2.6.1          
-#> [33] bslib_0.11.0       gtable_0.3.6       tools_4.6.0        ggplot2_4.0.3     
+#> [33] bslib_0.11.0       gtable_0.3.6       tools_4.6.1        ggplot2_4.0.3     
 #> [37] pkgdown_2.2.0      cachem_1.1.0       desc_1.4.3
 ```
