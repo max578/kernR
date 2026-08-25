@@ -27,6 +27,7 @@ Imports:
     generics,
     methods,
     Rcpp,
+    S7,
     stats,
     PESTO (>= 0.6.0)
 LinkingTo:

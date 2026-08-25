@@ -475,3 +475,31 @@ test_that("defunct arg error mentions both replacements", {
     "total_order_test"
   )
 })
+
+# K3 (orchestra-fitness audit, 2026-08-25): the roxygen and vignette
+# documentation asserted "for purely additive models T_j = S_j" as an
+# exact identity. It is not: T_j = 1 - S_{~j} and S_j use different
+# normalisers, so even on a purely additive model the two need not
+# coincide. This test pins the vignette's own additive worked example
+# (kernR-sensitivity.Rmd's "additive-stub" chunk) against the exact
+# identity a naive reading of the old documentation would expect --
+# expect_equal() with a tight tolerance FAILS on this design, which is
+# exactly the defect: the doc claimed an equality the implementation
+# does not deliver.
+test_that("K3: T_j is NOT exactly equal to S_j on a purely additive model", {
+  set.seed(1)
+  n <- 400L
+  theta_add <- matrix(stats::runif(n * 2L), n, 2L,
+                      dimnames = list(NULL, c("x1", "x2")))
+  y_add <- 2 * theta_add[, "x1"] + theta_add[, "x2"] +
+    stats::rnorm(n, sd = 0.05)
+  fit_add <- hsic_sensitivity(theta_add, y_add, total_order = TRUE,
+                              p_value = FALSE, seed = 1L)
+  gap <- fit_add$index_total_order[, 1L] - fit_add$index[, 1L]
+
+  # The old documentation's claim, taken literally: gap should be ~0.
+  # It is not -- this is the false-identity defect K3 corrects the docs
+  # for, verified against the package's own additive worked example.
+  expect_false(isTRUE(all.equal(unname(gap), c(0, 0), tolerance = 0.02)))
+  expect_true(all(gap > 0.05))
+})

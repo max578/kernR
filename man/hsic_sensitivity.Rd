@@ -126,11 +126,18 @@ equal to) the Sobol first-order index.
 \strong{Total-order index} (when \code{total_order = TRUE}):
 \deqn{T^{HSIC}_j = 1 - \frac{HSIC(X_{\sim j}, Y)}{\sqrt{HSIC(X_{\sim j}, X_{\sim j}) \cdot HSIC(Y, Y)}}}{
       T_j^HSIC = 1 - HSIC(X_(-j), Y) / sqrt(HSIC(X_(-j), X_(-j)) * HSIC(Y, Y))}
-where \verb{X_\{~j\}} is the parameter design with column \code{j} removed. By
-construction the difference \code{T_j - S_j} captures the contribution of
-\code{X_j} \emph{through interactions} with other parameters. For purely
-additive models \code{T_j = S_j}; in the presence of interaction
-\code{T_j > S_j}.
+where \verb{X_\{~j\}} is the parameter design with column \code{j} removed. The
+difference \code{T_j - S_j} is used as an \emph{interaction screen}: \code{S_j} and
+\code{T_j} are built from different normalisers
+(\code{HSIC(X_j, .)} versus \verb{1 - HSIC(X_\{~j\}, .)}), so \strong{this is not a
+variance-budget identity} -- unlike a Sobol decomposition, \code{T_j - S_j}
+is not guaranteed to be exactly zero on a purely additive model, and
+the two indices need not sum, or agree, in any exact sense. On a
+purely additive model \verb{Y = sum_j f_j(X_j)} the gap is typically small
+relative to a genuinely interactive model (\verb{Y = X_1 X_2}), where
+\code{S_j} may be near zero (the marginal signal averages out) while \code{T_j}
+is strong; use the \emph{relative size} of the gap across parameters as
+the interaction screen, not its distance from an exact zero.
 
 Unlike variance-based Sobol indices, both versions of the
 HSIC-Sensitivity Index capture non-linear and distributional

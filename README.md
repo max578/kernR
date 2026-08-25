@@ -12,7 +12,7 @@ kernR implements kernel-based hypothesis tests for causal inference and distribu
 
 - **HSIC independence test** — detects non-linear dependencies that Pearson correlation misses
 - **MMD two-sample test** — detects any distributional difference, not just mean shifts
-- **Backdoor-adjusted HSIC (bd-HSIC)** — tests causal association after adjusting for confounders via density ratio estimation [(Hu, Sejdinovic & Evans, 2024)](https://jmlr.org/beta/papers/v25/21-1409.html)
+- **Backdoor-adjusted HSIC (bd-HSIC)** — tests causal association after adjusting for confounders via density ratio estimation [(Hu, Sejdinovic & Evans, 2024)](https://jmlr.org/papers/v25/21-1409.html)
 - **Doubly robust distributional tests (DR-DATE, DR-DETT)** — tests for distributional treatment effects with double robustness [(Fawkes, Hu, Evans & Sejdinovic, 2024)](https://openreview.net/pdf?id=5g5zFVj33K)
 - **Hierarchical/nested data** — within-cluster and between-cluster decomposition for clustered data (farms, hospitals, schools)
 - **Formula interface** — `kernel_causal_test(y ~ treatment | confounders, data = df)`
@@ -79,7 +79,7 @@ dr_date_test(outcome, treatment, covariates, seed = 1)    # p = 0.002 (sees it)
 
 kernR implements methods from two peer-reviewed papers:
 
-1. **Hu, R., Sejdinovic, D., & Evans, R. J.** (2024). A kernel test for causal association via noise contrastive backdoor adjustment. *Journal of Machine Learning Research*, 25(160), 1–56. [Paper](https://jmlr.org/beta/papers/v25/21-1409.html) | [Original code](https://github.com/MrHuff/kgformula)
+1. **Hu, R., Sejdinovic, D., & Evans, R. J.** (2024). A kernel test for causal association via noise contrastive backdoor adjustment. *Journal of Machine Learning Research*, 25(160), 1–56. [Paper](https://jmlr.org/papers/v25/21-1409.html) | [Original code](https://github.com/MrHuff/kgformula)
 
 2. **Fawkes, J., Hu, R., Evans, R. J., & Sejdinovic, D.** (2024). Doubly robust kernel statistics for testing distributional treatment effects. *Transactions on Machine Learning Research*. [Paper](https://openreview.net/pdf?id=5g5zFVj33K) | [Original code](https://github.com/Jakefawkes/DR_distributional_test)
 

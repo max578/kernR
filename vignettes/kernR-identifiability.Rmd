@@ -94,9 +94,16 @@ should fall below the threshold.
 
 ## Visual diagnostic
 
-```{r plot}
+```{r plot, fig.cap = "Maximum HSIC-Sensitivity Index per parameter across the yield and biomass outputs, with the identifiability threshold marked."}
 plot(fit)
 ```
+
+`slope` and `curvature` clear the threshold comfortably -- each drives
+one output almost deterministically by construction -- while `inert`
+sits at the floor and `weak` lands close to the boundary, reflecting
+its genuinely marginal effect on biomass. Only `slope`, `curvature`
+and (marginally) `weak` are candidates for the IES prior; `inert`
+would waste calibration budget.
 
 ## Handing off to PESTO
 

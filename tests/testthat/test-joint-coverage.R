@@ -107,3 +107,29 @@ test_that("Type-I error rate stays near the nominal level under the null", {
   expect_lt(mean(rej_bd), alpha + 0.12)
   expect_lt(mean(rej_av), alpha + 0.12)
 })
+
+# pesto_ensemble_manifest dispatch --------------------------------------------
+
+test_that("the manifest method dispatches via the registered S7 alias (K1)", {
+  skip_if_not_installed("PESTO")
+  set.seed(9)
+  n <- 300L
+  outputs <- data.frame(
+    real_name = paste0("r", seq_len(n)),
+    o1 = stats::rnorm(n), o2 = stats::rnorm(n)
+  )
+  params <- data.frame(real_name = paste0("r", seq_len(n)),
+                       p1 = stats::rnorm(n))
+  m <- PESTO::pesto_ensemble_manifest(
+    run_id = "jcov", params = params, outputs = outputs,
+    weights = c(o1 = 1, o2 = 1), obs_target = c(o1 = 0, o2 = 0),
+    data_hash = "sha256:test", pesto_version = "0.4.1",
+    timestamp = Sys.time(), method = "ies_callback",
+    noptmax = 3L, lambda_schedule = c(1, 1, 1),
+    fidelity = list(type = "multifidelity", final_level = 1L, n_levels = 2L)
+  )
+  obs <- matrix(stats::rnorm(40L), ncol = 2L)
+  fit <- joint_coverage_test(m, observed = obs, seed = 9L)
+  expect_s3_class(fit, "joint_coverage_test")
+  expect_equal(fit$pesto_metadata$run_id, "jcov")
+})

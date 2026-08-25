@@ -97,12 +97,16 @@ Index. Expectations on this design:
 
 ## Visual
 
-```{r plot}
+```{r plot, fig.cap = "First-order HSIC-Sensitivity Index per parameter, bars coloured by significance after Benjamini-Hochberg adjustment at alpha = 0.05."}
 plot(fit)
 ```
 
 Bars colour-coded by significance at the default `alpha = 0.05` after
-Benjamini-Hochberg adjustment.
+Benjamini-Hochberg adjustment. `mean_effect` clears the threshold on
+central tendency alone, but `var_effect` and `tail_effect` also come
+back significant even though they were built to leave the conditional
+mean untouched -- the distributional signal a Sobol variance-budget
+would miss.
 
 ## Side-by-side with `sensitivity::sobol`
 
@@ -148,11 +152,19 @@ T_j^{\mathrm{HSIC}}
 captures the total -- direct plus all-order interactions -- contribution
 of `X_j`. By construction:
 
-- Purely additive model `Y = sum_j f_j(X_j)`: `T_j = S_j`.
+- Purely additive model `Y = sum_j f_j(X_j)`: `T_j` and `S_j` are
+  *close* (both measure a dependence driven only by `X_j`'s own
+  marginal contribution), but the two indices are built from different
+  normalisers (`HSIC(X_j, .)` versus `1 - HSIC(X_{~j}, .)`) and are
+  **not identical** even in the additive case -- do not read
+  `T_j - S_j = 0` as an exact null.
 - Pure interaction `Y = X_1 X_2`: `S_j` may be near zero (marginal
   signal averages out) but `T_j` is strong.
 
-The difference `T_j - S_j` quantifies the interactive component.
+The difference `T_j - S_j` is an uncalibrated contrast, not a
+variance-budget identity: treat it as a *screen* for interaction (a
+large gap is evidence of it) rather than a quantity with a known
+null distribution or a guaranteed zero on additive models.
 
 ### A pure-interaction example
 
@@ -181,9 +193,15 @@ expectation of `X1 X2` is zero) but large total-order indices. The
 
 ### Side-by-side plot
 
-```{r interaction-plot, fig.height = 4.5}
+```{r interaction-plot, fig.height = 4.5, fig.cap = "First-order versus total-order HSIC-Sensitivity Index for x1 and x2 on the pure-interaction model Y = X1 X2, side by side."}
 plot(fit_int, which = "both")
 ```
+
+Both parameters show a near-zero first-order bar next to a large
+total-order bar: the marginal contribution of `x1` or `x2` alone
+averages to nothing, but each parameter's total-order index is large
+because the pair jointly determines `Y`. The gap between the two bars
+is the interaction diagnostic in graphical form.
 
 ### A near-additive example for contrast
 
@@ -198,8 +216,11 @@ fit_add <- hsic_sensitivity(theta_add, y_add, total_order = TRUE,
 fit_add
 ```
 
-On this additive model `T_j - S_j` should be close to zero for both
-parameters.
+On this additive model `T_j - S_j` is small for both parameters
+relative to the pure-interaction case above, but it is not exactly
+zero -- the gap is a relative screen, useful for ranking parameters by
+interaction, not an exact diagnostic with a zero point under
+additivity.
 
 ### Pair-bootstrap CI for total-order indices
 
@@ -225,14 +246,39 @@ as.data.frame(fit_pf)[, c("parameter", "output",
 
 The CI is uncertainty quantification on the *index magnitude*, not a
 hypothesis test. An earlier (0.0.0.9012) `total_order_p_value` field
-claimed to test `H_0: T_j = 0` — that was found in critical review
+claimed to test `H_0: T_j = 0` -- that was found in critical review
 on 2026-05-16 to be mis-calibrated under pure-noise `Y` (all
-parameters were assigned `p ≈ 1/(1 + B)` because the bootstrap
+parameters were assigned `p ~ 1 / (1 + B)` because the bootstrap
 samples the empirical joint, not a null-of-no-effect) and was removed
-in 0.0.0.9013. A properly null-calibrated total-order significance
-test remains future work. Cost scales as `n_bootstrap × p × q` kernel
-re-evaluations on resampled designs; default `n_bootstrap = 200`
-is a workable starting point for `p, q ≤ 10`, `n ≤ 1000`.
+in 0.0.0.9013.
+
+### Conditional-permutation significance test
+
+The properly null-calibrated replacement is the conditional-permutation
+test, `total_order_test = "cond_perm"` (since 0.0.0.9014): it tests
+`H_0: X_j` independent of `Y` given `X_{~j}` by k-means-clustering the
+design on `X_{~j}` similarity, permuting `Y` within each cluster, and
+recomputing `T_j` on every permuted design.
+
+```{r cond-perm-test}
+fit_cp <- hsic_sensitivity(
+  theta_add, y_add,
+  total_order      = TRUE,
+  total_order_test = "cond_perm",
+  n_permutations   = 199L,
+  seed             = 21L
+)
+as.data.frame(fit_cp)[, c("parameter", "output",
+                          "index_total_order",
+                          "p_value_total_order")]
+```
+
+On this additive design neither parameter's total-order index survives
+the conditional-permutation null -- there is no interaction to detect,
+which is the expected verdict alongside the small `T_j - S_j` gap
+above. Cost scales as `n_bootstrap * p * q` kernel re-evaluations on
+resampled designs; default `n_bootstrap = 200` is a workable starting
+point for `p, q <= 10`, `n <= 1000`.
 
 ## Notes on total-order indices
 
