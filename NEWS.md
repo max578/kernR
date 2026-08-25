@@ -37,6 +37,20 @@
   before hashing, so the digest is reproducible across R versions and
   recomputable by a consumer.
 
+* `bd_hsic_test()` and `taci_test()` now stamp a typed `kernR_abstention`
+  marker on their result when a reliability gate fails (the ESS floor and
+  the proxymix density-ratio fit-quality gate for `bd_hsic_test()`; the
+  TACI posterior-adequacy guard for `taci_test()`). This is recognised by
+  the orchestra's `is_orchestra_decline()` predicate via the
+  `_(refusal|abstention)$` class-name convention, and by the new
+  `is_kernR_abstention()` predicate exported here -- previously these
+  gates only set a field and emitted a `warning()`, so a cross-member
+  gate reading only the class had no way to tell a reliable verdict from
+  an unreliable one. `as_orchestra_manifest()`'s `summary$abstained` is
+  now read off this marker instead of re-deriving it from the same raw
+  flags a second time. Nothing about which results are flagged
+  unreliable has changed.
+
 ## Documentation
 
 * Corrected the *HSIC-Sensitivity Index* documentation and vignette: the
