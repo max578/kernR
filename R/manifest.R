@@ -167,6 +167,21 @@ orchestra_manifest <- S7::new_class(
 #'
 #' @returns A list with logical `ok` and a human-readable `message`.
 #'
+#' @examples
+#' mechanism <- function(theta, X, t) theta[3] + theta[1] * (1 - exp(-theta[2] * t))
+#' set.seed(1L)
+#' n <- 60L
+#' nrate <- runif(n, 0, 200)
+#' yield <- 1.1 + 4.2 * (1 - exp(-0.018 * nrate)) + rnorm(n, 0, 0.25)
+#' post <- cbind(ymax = rnorm(100L, 4.2, 0.30),
+#'              rate = rnorm(100L, 0.018, 0.004),
+#'              y0   = rnorm(100L, 1.1, 0.15))
+#' verdict <- taci_test(post, mechanism, X = matrix(1, n, 1),
+#'                      treatment = nrate, outcome = yield,
+#'                      n_perm = 99L, seed = 1L)
+#' m <- as_orchestra_manifest(verdict)
+#' verify_manifest(m)$ok  # TRUE -- payload untampered
+#'
 #' @seealso [as_orchestra_manifest()]
 #' @family orchestra manifest
 #' @export
@@ -202,6 +217,22 @@ verify_manifest <- function(m) {
 #'   when omitted, so two identical verdicts get the same identifier.
 #'
 #' @returns An `orchestra_manifest` S7 object.
+#'
+#' @examples
+#' mechanism <- function(theta, X, t) theta[3] + theta[1] * (1 - exp(-theta[2] * t))
+#' set.seed(1L)
+#' n <- 60L
+#' nrate <- runif(n, 0, 200)
+#' yield <- 1.1 + 4.2 * (1 - exp(-0.018 * nrate)) + rnorm(n, 0, 0.25)
+#' post <- cbind(ymax = rnorm(100L, 4.2, 0.30),
+#'              rate = rnorm(100L, 0.018, 0.004),
+#'              y0   = rnorm(100L, 1.1, 0.15))
+#' verdict <- taci_test(post, mechanism, X = matrix(1, n, 1),
+#'                      treatment = nrate, outcome = yield,
+#'                      n_perm = 99L, seed = 1L)
+#' m <- as_orchestra_manifest(verdict)
+#' m@summary$headline
+#' m@summary$abstained  # FALSE: the posterior-adequacy gate passed
 #'
 #' @seealso [verify_manifest()], [taci_test()]
 #' @family orchestra manifest

@@ -18,6 +18,22 @@ compares it to the stored \code{data_hash}. A mismatch means the payload was
 modified after emission. Matches the reference contract's
 \code{verify_manifest()}.
 }
+\examples{
+mechanism <- function(theta, X, t) theta[3] + theta[1] * (1 - exp(-theta[2] * t))
+set.seed(1L)
+n <- 60L
+nrate <- runif(n, 0, 200)
+yield <- 1.1 + 4.2 * (1 - exp(-0.018 * nrate)) + rnorm(n, 0, 0.25)
+post <- cbind(ymax = rnorm(100L, 4.2, 0.30),
+             rate = rnorm(100L, 0.018, 0.004),
+             y0   = rnorm(100L, 1.1, 0.15))
+verdict <- taci_test(post, mechanism, X = matrix(1, n, 1),
+                     treatment = nrate, outcome = yield,
+                     n_perm = 99L, seed = 1L)
+m <- as_orchestra_manifest(verdict)
+verify_manifest(m)$ok  # TRUE -- payload untampered
+
+}
 \seealso{
 \code{\link[=as_orchestra_manifest]{as_orchestra_manifest()}}
 
