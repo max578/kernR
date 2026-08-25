@@ -62,7 +62,7 @@
                         <h4 data-toc-skip class="author">Max
 Moldovan</h4>
             
-            <h4 data-toc-skip class="date">2026-06-25</h4>
+            <h4 data-toc-skip class="date">2026-08-25</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/max578/kernR/blob/main/vignettes/kernR-identifiability.Rmd" class="external-link"><code>vignettes/kernR-identifiability.Rmd</code></a></small>
       <div class="d-none name"><code>kernR-identifiability.Rmd</code></div>
@@ -177,13 +177,26 @@ threshold.</p>
 </h2>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
-<p><img src="kernR-identifiability_files/figure-html/plot-1.png" class="r-plt" alt="" width="900"></p>
+<div class="figure">
+<img src="kernR-identifiability_files/figure-html/plot-1.png" class="r-plt" alt="Maximum HSIC-Sensitivity Index per parameter across the yield and biomass outputs, with the identifiability threshold marked." width="900"><p class="caption">
+Maximum HSIC-Sensitivity Index per parameter across the yield and
+biomass outputs, with the identifiability threshold marked.
+</p>
+</div>
+<p><code>slope</code> and <code>curvature</code> clear the threshold
+comfortably – each drives one output almost deterministically by
+construction – while <code>inert</code> sits at the floor and
+<code>weak</code> lands close to the boundary, reflecting its genuinely
+marginal effect on biomass. Only <code>slope</code>,
+<code>curvature</code> and (marginally) <code>weak</code> are candidates
+for the IES prior; <code>inert</code> would waste calibration
+budget.</p>
 </div>
 <div class="section level2">
 <h2 id="handing-off-to-pesto">Handing off to PESTO<a class="anchor" aria-label="anchor" href="#handing-off-to-pesto"></a>
 </h2>
 <p>The identifiable subset is precisely the set you would forward to
-<code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ies.html" class="external-link">pesto_ies()</a></code> (PESTO’s IES wrapper) as the parameter prior.
+<code><a href="https://max578.github.io/PESTO/reference/pesto_ies.html" class="external-link">pesto_ies()</a></code> (PESTO’s IES wrapper) as the parameter prior.
 In pseudo-R:</p>
 <pre><code><span><span class="va">identifiable_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">identifiable</span><span class="op">)</span><span class="op">[</span><span class="va">fit</span><span class="op">$</span><span class="va">identifiable</span><span class="op">]</span></span>
 <span><span class="fu">pesto</span><span class="fu">::</span><span class="fu">pesto_ies</span><span class="op">(</span><span class="va">...</span>, params <span class="op">=</span> <span class="va">identifiable_params</span>, <span class="va">...</span><span class="op">)</span></span></code></pre>
@@ -259,7 +272,7 @@ measures. <em>Journal of Statistical Computation and Simulation</em>,
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

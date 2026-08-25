@@ -57,7 +57,7 @@ across versions would defeat that contract.
 ## Cross-package contracts
 
 `kernR` imports `PESTO (>= 0.3.0)` and dispatches on
-[`PESTO::pesto_ensemble_manifest`](https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html)
+[`PESTO::pesto_ensemble_manifest`](https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html)
 via S3 methods registered at `.onLoad()`. The contract is owned jointly
 with PESTO; any change to the S7 class shape on PESTO’s side requires a
 coordinated kernR release (and a corresponding `Imports:` lower bound
@@ -65,10 +65,12 @@ bump).
 
 `proxymix (>= 0.3.0)` in `Suggests` provides the
 `density_ratio = "proxymix"` backend. The interface is the
-[`proxymix::fit_proxymix()`](https://rdrr.io/pkg/proxymix/man/fit_proxymix.html)
-/ [`proxymix::dgmm()`](https://rdrr.io/pkg/proxymix/man/dgmm.html) pair;
-backwards- incompatible changes there will be detected at run-time via
-the [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html) guard.
+[`proxymix::fit_proxymix()`](https://max578.github.io/proxymix/reference/fit_proxymix.html)
+/
+[`proxymix::dgmm()`](https://max578.github.io/proxymix/reference/dgmm.html)
+pair; backwards- incompatible changes there will be detected at run-time
+via the [`requireNamespace()`](https://rdrr.io/r/base/ns-load.html)
+guard.
 
 ## Versioning and tags
 

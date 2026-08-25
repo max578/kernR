@@ -179,6 +179,18 @@ contract.
 - [`pesto_ensemble()`](https://max578.github.io/kernR/reference/pesto_ensemble.md)
   : PESTO Ensemble Manifest (Constructor)
 
+## Orchestra manifest contract
+
+Emitting a kernR verdict as the federation’s shared, integrity-hashed
+manifest, and verifying one.
+
+- [`as_orchestra_manifest()`](https://max578.github.io/kernR/reference/as_orchestra_manifest.md)
+  : Emit a kernR verdict as an orchestra manifest
+- [`orchestra_manifest`](https://max578.github.io/kernR/reference/orchestra_manifest.md)
+  : The orchestra ensemble-manifest contract (kernR-side implementation)
+- [`verify_manifest()`](https://max578.github.io/kernR/reference/verify_manifest.md)
+  : Verify an orchestra manifest's payload integrity
+
 ## Tidiers
 
 broom-style one-row-per-term summaries of kernR verdict objects.

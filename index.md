@@ -16,8 +16,7 @@ distributional changes that leave the mean unchanged.
   just mean shifts
 - **Backdoor-adjusted HSIC (bd-HSIC)** — tests causal association after
   adjusting for confounders via density ratio estimation [(Hu,
-  Sejdinovic & Evans,
-  2024)](https://jmlr.org/beta/papers/v25/21-1409.html)
+  Sejdinovic & Evans, 2024)](https://jmlr.org/papers/v25/21-1409.html)
 - **Doubly robust distributional tests (DR-DATE, DR-DETT)** — tests for
   distributional treatment effects with double robustness [(Fawkes, Hu,
   Evans & Sejdinovic, 2024)](https://openreview.net/pdf?id=5g5zFVj33K)
@@ -94,7 +93,7 @@ kernR implements methods from two peer-reviewed papers:
 1.  **Hu, R., Sejdinovic, D., & Evans, R. J.** (2024). A kernel test for
     causal association via noise contrastive backdoor adjustment.
     *Journal of Machine Learning Research*, 25(160), 1–56.
-    [Paper](https://jmlr.org/beta/papers/v25/21-1409.html) \| [Original
+    [Paper](https://jmlr.org/papers/v25/21-1409.html) \| [Original
     code](https://github.com/MrHuff/kgformula)
 
 2.  **Fawkes, J., Hu, R., Evans, R. J., & Sejdinovic, D.** (2024).

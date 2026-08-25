@@ -62,7 +62,7 @@
                         <h4 data-toc-skip class="author">Max
 Moldovan</h4>
             
-            <h4 data-toc-skip class="date">2026-06-25</h4>
+            <h4 data-toc-skip class="date">2026-08-25</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/max578/kernR/blob/main/vignettes/kernR-ppc.Rmd" class="external-link"><code>vignettes/kernR-ppc.Rmd</code></a></small>
       <div class="d-none name"><code>kernR-ppc.Rmd</code></div>
@@ -89,11 +89,14 @@ kernel two-sample test (MMD) plus a Bayesian-flavoured <em>surprise</em>
 diagnostic.</p>
 </div>
 <div class="section level2">
-<h2 id="the-stub-ensemble">The stub ensemble<a class="anchor" aria-label="anchor" href="#the-stub-ensemble"></a>
+<h2 id="the-lightweight-ensemble-path">The lightweight ensemble path<a class="anchor" aria-label="anchor" href="#the-lightweight-ensemble-path"></a>
 </h2>
-<p>Until PESTO ships its native manifest emitter, we construct a
-<code>pesto_ensemble</code> object directly. This is the kernR-side
-schema for the cross-package contract.</p>
+<p><code><a href="../reference/mmd_ppc.html">mmd_ppc()</a></code> also accepts a <code>pesto_ensemble</code>
+object built directly, as a lightweight alternative to the full
+<code>pesto_ensemble_manifest</code> S7 class that PESTO’s native
+emitter produces (see “Cross-package handoff” below). Use this path for
+a synthetic worked example, or when the ensemble was assembled outside
+PESTO entirely.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span>
 <span></span>
@@ -240,7 +243,17 @@ threshold of ~4.32 bits (the surprise corresponding to
 distribution with the observed MMD statistic marked:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_narrow</span><span class="op">)</span></span></code></pre></div>
-<p><img src="kernR-ppc_files/figure-html/plot-1.png" class="r-plt" alt="" width="900"></p>
+<div class="figure">
+<img src="kernR-ppc_files/figure-html/plot-1.png" class="r-plt" alt="Permutation null distribution of the MMD statistic for the narrow posterior-predictive ensemble, with the observed statistic marked against the held-out sample." width="900"><p class="caption">
+Permutation null distribution of the MMD statistic for the narrow
+posterior-predictive ensemble, with the observed statistic marked
+against the held-out sample.
+</p>
+</div>
+<p>The observed statistic falls in the right tail of the permutation
+null, consistent with <code>fit_narrow</code>’s p-value: the narrow
+ensemble’s predictive draws are distributionally distinguishable from
+the held-out observations, not merely off in their mean.</p>
 </div>
 <div class="section level2">
 <h2 id="notes-on-practice">Notes on practice<a class="anchor" aria-label="anchor" href="#notes-on-practice"></a>
@@ -274,20 +287,26 @@ posterior + observed sample.</li>
 <div class="section level2">
 <h2 id="cross-package-handoff">Cross-package handoff<a class="anchor" aria-label="anchor" href="#cross-package-handoff"></a>
 </h2>
-<p>PESTO 0.3.0 ships a native ensemble emitter — the
-<code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html" class="external-link">PESTO::pesto_ensemble_manifest</a></code> S7 class — which
-<code><a href="../reference/mmd_ppc.html">mmd_ppc()</a></code> consumes via a dedicated method. The legacy
-lightweight <code>pesto_ensemble</code> S3 constructor is unchanged and
-remains supported.</p>
+<p>PESTO (from 0.3.0) ships a native ensemble emitter – the
+<code><a href="https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html" class="external-link">PESTO::pesto_ensemble_manifest</a></code> S7 class – which
+<code><a href="../reference/mmd_ppc.html">mmd_ppc()</a></code> consumes via a dedicated method. The lightweight
+<code>pesto_ensemble</code> S3 constructor from the section above is
+unchanged and remains supported for the cases that do not need the full
+manifest.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/PESTO" class="external-link">PESTO</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Attaching package: 'PESTO'</span></span>
+<span><span class="co">#&gt; The following object is masked from 'package:kernR':</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;     verify_manifest</span></span>
 <span></span>
 <span><span class="co"># Build a tiny synthetic manifest (in real workflows: come from</span></span>
 <span><span class="co"># pesto_ies_callback() + as_manifest()).</span></span>
 <span><span class="va">nreal</span> <span class="op">&lt;-</span> <span class="fl">80L</span>; <span class="va">nobs</span> <span class="op">&lt;-</span> <span class="fl">3L</span></span>
 <span><span class="va">post</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">nreal</span> <span class="op">*</span> <span class="va">nobs</span><span class="op">)</span>, <span class="va">nreal</span>, <span class="va">nobs</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">post</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"o"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">nobs</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html" class="external-link">pesto_ensemble_manifest</a></span><span class="op">(</span></span>
+<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html" class="external-link">pesto_ensemble_manifest</a></span><span class="op">(</span></span>
 <span>  run_id          <span class="op">=</span> <span class="st">"vignette_demo"</span>,</span>
 <span>  params          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>real_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"r"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">nreal</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                                p1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">nreal</span><span class="op">)</span>,</span>
@@ -354,7 +373,7 @@ Smola, A. (2012). A kernel two-sample test. <em>JMLR</em>, 13,
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

@@ -19,11 +19,14 @@ posterior-predictive draws and the held-out observations samples from
 the same distribution? It is a model-free, kernel two-sample test (MMD)
 plus a Bayesian-flavoured *surprise* diagnostic.
 
-## The stub ensemble
+## The lightweight ensemble path
 
-Until PESTO ships its native manifest emitter, we construct a
-`pesto_ensemble` object directly. This is the kernR-side schema for the
-cross-package contract.
+[`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md) also
+accepts a `pesto_ensemble` object built directly, as a lightweight
+alternative to the full `pesto_ensemble_manifest` S7 class that PESTO’s
+native emitter produces (see “Cross-package handoff” below). Use this
+path for a synthetic worked example, or when the ensemble was assembled
+outside PESTO entirely.
 
 ``` r
 
@@ -182,7 +185,18 @@ statistic marked:
 plot(fit_narrow)
 ```
 
-![](kernR-ppc_files/figure-html/plot-1.png)
+![Permutation null distribution of the MMD statistic for the narrow
+posterior-predictive ensemble, with the observed statistic marked
+against the held-out sample.](kernR-ppc_files/figure-html/plot-1.png)
+
+Permutation null distribution of the MMD statistic for the narrow
+posterior-predictive ensemble, with the observed statistic marked
+against the held-out sample.
+
+The observed statistic falls in the right tail of the permutation null,
+consistent with `fit_narrow`’s p-value: the narrow ensemble’s predictive
+draws are distributionally distinguishable from the held-out
+observations, not merely off in their mean.
 
 ## Notes on practice
 
@@ -207,16 +221,22 @@ plot(fit_narrow)
 
 ## Cross-package handoff
 
-PESTO 0.3.0 ships a native ensemble emitter — the
-[`PESTO::pesto_ensemble_manifest`](https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html)
-S7 class — which
+PESTO (from 0.3.0) ships a native ensemble emitter – the
+[`PESTO::pesto_ensemble_manifest`](https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html)
+S7 class – which
 [`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md)
-consumes via a dedicated method. The legacy lightweight `pesto_ensemble`
-S3 constructor is unchanged and remains supported.
+consumes via a dedicated method. The lightweight `pesto_ensemble` S3
+constructor from the section above is unchanged and remains supported
+for the cases that do not need the full manifest.
 
 ``` r
 
 library(PESTO)
+#> 
+#> Attaching package: 'PESTO'
+#> The following object is masked from 'package:kernR':
+#> 
+#>     verify_manifest
 
 # Build a tiny synthetic manifest (in real workflows: come from
 # pesto_ies_callback() + as_manifest()).

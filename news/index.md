@@ -1,5 +1,95 @@
 # Changelog
 
+## kernR (development version)
+
+- The manifest integrity hash uses
+  [`digest::digest()`](https://eddelbuettel.github.io/digest/man/digest.html)
+  instead of
+  [`tools::sha256sum()`](https://rdrr.io/r/tools/sha256sum.html), which
+  only exists from R 4.5.0 (above the declared R \>= 4.1.0 floor);
+  `digest` is now an Import.
+
+### Bug fixes
+
+- [`joint_coverage_test()`](https://max578.github.io/kernR/reference/joint_coverage_test.md)
+  errored on a `pesto_ensemble_manifest` object: `.onLoad` registered
+  the package-qualified S7 alias for
+  [`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md) and
+  [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md)
+  only, so the manifest method declared in `NAMESPACE` was unreachable
+  through dispatch. The third
+  [`registerS3method()`](https://rdrr.io/r/base/ns-internal.html) call
+  is now registered alongside the other two.
+
+- The pkgdown reference index gained an *Orchestra manifest contract*
+  section; the three new manifest exports were missing from it, which
+  failed the site build.
+
+### New features
+
+- [`as_orchestra_manifest()`](https://max578.github.io/kernR/reference/as_orchestra_manifest.md)
+  (S3 generic, methods for `taci_result` and `kernel_test_result`) emits
+  a kernR verdict as an `orchestra_manifest` S7 object, closing the
+  previously-missing emit side of the C2 contract: a TACI
+  mechanism-consistency decision or a kernel hypothesis test can now
+  enter `decideR` through the shared manifest, not just be consumed by
+  hand. `inferential_target` is `"treatment_effects"`; the typed
+  `summary` carries `abstained` set from the result’s own reliability
+  flags (`posterior_adequacy$ok` for TACI, `ess_warning` /
+  `density_ratio_warning` for a kernel test).
+  [`verify_manifest()`](https://max578.github.io/kernR/reference/verify_manifest.md)
+  recomputes the payload hash for tamper detection. The emitted object
+  is the federation’s shared contract class, not a kernR-namespaced
+  look-alike: the S7 class is declared with `package = NULL` (S7
+  identity is the pair name/package, so a class declared under `kernR`
+  would carry the name `"kernR::orchestra_manifest"` and be refused by
+  every orchestra consumer), and the payload hash follows the reference
+  recipe exactly –
+  [`serialize()`](https://rdrr.io/r/base/serialize.html) pinned to
+  format 2 with its fixed 14-byte header dropped before hashing, so the
+  digest is reproducible across R versions and recomputable by a
+  consumer.
+
+### Documentation
+
+- Corrected the *HSIC-Sensitivity Index* documentation and vignette: the
+  claim “for purely additive models `T_j = S_j`” was false as
+  implemented (the first-order and total-order indices use different
+  normalisers and are not identical even without interaction); both
+  [`hsic_sensitivity()`](https://max578.github.io/kernR/reference/hsic_sensitivity.md)’s
+  roxygen and *HSIC-Based Distributional Sensitivity* now describe
+  `T_j - S_j` as an uncalibrated interaction screen rather than an exact
+  identity.
+- *HSIC-Based Distributional Sensitivity* no longer tells readers that a
+  “properly null-calibrated total-order significance test remains future
+  work” – that test (`total_order_test = "cond_perm"`) has shipped since
+  0.0.0.9014; the vignette now demonstrates it on the additive worked
+  example.
+- *Posterior-Predictive Checks with
+  [`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md)* no
+  longer contradicts itself about whether PESTO ships a native ensemble
+  emitter (the earlier section said “until PESTO ships”; a later section
+  said it already had); the lightweight `pesto_ensemble` path is now
+  framed as an alternative to the manifest path, not a stand-in for a
+  missing one.
+- Added `fig.cap` and an interpreting sentence to every vignette figure
+  that previously had neither: the permutation-null plot in
+  *Posterior-Predictive Checks*, the identifiability screen bar chart in
+  *Pre-IES Identifiability Screening*, the first-order and
+  interaction-contrast plots in *HSIC-Based Distributional Sensitivity*,
+  and the per-cluster bd-HSIC bar chart in *Hierarchical bd-HSIC on
+  Panel Data*.
+- Replaced the stale JMLR “beta” URL for the bd-HSIC citation (Hu,
+  Sejdinovic & Evans, 2024) with the paper’s canonical
+  `jmlr.org/papers/...` location in `README.md`.
+- Added `@examples` to
+  [`predict.cme_fit()`](https://max578.github.io/kernR/reference/predict.cme_fit.md),
+  [`as_orchestra_manifest()`](https://max578.github.io/kernR/reference/as_orchestra_manifest.md)
+  and
+  [`verify_manifest()`](https://max578.github.io/kernR/reference/verify_manifest.md),
+  the package’s three most substantive exported functions that
+  previously shipped without a runnable example.
+
 ## kernR 0.8.2
 
 ### Documentation
@@ -272,7 +362,7 @@
 
 - [`dr_date_scenario()`](https://max578.github.io/kernR/reference/dr_date_scenario.md)
   now inspects the `fidelity` slot of the two input
-  [`PESTO::pesto_ensemble_manifest`](https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html)
+  [`PESTO::pesto_ensemble_manifest`](https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html)
   objects. A provenance mismatch – one scenario single-fidelity and the
   other multi-fidelity, or two multi-fidelity runs with different stack
   shapes / final levels – raises a `warning` by default (the two
@@ -288,7 +378,7 @@
 - Both checks are forward-compatible: manifests from PESTO versions that
   do not populate the slot read as `NULL` and pass. Full fidelity
   provenance is populated by PESTO’s multi-fidelity
-  [`pesto_ies_callback()`](https://rdrr.io/pkg/PESTO/man/pesto_ies_callback.html)
+  [`pesto_ies_callback()`](https://max578.github.io/PESTO/reference/pesto_ies_callback.html)
   runs.
 
 ## kernR 0.4.0
@@ -520,7 +610,7 @@ substantial new public surface arriving in this release.
 - **Posterior-predictive check + PESTO contract**:
   [`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md)
   (consumes
-  [`PESTO::pesto_ensemble_manifest`](https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html)
+  [`PESTO::pesto_ensemble_manifest`](https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html)
   via S3 dispatch).
 - **Design**:
   [`lhs_design()`](https://max578.github.io/kernR/reference/lhs_design.md)
@@ -583,7 +673,7 @@ proxymix’s CRAN pre-submission stays untouched.
 - Accepts the latent prior either as a list
   `(means, covariances, weights)` or as any object exposing those slots
   — including
-  [`proxymix::fit_proxymix()`](https://rdrr.io/pkg/proxymix/man/fit_proxymix.html)
+  [`proxymix::fit_proxymix()`](https://max578.github.io/proxymix/reference/fit_proxymix.html)
   results (gated via
   [`methods::slot()`](https://rdrr.io/r/methods/slot.html), no hard
   dependency added).
@@ -782,7 +872,7 @@ null” — persists across sessions.
   proxies (Hoek & Elliott, 2024) to the joint and product-of-marginals
   sample clouds via `proxymix::fit_proxymix(regime = "sample")` and
   computes pointwise density ratios from
-  [`proxymix::dgmm()`](https://rdrr.io/pkg/proxymix/man/dgmm.html)
+  [`proxymix::dgmm()`](https://max578.github.io/proxymix/reference/dgmm.html)
   evaluations. Useful when the underlying densities are multimodal or
   when NCE-classifier calibration is unreliable.
 - [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
@@ -812,7 +902,7 @@ null” — persists across sessions.
   S3 method —
   [`mmd_ppc()`](https://max578.github.io/kernR/reference/mmd_ppc.md) now
   consumes a
-  [`PESTO::pesto_ensemble_manifest`](https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html)
+  [`PESTO::pesto_ensemble_manifest`](https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html)
   directly, completing the v0.3.0 cross-package contract symmetry
   alongside
   [`dr_date_scenario()`](https://max578.github.io/kernR/reference/dr_date_scenario.md).
@@ -898,7 +988,7 @@ family of RKHS regression methods.
 - `dr_date_scenario(baseline, intervention, ...)` — DR-DATE
   distributional treatment-effect test for the **two-scenario APSIM use
   case**, where `baseline` and `intervention` are
-  [`PESTO::pesto_ensemble_manifest`](https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html)
+  [`PESTO::pesto_ensemble_manifest`](https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html)
   objects (the v0.3.0 cross-package S7 contract). Pools parameters as
   covariates, outputs as the outcome, scenario label as binary
   treatment; dispatches to the existing

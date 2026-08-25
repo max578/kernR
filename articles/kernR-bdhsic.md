@@ -193,14 +193,17 @@ sessionInfo()
 #> [1] kernR_0.8.2
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.51         rlang_1.2.0       
-#>  [5] xfun_0.59          otel_0.2.0         generics_0.1.4     S7_0.2.2          
-#>  [9] textshaping_1.0.5  jsonlite_2.0.0     data.table_1.18.4  glue_1.8.1        
-#> [13] htmltools_0.5.9    PESTO_0.8.0        ragg_1.5.2         sass_0.4.10       
-#> [17] scales_1.4.0       rmarkdown_2.31     grid_4.6.1         evaluate_1.0.5    
-#> [21] jquerylib_0.1.4    fastmap_1.2.0      yaml_2.3.12        lifecycle_1.0.5   
-#> [25] compiler_4.6.1     RColorBrewer_1.1-3 fs_2.1.0           Rcpp_1.1.1-1.1    
-#> [29] farver_2.1.2       systemfonts_1.3.2  digest_0.6.39      R6_2.6.1          
-#> [33] bslib_0.11.0       gtable_0.3.6       tools_4.6.1        ggplot2_4.0.3     
-#> [37] pkgdown_2.2.0      cachem_1.1.0       desc_1.4.3
+#>  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.51         
+#>  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         
+#>  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  
+#> [10] jsonlite_2.0.0      data.table_1.18.6.1 glue_1.8.1         
+#> [13] htmltools_0.5.9     PESTO_0.10.1        ragg_1.5.2         
+#> [16] sass_0.4.10         scales_1.4.0        rmarkdown_2.31     
+#> [19] grid_4.6.1          evaluate_1.0.5      jquerylib_0.1.4    
+#> [22] fastmap_1.2.0       yaml_2.3.12         lifecycle_1.0.5    
+#> [25] compiler_4.6.1      RColorBrewer_1.1-3  fs_2.1.0           
+#> [28] Rcpp_1.1.2          farver_2.1.2        systemfonts_1.3.2  
+#> [31] digest_0.6.39       R6_2.6.1            bslib_0.12.0       
+#> [34] gtable_0.3.6        tools_4.6.1         ggplot2_4.0.3      
+#> [37] pkgdown_2.2.1       cachem_1.1.0        desc_1.4.3
 ```

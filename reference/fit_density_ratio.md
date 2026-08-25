@@ -76,7 +76,7 @@ Four backends are supported (the `method` argument):
   joint sample cloud `(x, z)` and one to a permuted product-of-marginals
   cloud via `proxymix::fit_proxymix(regime = "sample")`; ratios are
   evaluated in log-space from
-  [`proxymix::dgmm()`](https://rdrr.io/pkg/proxymix/man/dgmm.html).
+  [`proxymix::dgmm()`](https://max578.github.io/proxymix/reference/dgmm.html).
   Per-GMM convergence diagnostics (BIC, AIC, final log-likelihood,
   iteration count) are surfaced on the returned fit; query them via
   `fit$diagnostics`.

@@ -151,10 +151,10 @@ binary treatment. Sensitive to distributional differences (variance,
 shape, tails), not just mean shifts.
 
 The PESTO 0.3.0
-[`PESTO::pesto_ensemble_manifest`](https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html)
+[`PESTO::pesto_ensemble_manifest`](https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html)
 S7 contract is the supported input shape; the per-realisation file-I/O
 for ingestion is handled by
-[`PESTO::read_manifest()`](https://rdrr.io/pkg/PESTO/man/read_manifest.html)
+[`PESTO::read_manifest()`](https://max578.github.io/PESTO/reference/read_manifest.html)
 upstream of this call.
 
 ## Fidelity provenance
@@ -181,9 +181,9 @@ kernel statistics for testing distributional treatment effects.
 
 [`dr_date_test()`](https://max578.github.io/kernR/reference/dr_date_test.md)
 for the underlying observational-causal test;
-[`PESTO::pesto_ensemble_manifest`](https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html)
+[`PESTO::pesto_ensemble_manifest`](https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html)
 for the input contract;
-[`PESTO::pesto_ies_callback()`](https://rdrr.io/pkg/PESTO/man/pesto_ies_callback.html)
+[`PESTO::pesto_ies_callback()`](https://max578.github.io/PESTO/reference/pesto_ies_callback.html)
 for producing the ensembles upstream.
 
 Other distributional treatment effects:
@@ -196,6 +196,11 @@ Other distributional treatment effects:
 # \donttest{
 # Requires PESTO (>= 0.4.1) -- wired through Imports.
 library(PESTO)
+#> 
+#> Attaching package: ‘PESTO’
+#> The following object is masked from ‘package:kernR’:
+#> 
+#>     verify_manifest
 npar <- 2L; nobs <- 4L; nreal <- 60L
 G  <- matrix(stats::rnorm(nobs * npar), nobs, npar)
 y0 <- as.numeric(G %*% c(1.0, -0.5)) + stats::rnorm(nobs, sd = 0.05)
@@ -227,7 +232,7 @@ print(res)
 #>   baseline      : baseline (n=60)
 #>   intervention  : intervention (n=60)
 #>   outputs tested: o1, o2, o3, o4
-#>   PESTO versions: baseline=0.8.0, intervention=0.8.0
+#>   PESTO versions: baseline=0.10.1, intervention=0.10.1
 #>   fidelity      : baseline=single, intervention=single
 #>   Verdict:        fail to reject (no distributional difference detected)
 #> 

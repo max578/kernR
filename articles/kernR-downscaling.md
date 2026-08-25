@@ -267,7 +267,7 @@ observation is `y = T(x) + eps` where `T` is a *known* operator (spatial
 average, temporal average, satellite footprint convolution, a non-linear
 sensor model), `eps` is observation noise, and a parametric prior on the
 fine-scale latent `x` is available — for example, fitted via
-[`proxymix::fit_proxymix()`](https://rdrr.io/pkg/proxymix/man/fit_proxymix.html)
+[`proxymix::fit_proxymix()`](https://max578.github.io/proxymix/reference/fit_proxymix.html)
 on historical fine-scale data, or specified directly. The job is to
 recover the posterior `p(x | y)`.
 
@@ -350,14 +350,14 @@ head(samples)
 - The aggregation operator `T` is known (spatial averaging, temporal
   averaging, sensor convolution, mass-balance constraint).
 - A parametric latent prior is available — e.g. from
-  [`proxymix::fit_proxymix()`](https://rdrr.io/pkg/proxymix/man/fit_proxymix.html)
+  [`proxymix::fit_proxymix()`](https://max578.github.io/proxymix/reference/fit_proxymix.html)
   on historical fine-scale data, or user-supplied from a domain model.
 - You want a closed-form posterior when `T` is linear, or a clean
   importance-sampling pass when it is not — without committing to
   2000. 
 
 Pair with
-[`proxymix::fit_proxymix()`](https://rdrr.io/pkg/proxymix/man/fit_proxymix.html)
+[`proxymix::fit_proxymix()`](https://max578.github.io/proxymix/reference/fit_proxymix.html)
 (the canonical prior fitter) and PESTO’s manifest contract (the
 cross-package handoff) for the full APSIM → posterior-prior →
 downscaled-fine-scale chain.

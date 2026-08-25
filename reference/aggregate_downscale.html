@@ -56,7 +56,7 @@ fine-scale latent <code>X</code> from coarse / aggregate observations <code>Y</c
 a Gaussian-mixture prior on the latent. Implements the
 aggregate-likelihood / kernel-downsizing framework (Sejdinovic et
 al.) as a kernR-side method consuming an optional
-<code><a href="https://rdrr.io/pkg/proxymix/man/fit_proxymix.html" class="external-link">proxymix::fit_proxymix()</a></code> latent prior.</p>
+<code><a href="https://max578.github.io/proxymix/reference/fit_proxymix.html" class="external-link">proxymix::fit_proxymix()</a></code> latent prior.</p>
     </div>
 
     <div class="section level2">
@@ -93,7 +93,7 @@ matrix of latent samples to an <code>n x dim_y</code> matrix of aggregates
 <dd><p>Either (a) a list with elements <code>means</code>
 (<code>N x dim_x</code> matrix or list of <code>dim_x</code>-vectors), <code>covariances</code>
 (list of <code>N</code> <code>dim_x x dim_x</code> matrices), <code>weights</code> (length-<code>N</code>
-numeric, summing to 1) – or (b) a <code><a href="https://rdrr.io/pkg/proxymix/man/gmm_fit.html" class="external-link">proxymix::gmm_fit</a></code> (any object
+numeric, summing to 1) – or (b) a <code><a href="https://max578.github.io/proxymix/reference/gmm_fit.html" class="external-link">proxymix::gmm_fit</a></code> (any object
 exposing <code>@means</code>, <code>@covariances</code>, <code>@weights</code> slots).</p></dd>
 
 
@@ -164,7 +164,7 @@ mixture weights from the importance-weighted samples. Reports
 per-component effective sample size; warns when below a stated
 floor.</p></li>
 </ul><p>The aggregate-likelihood / GMM-proxy direction is shared with the
-companion proxymix Tier-2 stub <code><a href="https://rdrr.io/pkg/proxymix/man/from_aggregate_likelihood.html" class="external-link">proxymix::from_aggregate_likelihood()</a></code>,
+companion proxymix Tier-2 stub <code>proxymix::from_aggregate_likelihood()</code>,
 which targets the same problem from the prior-fitting side; this
 function targets it from the consumption side (inversion given a
 fitted prior).</p>
@@ -213,7 +213,7 @@ fitted prior).</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

@@ -24,6 +24,7 @@
 <url><loc>https://max578.github.io/kernR/index.html</loc></url>
 <url><loc>https://max578.github.io/kernR/news/index.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/aggregate_downscale.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/as_orchestra_manifest.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/assess_overlap.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/bd_hsic_test.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/bin_permute_treatment.html</loc></url>
@@ -78,6 +79,7 @@
 <url><loc>https://max578.github.io/kernR/reference/mmd_test.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/numeric_score.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/nystrom_factor.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/orchestra_manifest.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/parse_causal_formula.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/permutation_hsic_cpp.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/permutation_ksample_mmd_cpp.html</loc></url>
@@ -110,6 +112,7 @@
 <url><loc>https://max578.github.io/kernR/reference/tidy.kernel_test_result.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/tidy.taci_result.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/validate_input.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/verify_manifest.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/weighted_hsic_stat.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/weighted_hsic_stat_cpp.html</loc></url>
 </urlset>

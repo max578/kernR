@@ -113,7 +113,12 @@ graphics::barplot(
 )
 ```
 
-![](kernR-hierarchical-bdhsic_files/figure-html/plot-per-cluster-1.png)
+![Weighted bd-HSIC contribution per cluster (site), showing whether the
+causal signal is concentrated at one site or spread across the
+panel.](kernR-hierarchical-bdhsic_files/figure-html/plot-per-cluster-1.png)
+
+Weighted bd-HSIC contribution per cluster (site), showing whether the
+causal signal is concentrated at one site or spread across the panel.
 
 A site whose stratified statistic dwarfs the others is a candidate for
 follow-up investigation – either real site-specific effect modification

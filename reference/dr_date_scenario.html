@@ -184,9 +184,9 @@ systematic difference in the parameter posteriors that came from the
 two PESTO runs), outputs are the outcome, and the scenario label is
 the binary treatment. Sensitive to distributional differences
 (variance, shape, tails), not just mean shifts.</p>
-<p>The PESTO 0.3.0 <code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html" class="external-link">PESTO::pesto_ensemble_manifest</a></code> S7 contract is the
+<p>The PESTO 0.3.0 <code><a href="https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html" class="external-link">PESTO::pesto_ensemble_manifest</a></code> S7 contract is the
 supported input shape; the per-realisation file-I/O for ingestion is
-handled by <code><a href="https://rdrr.io/pkg/PESTO/man/read_manifest.html" class="external-link">PESTO::read_manifest()</a></code> upstream of this call.</p>
+handled by <code><a href="https://max578.github.io/PESTO/reference/read_manifest.html" class="external-link">PESTO::read_manifest()</a></code> upstream of this call.</p>
     </div>
     <div class="section level2">
     <h2 id="fidelity-provenance">Fidelity provenance<a class="anchor" aria-label="anchor" href="#fidelity-provenance"></a></h2>
@@ -213,8 +213,8 @@ robust kernel statistics for testing distributional treatment effects.
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="dr_date_test.html">dr_date_test()</a></code> for the underlying observational-causal
-test; <code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html" class="external-link">PESTO::pesto_ensemble_manifest</a></code> for the input contract;
-<code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ies_callback.html" class="external-link">PESTO::pesto_ies_callback()</a></code> for producing the ensembles upstream.</p>
+test; <code><a href="https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html" class="external-link">PESTO::pesto_ensemble_manifest</a></code> for the input contract;
+<code><a href="https://max578.github.io/PESTO/reference/pesto_ies_callback.html" class="external-link">PESTO::pesto_ies_callback()</a></code> for producing the ensembles upstream.</p>
 <p>Other distributional treatment effects:
 <code><a href="dr_date_test.html">dr_date_test()</a></code>,
 <code><a href="dr_dett_test.html">dr_dett_test()</a></code></p></div>
@@ -225,6 +225,11 @@ test; <code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html"
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Requires PESTO (&gt;= 0.4.1) -- wired through Imports.</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/PESTO" class="external-link">PESTO</a></span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘PESTO’</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following object is masked from ‘package:kernR’:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     verify_manifest</span>
 <span class="r-in"><span><span class="va">npar</span> <span class="op">&lt;-</span> <span class="fl">2L</span>; <span class="va">nobs</span> <span class="op">&lt;-</span> <span class="fl">4L</span>; <span class="va">nreal</span> <span class="op">&lt;-</span> <span class="fl">60L</span></span></span>
 <span class="r-in"><span><span class="va">G</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">nobs</span> <span class="op">*</span> <span class="va">npar</span><span class="op">)</span>, <span class="va">nobs</span>, <span class="va">npar</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">y0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">G</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.0</span>, <span class="op">-</span><span class="fl">0.5</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">nobs</span>, sd <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></span>
@@ -233,12 +238,12 @@ test; <code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html"
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">prior</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">nreal</span> <span class="op">*</span> <span class="va">npar</span><span class="op">)</span>, <span class="va">nreal</span>, <span class="va">npar</span>,</span></span>
 <span class="r-in"><span>                dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"p1"</span>, <span class="st">"p2"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/PESTO/man/pesto_ies_callback.html" class="external-link">pesto_ies_callback</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="va">t</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">G</span><span class="op">)</span>, <span class="va">prior</span>, <span class="va">y0</span>, <span class="fl">0.05</span>,</span></span>
+<span class="r-in"><span><span class="va">fit0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://max578.github.io/PESTO/reference/pesto_ies_callback.html" class="external-link">pesto_ies_callback</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="va">t</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">G</span><span class="op">)</span>, <span class="va">prior</span>, <span class="va">y0</span>, <span class="fl">0.05</span>,</span></span>
 <span class="r-in"><span>                           noptmax <span class="op">=</span> <span class="fl">3</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/PESTO/man/pesto_ies_callback.html" class="external-link">pesto_ies_callback</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="va">t</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">G</span><span class="op">)</span>, <span class="va">prior</span>, <span class="va">y1</span>, <span class="fl">0.05</span>,</span></span>
+<span class="r-in"><span><span class="va">fit1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://max578.github.io/PESTO/reference/pesto_ies_callback.html" class="external-link">pesto_ies_callback</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="va">t</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">G</span><span class="op">)</span>, <span class="va">prior</span>, <span class="va">y1</span>, <span class="fl">0.05</span>,</span></span>
 <span class="r-in"><span>                           noptmax <span class="op">=</span> <span class="fl">3</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">m_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/PESTO/man/as_manifest.html" class="external-link">as_manifest</a></span><span class="op">(</span><span class="va">fit0</span>, run_id <span class="op">=</span> <span class="st">"baseline"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">m_intv</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/PESTO/man/as_manifest.html" class="external-link">as_manifest</a></span><span class="op">(</span><span class="va">fit1</span>, run_id <span class="op">=</span> <span class="st">"intervention"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">m_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://max578.github.io/PESTO/reference/as_manifest.html" class="external-link">as_manifest</a></span><span class="op">(</span><span class="va">fit0</span>, run_id <span class="op">=</span> <span class="st">"baseline"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">m_intv</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://max578.github.io/PESTO/reference/as_manifest.html" class="external-link">as_manifest</a></span><span class="op">(</span><span class="va">fit1</span>, run_id <span class="op">=</span> <span class="st">"intervention"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">dr_date_scenario</span><span class="op">(</span><span class="va">m_base</span>, <span class="va">m_intv</span>,</span></span>
 <span class="r-in"><span>                         n_permutations <span class="op">=</span> <span class="fl">200L</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
@@ -256,7 +261,7 @@ test; <code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html"
 <span class="r-out co"><span class="r-pr">#&gt;</span>   baseline      : baseline (n=60)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   intervention  : intervention (n=60)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   outputs tested: o1, o2, o3, o4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   PESTO versions: baseline=0.8.0, intervention=0.8.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PESTO versions: baseline=0.10.1, intervention=0.10.1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   fidelity      : baseline=single, intervention=single</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Verdict:        fail to reject (no distributional difference detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -272,7 +277,7 @@ test; <code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html"
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

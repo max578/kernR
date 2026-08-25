@@ -115,7 +115,7 @@ high-dimensional `z`, and have well-understood calibration. Reach for
   this cleanly where a classifier would smear across the modes;
 - you need a **parametric** density-ratio whose components you can
   inspect, hand off to a downstream Bayesian step (via
-  [`proxymix::gmm_target_from_posterior()`](https://rdrr.io/pkg/proxymix/man/gmm_target_from_posterior.html)),
+  [`proxymix::gmm_target_from_posterior()`](https://max578.github.io/proxymix/reference/gmm_target_from_posterior.html)),
   or use as the seed of a KLD-EM refinement on a target you can evaluate
   but not sample from;
 - classifier calibration is unreliable on the cohort at hand (small `n`,
@@ -165,16 +165,20 @@ sessionInfo()
 #> [1] kernR_0.8.2
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] mvnfast_0.2.8      Matrix_1.7-5       gtable_0.3.6       jsonlite_2.0.0    
-#>  [5] compiler_4.6.1     ranger_0.18.0      Rcpp_1.1.1-1.1     jquerylib_0.1.4   
-#>  [9] systemfonts_1.3.2  scales_1.4.0       textshaping_1.0.5  yaml_2.3.12       
-#> [13] fastmap_1.2.0      lattice_0.22-9     ggplot2_4.0.3      R6_2.6.1          
-#> [17] generics_0.1.4     proxymix_0.11.4    knitr_1.51         desc_1.4.3        
-#> [21] bslib_0.11.0       RColorBrewer_1.1-3 rlang_1.2.0        cachem_1.1.0      
-#> [25] xfun_0.59          fs_2.1.0           sass_0.4.10        S7_0.2.2          
-#> [29] otel_0.2.0         cli_3.6.6          pkgdown_2.2.0      withr_3.0.3       
-#> [33] PESTO_0.8.0        digest_0.6.39      grid_4.6.1         xgboost_3.2.1.1   
-#> [37] lifecycle_1.0.5    vctrs_0.7.3        evaluate_1.0.5     glue_1.8.1        
-#> [41] data.table_1.18.4  farver_2.1.2       ragg_1.5.2         rmarkdown_2.31    
-#> [45] tools_4.6.1        htmltools_0.5.9
+#>  [1] mvnfast_0.2.8       Matrix_1.7-5        gtable_0.3.6       
+#>  [4] jsonlite_2.0.0      compiler_4.6.1      ranger_0.18.0      
+#>  [7] Rcpp_1.1.2          jquerylib_0.1.4     systemfonts_1.3.2  
+#> [10] scales_1.4.0        textshaping_1.0.5   yaml_2.3.12        
+#> [13] fastmap_1.2.0       lattice_0.22-9      ggplot2_4.0.3      
+#> [16] R6_2.6.1            generics_0.1.4      proxymix_0.15.2    
+#> [19] knitr_1.51          desc_1.4.3          bslib_0.12.0       
+#> [22] RColorBrewer_1.1-3  rlang_1.3.0         cachem_1.1.0       
+#> [25] xfun_0.60           fs_2.1.0            sass_0.4.10        
+#> [28] S7_0.2.2            otel_0.2.0          cli_3.6.6          
+#> [31] pkgdown_2.2.1       withr_3.0.3         PESTO_0.10.1       
+#> [34] digest_0.6.39       grid_4.6.1          xgboost_3.2.1.1    
+#> [37] lifecycle_1.0.5     vctrs_0.7.3         evaluate_1.0.5     
+#> [40] glue_1.8.1          data.table_1.18.6.1 farver_2.1.2       
+#> [43] ragg_1.5.2          rmarkdown_2.31      tools_4.6.1        
+#> [46] htmltools_0.5.9
 ```

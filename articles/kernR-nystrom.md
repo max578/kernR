@@ -95,9 +95,9 @@ benchmark_hsic <- function(n, m, B = 49L, seed = 1L) {
 
 benchmark_hsic(n = 500L,  m = 60L)
 #>     n  m            method elapsed_s p_value
-#> 1 500 60 hsic_test (exact)     0.098    0.02
-#> 2 500 60           nystrom     0.021    0.02
-#> 3 500 60               rff     0.018    0.02
+#> 1 500 60 hsic_test (exact)     0.093    0.02
+#> 2 500 60           nystrom     0.016    0.02
+#> 3 500 60               rff     0.015    0.02
 ```
 
 For larger `n`, the gap widens:
@@ -106,9 +106,9 @@ For larger `n`, the gap widens:
 
 benchmark_hsic(n = 1500L, m = 100L)
 #>      n   m            method elapsed_s p_value
-#> 1 1500 100 hsic_test (exact)     1.217    0.02
-#> 2 1500 100           nystrom     0.136    0.02
-#> 3 1500 100               rff     0.134    0.02
+#> 1 1500 100 hsic_test (exact)     0.783    0.02
+#> 2 1500 100           nystrom     0.117    0.02
+#> 3 1500 100               rff     0.117    0.02
 ```
 
 The verdict (reject vs accept) agrees across exact and approximate tests

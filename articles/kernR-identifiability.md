@@ -111,13 +111,25 @@ should fall below the threshold.
 plot(fit)
 ```
 
-![](kernR-identifiability_files/figure-html/plot-1.png)
+![Maximum HSIC-Sensitivity Index per parameter across the yield and
+biomass outputs, with the identifiability threshold
+marked.](kernR-identifiability_files/figure-html/plot-1.png)
+
+Maximum HSIC-Sensitivity Index per parameter across the yield and
+biomass outputs, with the identifiability threshold marked.
+
+`slope` and `curvature` clear the threshold comfortably – each drives
+one output almost deterministically by construction – while `inert` sits
+at the floor and `weak` lands close to the boundary, reflecting its
+genuinely marginal effect on biomass. Only `slope`, `curvature` and
+(marginally) `weak` are candidates for the IES prior; `inert` would
+waste calibration budget.
 
 ## Handing off to PESTO
 
 The identifiable subset is precisely the set you would forward to
-[`pesto_ies()`](https://rdrr.io/pkg/PESTO/man/pesto_ies.html) (PESTO’s
-IES wrapper) as the parameter prior. In pseudo-R:
+[`pesto_ies()`](https://max578.github.io/PESTO/reference/pesto_ies.html)
+(PESTO’s IES wrapper) as the parameter prior. In pseudo-R:
 
     identifiable_params <- names(fit$identifiable)[fit$identifiable]
     pesto::pesto_ies(..., params = identifiable_params, ...)

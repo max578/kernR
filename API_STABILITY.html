@@ -63,8 +63,8 @@
 </div>
 <div class="section level2">
 <h2 id="cross-package-contracts">Cross-package contracts<a class="anchor" aria-label="anchor" href="#cross-package-contracts"></a></h2>
-<p><code>kernR</code> imports <code>PESTO (&gt;= 0.3.0)</code> and dispatches on <code><a href="https://rdrr.io/pkg/PESTO/man/pesto_ensemble_manifest.html" class="external-link">PESTO::pesto_ensemble_manifest</a></code> via S3 methods registered at <code>.onLoad()</code>. The contract is owned jointly with PESTO; any change to the S7 class shape on PESTO’s side requires a coordinated kernR release (and a corresponding <code>Imports:</code> lower bound bump).</p>
-<p><code>proxymix (&gt;= 0.3.0)</code> in <code>Suggests</code> provides the <code>density_ratio = "proxymix"</code> backend. The interface is the <code><a href="https://rdrr.io/pkg/proxymix/man/fit_proxymix.html" class="external-link">proxymix::fit_proxymix()</a></code> / <code><a href="https://rdrr.io/pkg/proxymix/man/dgmm.html" class="external-link">proxymix::dgmm()</a></code> pair; backwards- incompatible changes there will be detected at run-time via the <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> guard.</p>
+<p><code>kernR</code> imports <code>PESTO (&gt;= 0.3.0)</code> and dispatches on <code><a href="https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html" class="external-link">PESTO::pesto_ensemble_manifest</a></code> via S3 methods registered at <code>.onLoad()</code>. The contract is owned jointly with PESTO; any change to the S7 class shape on PESTO’s side requires a coordinated kernR release (and a corresponding <code>Imports:</code> lower bound bump).</p>
+<p><code>proxymix (&gt;= 0.3.0)</code> in <code>Suggests</code> provides the <code>density_ratio = "proxymix"</code> backend. The interface is the <code><a href="https://max578.github.io/proxymix/reference/fit_proxymix.html" class="external-link">proxymix::fit_proxymix()</a></code> / <code><a href="https://max578.github.io/proxymix/reference/dgmm.html" class="external-link">proxymix::dgmm()</a></code> pair; backwards- incompatible changes there will be detected at run-time via the <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> guard.</p>
 </div>
 <div class="section level2">
 <h2 id="versioning-and-tags">Versioning and tags<a class="anchor" aria-label="anchor" href="#versioning-and-tags"></a></h2>
@@ -85,7 +85,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

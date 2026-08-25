@@ -5,7 +5,7 @@ fine-scale latent `X` from coarse / aggregate observations `Y`, using a
 Gaussian-mixture prior on the latent. Implements the
 aggregate-likelihood / kernel-downsizing framework (Sejdinovic et al.)
 as a kernR-side method consuming an optional
-[`proxymix::fit_proxymix()`](https://rdrr.io/pkg/proxymix/man/fit_proxymix.html)
+[`proxymix::fit_proxymix()`](https://max578.github.io/proxymix/reference/fit_proxymix.html)
 latent prior.
 
 ## Usage
@@ -41,7 +41,7 @@ aggregate_downscale(
   Either (a) a list with elements `means` (`N x dim_x` matrix or list of
   `dim_x`-vectors), `covariances` (list of `N` `dim_x x dim_x`
   matrices), `weights` (length-`N` numeric, summing to 1) – or (b) a
-  [`proxymix::gmm_fit`](https://rdrr.io/pkg/proxymix/man/gmm_fit.html)
+  [`proxymix::gmm_fit`](https://max578.github.io/proxymix/reference/gmm_fit.html)
   (any object exposing `@means`, `@covariances`, `@weights` slots).
 
 - sigma_y:
@@ -131,8 +131,7 @@ Two computational paths, selected on `aggregator`'s class:
   per-component effective sample size; warns when below a stated floor.
 
 The aggregate-likelihood / GMM-proxy direction is shared with the
-companion proxymix Tier-2 stub
-[`proxymix::from_aggregate_likelihood()`](https://rdrr.io/pkg/proxymix/man/from_aggregate_likelihood.html),
+companion proxymix Tier-2 stub `proxymix::from_aggregate_likelihood()`,
 which targets the same problem from the prior-fitting side; this
 function targets it from the consumption side (inversion given a fitted
 prior).

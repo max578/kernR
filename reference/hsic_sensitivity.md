@@ -181,10 +181,17 @@ the Sobol first-order index.
 **Total-order index** (when `total_order = TRUE`): \$\$T^{HSIC}\_j = 1 -
 \frac{HSIC(X\_{\sim j}, Y)}{\sqrt{HSIC(X\_{\sim j}, X\_{\sim j}) \cdot
 HSIC(Y, Y)}}\$\$ where `X_{~j}` is the parameter design with column `j`
-removed. By construction the difference `T_j - S_j` captures the
-contribution of `X_j` *through interactions* with other parameters. For
-purely additive models `T_j = S_j`; in the presence of interaction
-`T_j > S_j`.
+removed. The difference `T_j - S_j` is used as an *interaction screen*:
+`S_j` and `T_j` are built from different normalisers (`HSIC(X_j, .)`
+versus `1 - HSIC(X_{~j}, .)`), so **this is not a variance-budget
+identity** – unlike a Sobol decomposition, `T_j - S_j` is not guaranteed
+to be exactly zero on a purely additive model, and the two indices need
+not sum, or agree, in any exact sense. On a purely additive model
+`Y = sum_j f_j(X_j)` the gap is typically small relative to a genuinely
+interactive model (`Y = X_1 X_2`), where `S_j` may be near zero (the
+marginal signal averages out) while `T_j` is strong; use the *relative
+size* of the gap across parameters as the interaction screen, not its
+distance from an exact zero.
 
 Unlike variance-based Sobol indices, both versions of the
 HSIC-Sensitivity Index capture non-linear and distributional effects: a

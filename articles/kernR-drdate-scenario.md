@@ -20,6 +20,11 @@ adjustment absorbs the covariate shift (provided positivity holds).
 
 library(kernR)
 library(PESTO)
+#> 
+#> Attaching package: 'PESTO'
+#> The following object is masked from 'package:kernR':
+#> 
+#>     verify_manifest
 ```
 
 ## One calibration, two scenarios
@@ -115,17 +120,17 @@ m_baseline
 #>   method        : ies_callback  (noptmax=3)
 #>   ensemble      : 60 realisations x 2 parameters | 4 observations
 #>   failure rate  : 0.00%
-#>   pesto version : 0.8.0  apsim: NA
-#>   timestamp     : 2026-06-25T08:38:05+0000
+#>   pesto version : 0.10.1  apsim: NA
+#>   timestamp     : 2026-08-25T10:15:47+0000
 #>   data hash     : sha256:vignette_baseline
 ```
 
 In production you would build these manifests via
-[`as_manifest()`](https://rdrr.io/pkg/PESTO/man/as_manifest.html) on two
-separate IES runs *only when the scenarios genuinely produced different
-calibration data*. For the “did the intervention shift the forward
-outputs?” question, the same-posterior construction above is the right
-one.
+[`as_manifest()`](https://max578.github.io/PESTO/reference/as_manifest.html)
+on two separate IES runs *only when the scenarios genuinely produced
+different calibration data*. For the “did the intervention shift the
+forward outputs?” question, the same-posterior construction above is the
+right one.
 
 ## Run the DR-DATE scenario test
 
@@ -152,7 +157,7 @@ print(res)
 #>   baseline      : wagga_baseline_2026 (n=60)
 #>   intervention  : wagga_stubble_2026 (n=60)
 #>   outputs tested: o1, o2, o3, o4
-#>   PESTO versions: baseline=0.8.0, intervention=0.8.0
+#>   PESTO versions: baseline=0.10.1, intervention=0.10.1
 #>   fidelity      : baseline=single, intervention=single
 #>   Verdict:        REJECT (distributions differ; intervention has effect)
 ```
@@ -231,7 +236,7 @@ intervention density (and vice versa). If the two posteriors are
 completely separated in parameter space, the test will see “perfect
 separation” in the propensity-model fit and become uninformative
 (`p_value ~ 1`). For that regime, use
-[`PESTO::pesto_ies_callback()`](https://rdrr.io/pkg/PESTO/man/pesto_ies_callback.html)
+[`PESTO::pesto_ies_callback()`](https://max578.github.io/PESTO/reference/pesto_ies_callback.html)
 with a shared prior + overlapping calibration data, or restrict to
 outputs whose causal pathway is independent of the separating
 parameters.
@@ -239,19 +244,19 @@ parameters.
 ## Where the cross-package plumbing lives
 
 - Forward-model run:
-  [`PESTO::pesto_ies_callback()`](https://rdrr.io/pkg/PESTO/man/pesto_ies_callback.html)
+  [`PESTO::pesto_ies_callback()`](https://max578.github.io/PESTO/reference/pesto_ies_callback.html)
   (in-process R callback) or
-  [`PESTO::apsim_callback()`](https://rdrr.io/pkg/PESTO/man/apsim_callback.html)
+  [`PESTO::apsim_callback()`](https://max578.github.io/PESTO/reference/apsim_callback.html)
   (apsimx adapter).
 - Run capture:
-  [`PESTO::as_manifest()`](https://rdrr.io/pkg/PESTO/man/as_manifest.html)
+  [`PESTO::as_manifest()`](https://max578.github.io/PESTO/reference/as_manifest.html)
   → `pesto_ensemble_manifest`.
 - Persistence:
-  [`PESTO::write_manifest()`](https://rdrr.io/pkg/PESTO/man/write_manifest.html)
+  [`PESTO::write_manifest()`](https://max578.github.io/PESTO/reference/write_manifest.html)
   /
-  [`PESTO::read_manifest()`](https://rdrr.io/pkg/PESTO/man/read_manifest.html)
+  [`PESTO::read_manifest()`](https://max578.github.io/PESTO/reference/read_manifest.html)
   /
-  [`PESTO::verify_manifest()`](https://rdrr.io/pkg/PESTO/man/verify_manifest.html).
+  [`PESTO::verify_manifest()`](https://max578.github.io/PESTO/reference/verify_manifest.html).
 - Distributional verdict: this function.
 - (Future) proxymix density-ratio backend plug-in: tracked under §C1 of
   the roadmap; will become a fourth propensity-model option once it
@@ -283,17 +288,20 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] PESTO_0.8.0 kernR_0.8.2
+#> [1] PESTO_0.10.1 kernR_0.8.2 
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.51         rlang_1.2.0       
-#>  [5] xfun_0.59          otel_0.2.0         generics_0.1.4     S7_0.2.2          
-#>  [9] textshaping_1.0.5  jsonlite_2.0.0     data.table_1.18.4  glue_1.8.1        
-#> [13] htmltools_0.5.9    ragg_1.5.2         sass_0.4.10        scales_1.4.0      
-#> [17] rmarkdown_2.31     grid_4.6.1         evaluate_1.0.5     jquerylib_0.1.4   
-#> [21] fastmap_1.2.0      yaml_2.3.12        lifecycle_1.0.5    compiler_4.6.1    
-#> [25] RColorBrewer_1.1-3 fs_2.1.0           Rcpp_1.1.1-1.1     farver_2.1.2      
-#> [29] systemfonts_1.3.2  digest_0.6.39      R6_2.6.1           bslib_0.11.0      
-#> [33] gtable_0.3.6       tools_4.6.1        ggplot2_4.0.3      pkgdown_2.2.0     
-#> [37] cachem_1.1.0       desc_1.4.3
+#>  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.51         
+#>  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         
+#>  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  
+#> [10] jsonlite_2.0.0      data.table_1.18.6.1 glue_1.8.1         
+#> [13] htmltools_0.5.9     ragg_1.5.2          sass_0.4.10        
+#> [16] scales_1.4.0        rmarkdown_2.31      grid_4.6.1         
+#> [19] evaluate_1.0.5      jquerylib_0.1.4     fastmap_1.2.0      
+#> [22] yaml_2.3.12         lifecycle_1.0.5     compiler_4.6.1     
+#> [25] RColorBrewer_1.1-3  fs_2.1.0            Rcpp_1.1.2         
+#> [28] farver_2.1.2        systemfonts_1.3.2   digest_0.6.39      
+#> [31] R6_2.6.1            bslib_0.12.0        gtable_0.3.6       
+#> [34] tools_4.6.1         ggplot2_4.0.3       pkgdown_2.2.1      
+#> [37] cachem_1.1.0        desc_1.4.3
 ```
