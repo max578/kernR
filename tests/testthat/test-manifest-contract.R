@@ -63,7 +63,7 @@ test_that("data_hash follows the reference payload-hash recipe", {
                 m@summary)
     raw <- serialize(obj, connection = NULL, version = 2L)
     raw <- raw[-seq_len(14L)]
-    paste0("sha256:", as.character(tools::sha256sum(bytes = raw)))
+    paste0("sha256:", digest::digest(raw, algo = "sha256", serialize = FALSE))
   }
 
   set.seed(13L)

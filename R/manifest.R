@@ -47,8 +47,9 @@ MANIFEST_VERSION <- "2.0.0-draft"
 #' timestamp are metadata and are not hashed -- spec section 8.4). The
 #' `"sha256:"` prefix and the slot ordering match the reference implementation
 #' so a manifest hashed by kernR verifies under the federation's
-#' `verify_manifest()`. Uses `tools::sha256sum()` (base R) so the emitter adds
-#' no new hard dependency.
+#' `verify_manifest()`. Hashes through `digest::digest()` (the same hasher the
+#' reference contract uses); `tools::sha256sum()` would have been base R but
+#' only exists from R 4.5.0, above this package's declared floor.
 #'
 #' Serialisation is pinned to format version 2 and its fixed 14-byte header
 #' (magic, format, writer R version, minimum R version able to read it) is
@@ -70,7 +71,7 @@ MANIFEST_VERSION <- "2.0.0-draft"
   obj <- list(params, outputs, weights, obs_target, seed, summary)
   raw <- serialize(obj, connection = NULL, version = 2L)
   raw <- raw[-seq_len(14L)]
-  paste0("sha256:", as.character(tools::sha256sum(bytes = raw)))
+  paste0("sha256:", digest::digest(raw, algo = "sha256", serialize = FALSE))
 }
 
 #' A typed home for a kernR verdict (contract v1.1)

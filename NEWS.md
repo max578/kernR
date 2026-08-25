@@ -1,5 +1,9 @@
 # kernR (development version)
 
+* The manifest integrity hash uses `digest::digest()` instead of
+  `tools::sha256sum()`, which only exists from R 4.5.0 (above the declared
+  R >= 4.1.0 floor); `digest` is now an Import.
+
 ## Bug fixes
 
 * `joint_coverage_test()` errored on a `pesto_ensemble_manifest` object:
