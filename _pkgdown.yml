@@ -106,6 +106,13 @@ reference:
   - mmd_ppc
   - pesto_ensemble
 
+- title: Orchestra manifest contract
+  desc: Emitting a kernR verdict as the federation's shared, integrity-hashed manifest, and verifying one.
+  contents:
+  - as_orchestra_manifest
+  - orchestra_manifest
+  - verify_manifest
+
 - title: Tidiers
   desc: broom-style one-row-per-term summaries of kernR verdict objects.
   contents:

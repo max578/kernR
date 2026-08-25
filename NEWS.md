@@ -8,6 +8,10 @@
   was unreachable through dispatch. The third `registerS3method()` call
   is now registered alongside the other two.
 
+* The pkgdown reference index gained an *Orchestra manifest contract*
+  section; the three new manifest exports were missing from it, which
+  failed the site build.
+
 ## New features
 
 * `as_orchestra_manifest()` (S3 generic, methods for `taci_result` and
@@ -19,7 +23,15 @@
   `summary` carries `abstained` set from the result's own reliability
   flags (`posterior_adequacy$ok` for TACI, `ess_warning` /
   `density_ratio_warning` for a kernel test). `verify_manifest()`
-  recomputes the payload hash for tamper detection.
+  recomputes the payload hash for tamper detection. The emitted object is
+  the federation's shared contract class, not a kernR-namespaced
+  look-alike: the S7 class is declared with `package = NULL` (S7 identity
+  is the pair name/package, so a class declared under `kernR` would carry
+  the name `"kernR::orchestra_manifest"` and be refused by every orchestra
+  consumer), and the payload hash follows the reference recipe exactly --
+  `serialize()` pinned to format 2 with its fixed 14-byte header dropped
+  before hashing, so the digest is reproducible across R versions and
+  recomputable by a consumer.
 
 ## Documentation
 
