@@ -1,3 +1,26 @@
+# kernR (development version)
+
+## Bug fixes
+
+* `joint_coverage_test()` errored on a `pesto_ensemble_manifest` object:
+  `.onLoad` registered the package-qualified S7 alias for `mmd_ppc()` and
+  `coverage_test()` only, so the manifest method declared in `NAMESPACE`
+  was unreachable through dispatch. The third `registerS3method()` call
+  is now registered alongside the other two.
+
+## New features
+
+* `as_orchestra_manifest()` (S3 generic, methods for `taci_result` and
+  `kernel_test_result`) emits a kernR verdict as an `orchestra_manifest`
+  S7 object, closing the previously-missing emit side of the C2 contract:
+  a TACI mechanism-consistency decision or a kernel hypothesis test can
+  now enter `decideR` through the shared manifest, not just be consumed
+  by hand. `inferential_target` is `"treatment_effects"`; the typed
+  `summary` carries `abstained` set from the result's own reliability
+  flags (`posterior_adequacy$ok` for TACI, `ess_warning` /
+  `density_ratio_warning` for a kernel test). `verify_manifest()`
+  recomputes the payload hash for tamper detection.
+
 # kernR 0.8.2
 
 ## Documentation
