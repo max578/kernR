@@ -16,7 +16,7 @@ test_that("a TACI verdict emits a treatment_effects manifest, reliable case", {
                    treatment_type = "binary", n_perm = 100L, seed = 1L)
 
   m <- as_orchestra_manifest(fit)
-  expect_s3_class(m, "kernR::orchestra_manifest")
+  expect_s3_class(m, "orchestra_manifest")
   expect_equal(m@inferential_target, "treatment_effects")
   expect_equal(m@emitter_package, "kernR")
   expect_s3_class(m@summary, "manifest_summary")
@@ -56,7 +56,7 @@ test_that("a kernel_test_result emits a treatment_effects manifest", {
   expect_s3_class(fit, "kernel_test_result")
 
   m <- as_orchestra_manifest(fit)
-  expect_s3_class(m, "kernR::orchestra_manifest")
+  expect_s3_class(m, "orchestra_manifest")
   expect_equal(m@inferential_target, "treatment_effects")
   expect_equal(m@method, "kernR:HSIC")
   expect_false(m@summary$abstained)

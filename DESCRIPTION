@@ -24,6 +24,7 @@ Depends:
     R (>= 4.1.0)
 Imports:
     data.table,
+    digest,
     generics,
     methods,
     Rcpp,
