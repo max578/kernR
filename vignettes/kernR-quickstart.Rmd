@@ -23,6 +23,7 @@ knitr::opts_chunk$set(
 
 **kernR** provides kernel-based statistical tests for causal inference and
 distributional comparison. It implements:
+
 - **HSIC test**: independence testing via the Hilbert-Schmidt Independence Criterion
 - **MMD test**: two-sample testing via Maximum Mean Discrepancy
 - **bd-HSIC test**: causal association testing with backdoor adjustment
@@ -80,8 +81,9 @@ result <- mmd_test(x, y, seed = 1)
 result
 ```
 
-The p-value is large — no evidence of different distributions. Now with a
-mean shift:
+The p-value is large -- no evidence of different distributions. Now with a
+mean shift.
+
 ```{r mmd-different}
 y_shifted <- matrix(rnorm(200, mean = 0.5), 100, 2)
 result <- mmd_test(x, y_shifted, seed = 1)
@@ -92,7 +94,7 @@ The small p-value correctly detects the distributional difference.
 
 ## Independence Testing with HSIC
 
-HSIC tests whether two variables are independent — including non-linear
+HSIC tests whether two variables are independent -- including non-linear
 dependencies that correlation would miss.
 
 ```{r hsic-nonlinear}
@@ -123,9 +125,9 @@ plot(result)
 ```
 
 ## Next Steps
-- `vignette("kernR-bdhsic")` — Causal association testing with bd-HSIC
-- `vignette("kernR-drtest")` — Distributional treatment effect tests
-- `vignette("kernR-hierarchical")` — Tests for hierarchical/nested data
+- `vignette("kernR-bdhsic")` -- causal association testing with bd-HSIC
+- `vignette("kernR-drtest")` -- distributional treatment effect tests
+- `vignette("kernR-hierarchical")` -- tests for hierarchical/nested data
 
 ```{r session-info}
 sessionInfo()

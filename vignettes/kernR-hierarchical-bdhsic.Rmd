@@ -110,7 +110,7 @@ fit_hier$per_cluster_statistic
 Plot the per-cluster contributions to look for a single-site dominant
 signal vs. a uniformly distributed effect:
 
-```{r plot-per-cluster, fig.height = 4}
+```{r plot-per-cluster, fig.height = 4, fig.cap = "Weighted bd-HSIC contribution per cluster (site), showing whether the causal signal is concentrated at one site or spread across the panel."}
 graphics::barplot(
   fit_hier$per_cluster_statistic,
   las  = 2L,
