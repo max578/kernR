@@ -330,7 +330,7 @@ bd_hsic_test <- function(x, y, z,
   # p-value
   p_value <- (1 + sum(null_dist >= stat_obs)) / (1 + n_permutations)
 
-  structure(
+  result <- structure(
     list(
       statistic = stat_obs,
       p_value = p_value,
@@ -355,4 +355,12 @@ bd_hsic_test <- function(x, y, z,
     ),
     class = "kernel_test_result"
   )
+
+  # K4 residual: stamp the typed abstention marker when either reliability
+  # gate tripped, so a cross-member gate recognises this as a decline
+  # without knowing kernR's field names (see R/abstention.R).
+  if (ess_warning || dr_quality_warning) {
+    result <- .mark_kernR_abstention(result)
+  }
+  result
 }
