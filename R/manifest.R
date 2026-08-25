@@ -268,7 +268,12 @@ as_orchestra_manifest <- function(x, ...) {
 #' @rdname as_orchestra_manifest
 #' @export
 as_orchestra_manifest.taci_result <- function(x, ..., run_id = NULL) {
-  reliable <- isTRUE(x$posterior_adequacy$ok)
+  # K8 residual: `abstained` is read off the typed `kernR_abstention` marker
+  # (R/abstention.R) -- the same signal `is_orchestra_decline()` reads at a
+  # cross-member gate -- rather than re-deriving it from the raw
+  # `posterior_adequacy$ok` flag a second time. `reliable` still names the
+  # concept the abstain_reason branch below reads.
+  reliable <- !is_kernR_abstention(x)
 
   summ <- manifest_summary(
     headline = x$verdict,
@@ -327,7 +332,11 @@ as_orchestra_manifest.taci_result <- function(x, ..., run_id = NULL) {
 as_orchestra_manifest.kernel_test_result <- function(x, ..., run_id = NULL) {
   ess_warn <- isTRUE(x$ess_warning)
   dr_warn  <- isTRUE(x$density_ratio_warning)
-  reliable <- !ess_warn && !dr_warn
+  # K8 residual: `abstained` below is read off the typed `kernR_abstention`
+  # marker (R/abstention.R), not re-derived from the two raw flags a second
+  # time; `ess_warn`/`dr_warn` are kept only to build the human-readable
+  # `abstain_reason`.
+  reliable <- !is_kernR_abstention(x)
   reason <- if (reliable) {
     NA_character_
   } else if (ess_warn && dr_warn) {
