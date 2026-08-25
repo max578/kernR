@@ -361,7 +361,7 @@ taci_test <- function(posterior, mechanism, X, treatment, outcome,
     decision
   }
 
-  structure(
+  result <- structure(
     list(observed_statistic = obs_stat,
          p_h0 = p_h0, in_tail = in_tail,
          h1_interval = q, h1_consistent = h1_consistent,
@@ -381,4 +381,11 @@ taci_test <- function(posterior, mechanism, X, treatment, outcome,
          n = n, n_posterior = S, alpha = alpha, noise_sd = noise_sd),
     class = "taci_result"
   )
+
+  # K4 residual: stamp the typed abstention marker when the
+  # posterior-adequacy guard tripped (see R/abstention.R).
+  if (!post_ok) {
+    result <- .mark_kernR_abstention(result)
+  }
+  result
 }
