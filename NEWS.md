@@ -21,6 +21,40 @@
   `density_ratio_warning` for a kernel test). `verify_manifest()`
   recomputes the payload hash for tamper detection.
 
+## Documentation
+
+* Corrected the *HSIC-Sensitivity Index* documentation and vignette: the
+  claim "for purely additive models `T_j = S_j`" was false as
+  implemented (the first-order and total-order indices use different
+  normalisers and are not identical even without interaction); both
+  `hsic_sensitivity()`'s roxygen and *HSIC-Based Distributional
+  Sensitivity* now describe `T_j - S_j` as an uncalibrated interaction
+  screen rather than an exact identity.
+* *HSIC-Based Distributional Sensitivity* no longer tells readers that a
+  "properly null-calibrated total-order significance test remains
+  future work" -- that test (`total_order_test = "cond_perm"`) has
+  shipped since 0.0.0.9014; the vignette now demonstrates it on the
+  additive worked example.
+* *Posterior-Predictive Checks with `mmd_ppc()`* no longer contradicts
+  itself about whether PESTO ships a native ensemble emitter (the
+  earlier section said "until PESTO ships"; a later section said it
+  already had); the lightweight `pesto_ensemble` path is now framed as
+  an alternative to the manifest path, not a stand-in for a missing one.
+* Added `fig.cap` and an interpreting sentence to every vignette figure
+  that previously had neither: the permutation-null plot in
+  *Posterior-Predictive Checks*, the identifiability screen bar chart in
+  *Pre-IES Identifiability Screening*, the first-order and
+  interaction-contrast plots in *HSIC-Based Distributional Sensitivity*,
+  and the per-cluster bd-HSIC bar chart in
+  *Hierarchical bd-HSIC on Panel Data*.
+* Replaced the stale JMLR "beta" URL for the bd-HSIC citation
+  (Hu, Sejdinovic & Evans, 2024) with the paper's canonical
+  `jmlr.org/papers/...` location in `README.md`.
+* Added `@examples` to `predict.cme_fit()`, `as_orchestra_manifest()`
+  and `verify_manifest()`, the package's three most substantive
+  exported functions that previously shipped without a runnable
+  example.
+
 # kernR 0.8.2
 
 ## Documentation
