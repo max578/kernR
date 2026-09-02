@@ -35,6 +35,7 @@ LinkingTo:
     Rcpp,
     RcppArmadillo
 Suggests:
+    ggplot2,
     knitr,
     proxymix (>= 0.3.0),
     ranger,

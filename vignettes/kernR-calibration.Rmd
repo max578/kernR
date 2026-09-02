@@ -1,114 +1,282 @@
 ---
-title: "Calibration and concordance: kernR's validation layer"
+title: "Are these draws calibrated, and do the engines agree?"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Calibration and concordance: kernR's validation layer}
+  %\VignetteIndexEntry{Are these draws calibrated, and do the engines agree?}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- Render time: ~2 s under rmarkdown::render(); macOS aarch64, R 4.5.2, one
+     core. Three wild-bootstrap goodness-of-fit tests at 199 draws and two
+     joint-permutation concordance tests at 199 draws, all on samples of a
+     few hundred points. -->
+
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  dpi = 150
+)
+has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
+```
+
+```{r library}
 library(kernR)
 ```
 
-`kernR` is a verdict layer: it does not fit models, it decides whether a
-fitted model's output should be trusted. Two questions sit at the centre of
-that role, and this vignette covers the two tests that answer them.
+## Why
 
-- **Calibration.** Does a sample actually follow the distribution it claims to
-  represent? This is a one-sample, score-based question, answered by
-  `ksd_test()` -- the kernel Stein discrepancy goodness-of-fit test.
-- **Concordance.** Do several sources -- posterior draws from different
-  inference engines, or scenario ensembles from different simulators -- agree
-  with each other? This is a k-sample, sample-based question, answered by
-  `concordance_test()`.
+A statistician has a pipeline that produces posterior draws, and no way
+to audit it from the inside. *Three inference engines were pointed at the
+same model and each returned a posterior sample. I want two things before
+I use any of them. Do these draws actually follow the distribution they
+claim to represent, when all I can evaluate is an unnormalised log
+density? And do the three engines agree with each other, in a way that
+tells me which one departed if they do not?* This vignette answers both,
+on synthetic samples where the answer is known: one goodness-of-fit test
+against a target density, and one joint test across several samples.
 
-The two are complementary. Calibration compares a sample against a *density*;
-concordance compares samples against *each other*. Together they let `kernR`
-act as a falsification gate over an upstream inference pipeline.
+## What
 
-## Calibration: `ksd_test()`
+`ksd_test()` is the calibration half. It computes the kernel Stein
+discrepancy between a sample and a target distribution, and its defining
+property is that it needs only the target's *score* -- the gradient of
+its log density -- so the target may be unnormalised and no reference
+sample is required. `gaussian_score()` supplies that gradient in closed
+form for a multivariate normal target; `numeric_score()` takes it by
+finite differences from any log-density function, which is the adapter
+that lets an externally supplied log-posterior evaluator be tested
+directly. The null is a wild bootstrap rather than a permutation, because
+there is only one sample to resample. The default base kernel is the
+inverse multi-quadric, which keeps power in higher dimensions where a
+Gaussian kernel loses it; `kernel = "rbf"` selects the Gaussian
+alternative.
 
-The kernel Stein discrepancy needs only the *score* of the target -- the
-gradient of its log density -- so the target may be unnormalised and no
-reference sample is required. For a multivariate-normal target the score is
-available in closed form via `gaussian_score()`.
+`concordance_test()` is the agreement half. Its input is a list of
+samples, one per source, and it asks whether all of them could have come
+from one common distribution. It returns a single p-value calibrated by
+one joint permutation across all sources, so it is one test with one
+verdict rather than a sweep of pairwise comparisons, and alongside it the
+full `pairwise` matrix of discrepancies, so a rejection can be read down
+to the source responsible.
 
-```{r ksd-gaussian}
-set.seed(1)
+The two are complementary and neither substitutes for the other.
+Calibration compares one sample against a *density*; concordance compares
+samples against *each other*. Agreement among independent sources is
+corroborating evidence and is hard to fake; calibration against the
+target is the absolute check that the agreed answer is also the right
+one.
 
-# A sample that genuinely follows the standard normal
-x_ok <- matrix(rnorm(400), ncol = 2)
-ksd_test(x_ok, n_boot = 199, seed = 1)
+## Do
+
+### A sample that follows its target
+
+A synthetic sample of 200 points from a standard bivariate normal, tested
+against the standard bivariate normal target that `ksd_test()` assumes by
+default.
+
+```{r ksd-good}
+set.seed(1L)
+x_ok <- matrix(rnorm(400L), ncol = 2L)
+fit_ok <- ksd_test(x_ok, n_boot = 199L, seed = 1L)
+fit_ok
 ```
 
-The verdict is *consistent with target*: the statistic sits near zero and the
-p-value is large. A mis-specified sample -- here shifted in mean -- is caught.
+### The same sample, shifted
+
+The identical points moved 0.7 in both coordinates, so the sample is
+mis-specified against the same target by a known amount.
 
 ```{r ksd-shift}
 x_bad <- x_ok + 0.7
-ksd_test(x_bad, n_boot = 199, seed = 1)
+fit_bad <- ksd_test(x_bad, n_boot = 199L, seed = 1L)
+fit_bad
 ```
 
-When the target has no convenient closed-form score, supply it as a log
-density and let `numeric_score()` take the gradient by finite differences. Any
-additive normalising constant cancels, so an unnormalised log density is
+### A target supplied as an unnormalised log density
+
+When no closed-form score is available, hand `numeric_score()` a log
+density and it differentiates numerically. Any additive normalising
+constant cancels in the gradient, so an unnormalised log density is
 enough.
 
 ```{r ksd-numeric}
-log_density <- function(z) -0.5 * rowSums(z^2)   # standard normal, unnormalised
-ksd_test(x_ok, score = numeric_score(log_density), n_boot = 199, seed = 1)
+log_density <- function(z) -0.5 * rowSums(z^2)
+fit_numeric <- ksd_test(
+  x_ok, score = numeric_score(log_density), n_boot = 199L, seed = 1L
+)
+fit_numeric
 ```
 
-This is the adapter that lets `ksd_test()` consume any externally supplied
-log-posterior evaluator: wrap the evaluator in `numeric_score()` and the test
-asks whether posterior draws are calibrated against that posterior, with no
-dependency on the producer of the evaluator.
+### Three sources that agree
 
-The default base kernel is the inverse multi-quadric, which stays sensitive to
-mis-specification in higher dimensions where the Gaussian kernel can lose
-power; pass `kernel = "rbf"` for the Gaussian alternative.
-
-## Concordance: `concordance_test()`
-
-Where calibration checks one sample against a density, concordance checks
-several samples against one another. The input is a list -- one element per
-source -- and a named list labels the sources in the output.
+Three synthetic samples of 200 points each, all drawn from the same
+standard bivariate normal, standing in for three inference engines
+pointed at one model.
 
 ```{r concordance-ok}
-set.seed(2)
+set.seed(2L)
 draws <- list(
-  engine_a = matrix(rnorm(400), ncol = 2),
-  engine_b = matrix(rnorm(400), ncol = 2),
-  engine_c = matrix(rnorm(400), ncol = 2)
+  engine_a = matrix(rnorm(400L), ncol = 2L),
+  engine_b = matrix(rnorm(400L), ncol = 2L),
+  engine_c = matrix(rnorm(400L), ncol = 2L)
 )
-concordance_test(draws, n_permutations = 199, seed = 1)
+fit_agree <- concordance_test(draws, n_permutations = 199L, seed = 1L)
+fit_agree
 ```
 
-The three sources are mutually concordant, so the verdict is *concordant*. The
-test is more than a single yes-or-no, though: it returns the full pairwise
-discrepancy matrix, so when one source departs the rejection can be read down
-to the offending pair.
+### One source departs
+
+The same three samples with the third moved by 1 in both coordinates.
 
 ```{r concordance-bad}
-draws$engine_c <- draws$engine_c + 1   # engine_c now disagrees
-fit <- concordance_test(draws, n_permutations = 199, seed = 1)
-fit$pairwise
+draws_shifted <- draws
+draws_shifted$engine_c <- draws_shifted$engine_c + 1
+fit_disagree <- concordance_test(
+  draws_shifted, n_permutations = 199L, seed = 1L
+)
+fit_disagree$p_value
 ```
 
-The pairwise matrix localises the problem: the `engine_c` row and column carry
-the large discrepancies, while `engine_a` and `engine_b` remain close. The
-single joint-permutation null keeps the overall p-value calibrated across all
-pairs, so this is one test with one verdict, not a multiple-comparison sweep.
+```{r pairwise-table, echo = FALSE}
+knitr::kable(
+  fit_disagree$pairwise, digits = 4L,
+  caption = paste0(
+    "Pairwise discrepancy matrix after engine_c is shifted. The overall ",
+    "verdict is a single p-value; this matrix says which pair carries it."
+  )
+)
+```
 
-## The validation pattern
+### The figure: what the pairwise matrix is measuring
 
-Used together the two tests express a simple discipline. Concordance across
-independent sources is corroborating evidence -- agreement is hard to fake.
-Calibration against a target density is the absolute check that the agreed-upon
-answer is also the correct one. Divergence on either test is informative:
-`concordance_test()` localises *which* source departs, and `ksd_test()`
-identifies *whether* a sample departs from its claimed target. A pipeline whose
-ensembles pass both has earned more trust than one validated on the posterior
-mean alone.
+```{r fig-clouds, eval = has_ggplot2, fig.cap = "The three sources' samples before and after engine_c is shifted. In the left panel the three clouds are interleaved and the concordance test does not reject; in the right panel engine_c has moved as a body while the other two have not, which is the geometry the pairwise discrepancy matrix summarises to a number."}
+to_frame <- function(lst, state) {
+  do.call(rbind, lapply(names(lst), function(nm) {
+    data.frame(
+      dim1 = lst[[nm]][, 1L], dim2 = lst[[nm]][, 2L],
+      source = nm, state = state, stringsAsFactors = FALSE
+    )
+  }))
+}
+cloud_df <- rbind(
+  to_frame(draws, "as drawn"),
+  to_frame(draws_shifted, "engine_c shifted")
+)
+ggplot2::ggplot(
+  cloud_df, ggplot2::aes(x = dim1, y = dim2, colour = source)
+) +
+  ggplot2::geom_point(alpha = 0.6, size = 1.4) +
+  ggplot2::facet_wrap(~state) +
+  ggplot2::scale_colour_viridis_d(name = "source", end = 0.85) +
+  ggplot2::labs(
+    x = "coordinate 1", y = "coordinate 2",
+    title = "Three sources, before and after one of them departs"
+  ) +
+  ggplot2::theme_minimal()
+```
+
+```{r fig-clouds-skip, eval = !has_ggplot2, echo = FALSE, results = "asis"}
+cat("ggplot2 is not installed on this build, so the sample-cloud figure",
+    "is skipped.\n")
+```
+
+```{r verdict-table, echo = FALSE}
+verdicts <- data.frame(
+  check = c("draws follow the target", "draws shifted by 0.7",
+            "target as an unnormalised log density",
+            "three sources agree", "engine_c shifted by 1"),
+  test = c("ksd_test()", "ksd_test()", "ksd_test(numeric_score)",
+           "concordance_test()", "concordance_test()"),
+  statistic = c(fit_ok$statistic, fit_bad$statistic,
+                fit_numeric$statistic, fit_agree$statistic,
+                fit_disagree$statistic),
+  p_value = c(fit_ok$p_value, fit_bad$p_value, fit_numeric$p_value,
+              fit_agree$p_value, fit_disagree$p_value),
+  reject = c(fit_ok$reject, fit_bad$reject, fit_numeric$reject,
+             fit_agree$reject, fit_disagree$reject),
+  stringsAsFactors = FALSE
+)
+knitr::kable(
+  verdicts, digits = c(0L, 0L, 5L, 4L, 0L),
+  col.names = c("Check", "Test", "Statistic", "p-value",
+                paste0("Reject at ", fit_ok$alpha)),
+  caption = "The five verdicts in this vignette."
+)
+```
+
+## Read
+
+The well-specified sample gives a kernel Stein discrepancy of
+`r signif(fit_ok$statistic, 3)` with a p-value of
+`r round(fit_ok$p_value, 3)`, so the test does not reject: the sample is
+consistent with the target it was drawn from, which is the answer the
+construction demands. The statistic is a U-statistic and takes small
+negative values under the null, which is why a number below zero is not a
+sign of trouble; what matters is where it falls in its own bootstrap
+null. Moving the same points by 0.7 lifts it to
+`r signif(fit_bad$statistic, 3)`, larger than the well-specified value by
+`r signif(fit_bad$statistic - fit_ok$statistic, 3)` in absolute terms and
+exceeded by `r sum(fit_bad$null_distribution >= fit_bad$statistic)` of
+the `r fit_bad$n_permutations` bootstrap draws, so the p-value falls to
+`r round(fit_bad$p_value, 4)`. The numerically
+differentiated score reproduces the well-specified verdict: statistic
+`r signif(fit_numeric$statistic, 3)` against
+`r signif(fit_ok$statistic, 3)` from the closed-form score, the two
+differing by
+`r formatC(abs(fit_numeric$statistic - fit_ok$statistic), format = "e",
+   digits = 1L)`.
+The finite-difference gradient is an approximation, so exact agreement is
+not expected and the two verdicts matching is what the adapter has to
+deliver.
+
+The three concordant sources give a p-value of
+`r round(fit_agree$p_value, 3)`, so the joint test does not reject and
+the three may be treated as mutually consistent. Shifting the third drops
+the p-value to `r round(fit_disagree$p_value, 4)`. The pairwise matrix
+localises it: the two discrepancies involving `engine_c` are
+`r signif(fit_disagree$pairwise["engine_a", "engine_c"], 3)` and
+`r signif(fit_disagree$pairwise["engine_b", "engine_c"], 3)`, while the
+`engine_a` to `engine_b` discrepancy stays at
+`r signif(fit_disagree$pairwise["engine_a", "engine_b"], 3)`. The figure
+shows the same fact as geometry: one cloud has moved as a body and the
+other two have not.
+
+## Limits
+
+Every sample here is synthetic and drawn independently, which is the
+condition both tests assume; posterior draws from a Markov chain are
+autocorrelated, and neither the wild bootstrap nor the joint permutation
+corrects for that, so a chain should be thinned to something close to
+independent before either test is applied. The kernel Stein discrepancy
+tests a sample against a *stated* target: it can tell you the draws do
+not follow the density you supplied, and it cannot tell you the density
+you supplied is the right one. A concordance verdict is symmetric in the
+sources, so three engines that share a defect will agree and pass;
+agreement is evidence only to the extent that the sources are genuinely
+independent, and nothing in this vignette establishes that they are.
+Both p-values are bounded below by `1 / (B + 1)` for the bootstrap or
+permutation budget `B` used.
+
+## What to read next
+
+*Is the calibrated model right about more than the mean?* takes the same
+distributional idea to the posterior-predictive question, comparing a
+calibrated ensemble against held-out observations. *Getting started with
+kernR* introduces the kernel and two-sample machinery both tests here are
+built on. *Scaling HSIC to large ensembles* covers the low-rank
+approximations that the Nystrom variants of both tests,
+`ksd_test_nystrom()` and `concordance_test_nystrom()`, are built from.
+
+## Reproduce
+
+Seed `1` for the goodness-of-fit samples and `2` for the three sources;
+`seed = 1L` passed to every test so the wild-bootstrap and permutation
+draws are fixed. Package versions follow.
+
+```{r session-info}
+sessionInfo()
+```

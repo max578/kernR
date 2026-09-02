@@ -1,180 +1,353 @@
 ---
-title: "Hierarchical bd-HSIC for Multi-Site Designs"
-author: "Max Moldovan"
-date: "`r Sys.Date()`"
+title: "Multi-site trials and the permutation null"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Hierarchical bd-HSIC for Multi-Site Designs}
+  %\VignetteIndexEntry{Multi-site trials and the permutation null}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+<!-- Render time: ~1 s under rmarkdown::render(); macOS aarch64, R 4.5.2, one
+     core. Four bd-HSIC tests at 299 permutations on 240 observations in 8
+     sites, each with its own density-ratio fit. -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.width = 6,
-  fig.height = 4,
+  fig.width = 7,
+  fig.height = 4.5,
   dpi = 150
 )
-set.seed(1)
+has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
 ```
 
-## Why a hierarchical version of bd-HSIC?
+```{r library}
+library(kernR)
+```
 
-Agricultural trials almost always carry design clustering: paddocks
-within sites, sites within regions, plots within farms, seasons within
-years. Treat such data as i.i.d. and the permutation null breaks: by
-shuffling treatment labels across clusters, the null distribution
-absorbs cluster-level variation as if it were causal signal, inflating
-Type I error.
+## Why
 
-The original bd-HSIC test (Hu, Sejdinovic & Evans, 2024) handles this
-by clustering on propensity-score similarity. That works when the
-design has no natural hierarchy. When the *design itself* tells you
-which observations should be exchangeable -- *site*, *paddock*,
-*season* -- you should use the design clusters directly.
+A trial statistician is looking at a panel rather than a field. *The
+residue-retention trial ran at eight sites and the sites differ in ways
+the covariates do not capture. When the causal test shuffles the outcome
+to build its null, it shuffles across sites, so the null absorbs the
+between-site variation as though it were signal I could have produced by
+chance. That inflates the null, or deflates it, and either way the
+p-value is answering a question about a design I do not have. Can I make
+the null respect the design?* This vignette answers with the
+`cluster_id` argument of the backdoor-adjusted test, on a synthetic
+eight-site panel with a real effect and on the same panel with the effect
+removed.
 
-`bd_hsic_test()` accepts an optional `cluster_id` argument exactly for
-this case. Supplying it activates **within-cluster permutation**:
-indices of `y` are reshuffled only within each cluster, preserving
-cluster-level effects in the null.
+## What
 
-## A multi-site stub
+`bd_hsic_test()` builds its permutation null by shuffling the outcome
+within clusters of observations that are exchangeable. Which
+observations those are is the whole question, and the function offers
+three answers.
+
+The default, `permutation = "auto"` with no `cluster_id`, clusters on
+similarity in the estimated conditional density of treatment given the
+confounders, following Hu, Sejdinovic and Evans (2024); it is the right
+choice when the design has no natural grouping, and the vignette *Does
+the treatment cause the outcome, or do they share a cause?* uses it
+throughout. `permutation = "naive"` shuffles across the whole sample,
+which assumes every observation is exchangeable with every other.
+Supplying `cluster_id` activates within-cluster permutation on the
+design's own groups, so site-level effects are held fixed in the null
+rather than being shuffled into it.
+
+Supplying `cluster_id` also turns on a stratified breakdown:
+`per_cluster_statistic` carries the weighted bd-HSIC computed inside each
+cluster, which is where a single site driving the whole verdict becomes
+visible.
+
+## Do
+
+### A synthetic eight-site panel
+
+Eight sites, thirty plots each. Each site carries a random effect on
+yield with standard deviation 1, twice the residual noise. Rainfall and
+soil nitrogen are the measured confounders; the management variable
+depends on rainfall and on the site effect; and yield carries a genuine
+causal effect of 0.6 per unit of management.
 
 ```{r design}
-library(kernR)
-
-# 8 sites x 30 plots/site = 240 observations.
-# Each site has its own random effect on yield.
-n_sites <- 8L
-n_per   <- 30L
-n       <- n_sites * n_per
-site    <- factor(paste0("site", rep(seq_len(n_sites), each = n_per)))
-site_id <- as.integer(site)
-
 set.seed(101L)
-site_effect <- stats::rnorm(n_sites, sd = 1.0)[site_id]
+n_sites <- 8L
+n_per_site <- 30L
+n_obs <- n_sites * n_per_site
+site <- factor(paste0("site", rep(seq_len(n_sites), each = n_per_site)))
+site_effect <- rnorm(n_sites, sd = 1.0)[as.integer(site)]
 
-# Confounders: rainfall, soil_n
-z <- cbind(
-  rainfall = stats::rnorm(n),
-  soil_n   = stats::rnorm(n)
+z_conf <- cbind(
+  rainfall = rnorm(n_obs),
+  soil_n = rnorm(n_obs)
 )
-# Management treatment (e.g. residue retention intensity)
-x <- 0.4 * z[, "rainfall"] + 0.3 * site_effect + stats::rnorm(n)
-# Yield: causal effect of management + confounders + site random effect
-y <- 0.6 * x + 0.5 * z[, "soil_n"] + site_effect + stats::rnorm(n, sd = 0.5)
+x_manage <- 0.4 * z_conf[, "rainfall"] + 0.3 * site_effect + rnorm(n_obs)
+y_yield <- 0.6 * x_manage + 0.5 * z_conf[, "soil_n"] + site_effect +
+  rnorm(n_obs, sd = 0.5)
 ```
 
-## Naive vs hierarchical permutation
-
-The same data, two permutation schemes:
+### The same data, two permutation schemes
 
 ```{r compare-schemes}
 fit_naive <- bd_hsic_test(
-  x, y, z,
-  permutation    = "naive",
-  n_permutations = 199L,
-  seed           = 1L
+  x_manage, y_yield, z_conf, permutation = "naive",
+  n_permutations = 299L, seed = 1L
 )
-
-fit_hier <- bd_hsic_test(
-  x, y, z,
-  cluster_id     = site,        # activates within_cluster by default
-  n_permutations = 199L,
-  seed           = 1L
+fit_site <- bd_hsic_test(
+  x_manage, y_yield, z_conf, cluster_id = site,
+  n_permutations = 299L, seed = 1L
 )
-
-data.frame(
-  scheme  = c(fit_naive$permutation_scheme, fit_hier$permutation_scheme),
-  stat    = c(fit_naive$statistic,   fit_hier$statistic),
-  p_value = c(fit_naive$p_value,     fit_hier$p_value),
-  ess     = c(fit_naive$ess,         fit_hier$ess),
-  row.names = NULL
-)
+c(fit_naive$permutation_scheme, fit_site$permutation_scheme)
 ```
 
-In the presence of a true causal effect, both schemes typically reject;
-under the null, the naive scheme is more prone to false positives.
+### The same panel with the effect removed
 
-## Stratified per-cluster contributions
-
-When `cluster_id` is supplied, the result carries a per-cluster bd-HSIC
-breakdown:
-
-```{r per-cluster}
-fit_hier$per_cluster_statistic
-```
-
-Plot the per-cluster contributions to look for a single-site dominant
-signal vs. a uniformly distributed effect:
-
-```{r plot-per-cluster, fig.height = 4, fig.cap = "Weighted bd-HSIC contribution per cluster (site), showing whether the causal signal is concentrated at one site or spread across the panel."}
-graphics::barplot(
-  fit_hier$per_cluster_statistic,
-  las  = 2L,
-  col  = "#0072B2",
-  border = NA,
-  ylab = "weighted bd-HSIC (per site)",
-  main = "Stratified bd-HSIC contributions"
-)
-```
-
-A site whose stratified statistic dwarfs the others is a candidate for
-follow-up investigation -- either real site-specific effect modification
-or a data-quality issue.
-
-## Type-I behaviour under a true null with cluster effects
-
-To illustrate why the hierarchical scheme matters, here is the null
-case: cluster effects exist, but `x` has no causal effect on `y`.
+Identical sites, plots, confounders and management assignment; the
+management term is dropped from the yield, so the only structure left is
+the site effect and the confounders.
 
 ```{r null-case}
-set.seed(202L)
-n_sites <- 8L; n_per <- 30L; n <- n_sites * n_per
-site <- factor(paste0("s", rep(seq_len(n_sites), each = n_per)))
-site_id <- as.integer(site)
-site_effect <- stats::rnorm(n_sites, sd = 1.0)[site_id]
-z <- cbind(stats::rnorm(n), stats::rnorm(n))
-x <- 0.4 * z[, 1L] + 0.3 * site_effect + stats::rnorm(n)
-y <- 0.5 * z[, 2L] + site_effect + stats::rnorm(n, sd = 0.5)  # no x
-
-fit_null <- bd_hsic_test(
-  x, y, z,
-  cluster_id     = site,
-  n_permutations = 199L,
-  seed           = 202L
+y_null <- 0.5 * z_conf[, "soil_n"] + site_effect + rnorm(n_obs, sd = 0.5)
+fit_naive_null <- bd_hsic_test(
+  x_manage, y_null, z_conf, permutation = "naive",
+  n_permutations = 299L, seed = 1L
 )
-fit_null$p_value
+fit_site_null <- bd_hsic_test(
+  x_manage, y_null, z_conf, cluster_id = site,
+  n_permutations = 299L, seed = 1L
+)
 ```
 
-Under the null, the hierarchical scheme should not reject (`p > 0.05`);
-the naive scheme on the same data is more likely to.
+```{r scheme-table, echo = FALSE}
+scheme_tab <- data.frame(
+  panel = c("real effect", "real effect", "no effect", "no effect"),
+  scheme = c(fit_naive$permutation_scheme, fit_site$permutation_scheme,
+             fit_naive_null$permutation_scheme,
+             fit_site_null$permutation_scheme),
+  statistic = c(fit_naive$statistic, fit_site$statistic,
+                fit_naive_null$statistic, fit_site_null$statistic),
+  null_mean = c(mean(fit_naive$null_distribution),
+                mean(fit_site$null_distribution),
+                mean(fit_naive_null$null_distribution),
+                mean(fit_site_null$null_distribution)),
+  null_sd = c(sd(fit_naive$null_distribution),
+              sd(fit_site$null_distribution),
+              sd(fit_naive_null$null_distribution),
+              sd(fit_site_null$null_distribution)),
+  p_value = c(fit_naive$p_value, fit_site$p_value,
+              fit_naive_null$p_value, fit_site_null$p_value),
+  stringsAsFactors = FALSE
+)
+knitr::kable(
+  scheme_tab, digits = c(0L, 0L, 5L, 5L, 5L, 4L), row.names = FALSE,
+  col.names = c("Panel", "Permutation scheme", "Statistic",
+                "Null mean", "Null SD", "p-value"),
+  caption = paste0(
+    "The two permutation schemes on the same eight-site panel, with and ",
+    "without a causal effect, each against ", fit_site$n_permutations,
+    " permutations."
+  )
+)
+```
+
+### The stratified breakdown
+
+```{r per-cluster}
+round(fit_site$per_cluster_statistic, 4L)
+```
+
+### The figure: how the two nulls differ
+
+```{r fig-nulls, eval = has_ggplot2, fig.height = 5, fig.cap = "Permutation null distributions under the two schemes, on the panel with a real effect and on the panel without one, with the observed statistic marked in each. Shuffling within sites holds the site effects fixed, which changes the shape of the null the observed statistic is scored against; the naive scheme shuffles those effects into the null."}
+null_df <- rbind(
+  data.frame(statistic = fit_naive$null_distribution,
+             scheme = "naive", panel = "real effect"),
+  data.frame(statistic = fit_site$null_distribution,
+             scheme = "within site", panel = "real effect"),
+  data.frame(statistic = fit_naive_null$null_distribution,
+             scheme = "naive", panel = "no effect"),
+  data.frame(statistic = fit_site_null$null_distribution,
+             scheme = "within site", panel = "no effect")
+)
+obs_df <- data.frame(
+  scheme = c("naive", "within site", "naive", "within site"),
+  panel = c("real effect", "real effect", "no effect", "no effect"),
+  statistic = c(fit_naive$statistic, fit_site$statistic,
+                fit_naive_null$statistic, fit_site_null$statistic)
+)
+ggplot2::ggplot(null_df, ggplot2::aes(x = statistic, fill = scheme)) +
+  ggplot2::geom_histogram(bins = 40L, alpha = 0.65,
+                          position = "identity", colour = NA) +
+  ggplot2::geom_vline(
+    data = obs_df,
+    ggplot2::aes(xintercept = statistic, colour = scheme), linewidth = 1
+  ) +
+  ggplot2::facet_wrap(~panel, scales = "free", ncol = 1L) +
+  ggplot2::scale_fill_viridis_d(name = "scheme", end = 0.85) +
+  ggplot2::scale_colour_viridis_d(name = "scheme", end = 0.85) +
+  ggplot2::labs(
+    x = "weighted bd-HSIC statistic (unitless)",
+    y = "permutation draws",
+    title = "Two permutation schemes, two panels"
+  ) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(legend.position = "bottom")
+```
+
+```{r fig-nulls-skip, eval = !has_ggplot2, echo = FALSE, results = "asis"}
+cat("ggplot2 is not installed on this build, so the permutation-null",
+    "figure is skipped.\n")
+```
+
+```{r fig-clusters, eval = has_ggplot2, fig.cap = "Weighted bd-HSIC computed inside each site on the panel with a real effect, with the mean across sites marked. A site whose stratified statistic dwarfs the rest is a candidate for follow-up, either as genuine site-specific effect modification or as a data-quality problem."}
+cluster_df <- data.frame(
+  site = names(fit_site$per_cluster_statistic),
+  statistic = as.numeric(fit_site$per_cluster_statistic),
+  stringsAsFactors = FALSE
+)
+ggplot2::ggplot(
+  cluster_df, ggplot2::aes(x = site, y = statistic)
+) +
+  ggplot2::geom_col(fill = "#3b528b") +
+  ggplot2::geom_hline(
+    yintercept = mean(cluster_df$statistic, na.rm = TRUE),
+    colour = "#FDE725", linewidth = 0.9, linetype = "dashed"
+  ) +
+  ggplot2::labs(
+    x = "site", y = "weighted bd-HSIC within site (unitless)",
+    title = "Stratified contributions, site by site"
+  ) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45,
+                                                     hjust = 1))
+```
+
+```{r fig-clusters-skip, eval = !has_ggplot2, echo = FALSE, results = "asis"}
+cat("ggplot2 is not installed on this build, so the per-site figure is",
+    "skipped.\n")
+```
+
+## Read
+
+On the panel with a real effect both schemes reject: the naive scheme
+gives a p-value of `r round(fit_naive$p_value, 4)` and the within-site
+scheme `r round(fit_site$p_value, 4)`, against the same observed
+statistic of `r signif(fit_site$statistic, 3)`, because the statistic
+does not depend on the permutation scheme. What differs is the null it is
+scored against, and the figure shows that directly: the naive null has a
+standard deviation of
+`r formatC(scheme_tab$null_sd[scheme_tab$panel == "real effect" &
+  scheme_tab$scheme == "naive"], format = "f", digits = 5L)` against
+`r formatC(scheme_tab$null_sd[scheme_tab$panel == "real effect" &
+  scheme_tab$scheme == "within_cluster"], format = "f", digits = 5L)`
+for the within-site null, and a mean of
+`r formatC(scheme_tab$null_mean[scheme_tab$panel == "real effect" &
+  scheme_tab$scheme == "naive"], format = "f", digits = 5L)` against
+`r formatC(scheme_tab$null_mean[scheme_tab$panel == "real effect" &
+  scheme_tab$scheme == "within_cluster"], format = "f", digits = 5L)`:
+holding the site effects fixed shifts the whole null upward and widens
+it.
+
+On the panel with the effect removed the two schemes give p-values of
+`r round(fit_naive_null$p_value, 3)` (naive) and
+`r round(fit_site_null$p_value, 3)` (within site) against an observed
+statistic of `r signif(fit_site_null$statistic, 3)`. Both
+`r if (max(fit_naive_null$p_value, fit_site_null$p_value) > 0.05 &&
+  min(fit_naive_null$p_value, fit_site_null$p_value) > 0.05)
+  "decline to reject, which is the right answer on a panel built with no
+  effect" else
+  "should be read against the table above rather than summarised here"`.
+One draw is not a type-I error rate: what this pair of runs shows is the
+mechanism, that the two schemes construct different nulls from identical
+data, and not a measured false-positive rate for either. Establishing
+that would need the whole panel regenerated many times over, which is a
+simulation study and not a vignette.
+
+The stratified breakdown is the diagnostic worth keeping. Across the
+`r sum(!is.na(fit_site$per_cluster_statistic))` sites with enough test
+observations to score, the within-site statistic runs from
+`r signif(min(fit_site$per_cluster_statistic, na.rm = TRUE), 3)` to
+`r signif(max(fit_site$per_cluster_statistic, na.rm = TRUE), 3)`, a
+factor of
+`r round(max(fit_site$per_cluster_statistic, na.rm = TRUE) /
+   max(min(fit_site$per_cluster_statistic, na.rm = TRUE), 1e-8))`
+between the quietest site and the loudest. The second figure shows the
+spread. A panel in which one site towers over the rest is telling you
+something the pooled verdict does not: either the effect is real only
+there, or that site's data need looking at.
+
+## Limits
+
+This is a synthetic panel with balanced sites and one level of nesting,
+and every result above is a single run. The within-site scheme needs at
+least two test observations per cluster, and the test split takes only
+part of the sample, so small clusters are reported as `NA` in
+`per_cluster_statistic` and contribute the identity permutation to the
+null; a design of paddocks with three to five plots each has little
+within-cluster permutation power and is usually better pooled to the
+site. The per-cluster statistics are reported on the raw scale and are
+not weighted by cluster size, so an unbalanced panel needs a size-weighted
+summary computed outside the function before the sites are compared. The
+choice of clustering level is an assumption about exchangeability, not a
+fact the data can supply: within-site permutation assumes plots inside a
+site are exchangeable, which a systematic within-site layout would break.
+Finally, everything the vignette *Does the treatment cause the outcome,
+or do they share a cause?* says about the density-ratio step applies
+unchanged here, including the effective-sample-size floor.
 
 ## Choosing the scheme
 
-| Scenario | Scheme |
-|---|---|
-| Truly i.i.d. observations, no design clustering | `permutation = "auto"`, no `cluster_id` |
-| Multi-site / multi-season ag design | `cluster_id = site` (default within-cluster) |
-| Within-cluster independence is plausible *and* you want maximum power | `permutation = "naive"` (rare in practice) |
+Where the observations are genuinely independent and the design has no
+grouping, leave `permutation` at `"auto"` and supply no `cluster_id`: the
+propensity-similarity clustering is the intended default. Where the
+design has sites, seasons or paddocks that the covariates do not fully
+explain, supply `cluster_id` at the level you are willing to call
+exchangeable, and take the within-cluster scheme it activates.
+`permutation = "naive"` is for the case where within-cluster
+independence is plausible on other grounds and maximum power matters
+more, which is rare in a field trial.
 
 ## Notes on practice
 
-- **Cluster size.** Within-cluster permutation needs `>= 2` test
-  observations per cluster (test split = `1 - split_ratio` of `n`).
-  Smaller clusters are reported as `NA` in
-  `per_cluster_statistic` and contribute the identity permutation.
-- **Many small clusters.** When clusters are small (e.g. paddocks of
-  3-5 plots), within-cluster permutation has limited power; consider
-  pooling at a coarser level (site instead of paddock).
-- **Imbalanced design.** Per-cluster statistics are reported on the raw
-  scale, not weighted by cluster size; combine externally if you need a
-  size-weighted summary.
+**Cluster size.** Within-cluster permutation needs at least two test
+observations per cluster, where the test split is one minus
+`split_ratio` of the sample. Clusters below that appear as `NA` in the
+stratified breakdown.
 
-## Reference
+**Many small clusters.** Permutation power falls with cluster size.
+Pooling to a coarser level, site rather than paddock, is usually the
+better trade.
 
-- Hu, R., Sejdinovic, D., & Evans, R. J. (2024). *A kernel test for
-  causal association via noise contrastive backdoor adjustment.*
-  Journal of Machine Learning Research, 25(160), 1-56.
+**Imbalanced designs.** Combine the per-cluster statistics with the
+cluster sizes yourself if a size-weighted summary is what the report
+needs.
+
+## What to read next
+
+*Does the treatment cause the outcome, or do they share a cause?*
+introduces the backdoor-adjusted test and its density-ratio step, and is
+the place to start if bd-HSIC is new. *When plots sit inside farms*
+applies the same clustering idea to the doubly robust distributional
+tests, with a within-cluster and between-cluster decomposition this
+vignette does not compute. *Choosing a density-ratio backend* covers the
+adjustment step whose weights also determine the default clustering.
+
+## References
+
+- Hu, R., Sejdinovic, D., & Evans, R. J. (2024). A kernel test for causal
+  association via noise contrastive backdoor adjustment. *Journal of
+  Machine Learning Research*, 25(160), 1-56.
+
+## Reproduce
+
+Seed `101` for the synthetic panel and for the null variant;
+`seed = 1L` passed to every test so the density-ratio fit and the
+permutation draws are fixed. Package versions follow.
+
+```{r session-info}
+sessionInfo()
+```
