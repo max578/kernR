@@ -1,157 +1,273 @@
 ---
-title: "Pre-IES Identifiability Screening with HSIC"
-author: "Max Moldovan"
-date: "`r Sys.Date()`"
+title: "Which parameters are worth calibrating?"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Pre-IES Identifiability Screening with HSIC}
+  %\VignetteIndexEntry{Which parameters are worth calibrating?}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+<!-- Render time: ~1 s under rmarkdown::render(); macOS aarch64, R 4.5.2, one
+     core. One 80-point Latin-hypercube design, four parameters against two
+     outputs, screened at 299 permutations. -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.width = 6,
-  fig.height = 4,
+  fig.width = 7,
+  fig.height = 4.5,
   dpi = 150
 )
-set.seed(1)
+has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
 ```
 
-## Why screen before calibrating?
+```{r library}
+library(kernR)
+```
 
-Iterative Ensemble-Smoother (IES) calibration of a mechanistic
-agricultural model such as APSIM is expensive: each ensemble member is
-a full simulator run. Spending realisations on parameters that have no
-detectable effect on the outputs of interest is wasted budget.
+## Why
 
-A pre-IES screen answers a sharper question than variance-based Sobol
-analysis: *does this parameter influence the distribution of any output
-at all?* HSIC -- the Hilbert-Schmidt Independence Criterion -- detects
-both linear and non-linear, mean-shift and tail-shift effects, including
-those Sobol misses when variance is preserved.
+A modeller is about to spend a fortnight of compute on calibration.
+*Every realisation of the ensemble smoother is a full simulator run, and
+I have four parameters I could put in the prior. If one of them does not
+move the outputs I care about, every realisation spent exploring it is
+wasted, and worse, it widens the posterior for no reason. Before I start
+the calibration, which parameters actually reach the outputs?* This
+vignette answers that with a pre-calibration screen: a Latin-hypercube
+design over the parameter ranges, one cheap pass through the simulator,
+and a kernel independence test between every parameter and every output.
 
-The workflow is three lines:
+## What
 
-1. Build a Latin-hypercube design across plausible parameter ranges.
-2. Run the simulator on the design.
-3. Pass the design + outputs to `hsic_identifiability()`.
+The screen is three verbs. `lhs_design()` builds a Latin-hypercube design
+over a matrix of lower and upper bounds, one row per simulator run, so
+the parameter space is covered evenly with far fewer runs than a grid.
+The simulator is then run once per design row, producing a matrix of
+outputs.
 
-## A stubbed APSIM archetype
+`hsic_identifiability()` takes the design and the outputs and tests every
+parameter against every output with the Hilbert-Schmidt Independence
+Criterion. HSIC is the right statistic here because it asks a broader
+question than a variance-based Sobol index: *does this parameter
+influence the distribution of the output at all?* A parameter that
+changes an output's spread or its tail while leaving its variance intact
+is invisible to a variance budget and visible to HSIC. The test returns
+one statistic and one permutation p-value per parameter-output pair,
+adjusts the p-values across the whole grid (Benjamini-Hochberg by
+default), and reports each parameter as identifiable or not at `alpha`.
+`as.data.frame()` flattens the grid for reporting; `plot()` draws the
+package's own ranked diagnostic.
 
-Real APSIM workflows are heavy, so this vignette uses a small simulator
-stub with four parameters -- two genuinely identifiable, one weakly
-nonlinear, and one inert -- and two outputs (yield and biomass).
+The identifiable subset is what a calibration prior should contain, and
+`PESTO::pesto_ies()` is where it goes next.
+
+## Do
+
+### A stand-in simulator
+
+Running APSIM inside a vignette is not practical, so this is a synthetic
+stub with four parameters whose roles are known by construction: `slope`
+drives yield linearly, `curvature` drives biomass quadratically, `weak`
+has a small linear effect on biomass, and `inert` does nothing at all.
 
 ```{r stub-simulator}
-library(kernR)
-
 stub_apsim <- function(theta) {
-  # theta: n x 4 matrix with columns slope, curvature, weak, inert
-  yield   <- 1.5 * theta[, "slope"] +
-             0.3 * stats::rnorm(nrow(theta), sd = 0.1)
+  yield <- 1.5 * theta[, "slope"] +
+    0.3 * rnorm(nrow(theta), sd = 0.1)
   biomass <- theta[, "curvature"]^2 +
-             0.4 * theta[, "weak"] +
-             stats::rnorm(nrow(theta), sd = 0.1)
+    0.4 * theta[, "weak"] +
+    rnorm(nrow(theta), sd = 0.1)
   cbind(yield = yield, biomass = biomass)
 }
 ```
 
-## Latin-hypercube design
+### The design
 
 ```{r design}
+set.seed(1L)
 bounds <- rbind(
-  slope     = c(0.0, 2.0),   # active, linear in yield
-  curvature = c(-1.0, 1.0),  # active, quadratic in biomass
-  weak     = c(0.0, 1.0),    # weak linear effect on biomass
-  inert    = c(0.0, 1.0)     # no effect
+  slope     = c(0.0, 2.0),
+  curvature = c(-1.0, 1.0),
+  weak      = c(0.0, 1.0),
+  inert     = c(0.0, 1.0)
 )
 design <- lhs_design(n = 80L, bounds = bounds, seed = 11L)
-head(design)
+head(round(design, 3L))
 ```
 
-## Simulate and screen
+### One pass through the simulator, then the screen
 
 ```{r screen}
 outputs <- stub_apsim(design)
 fit <- hsic_identifiability(
-  theta          = design,
-  y              = outputs,
-  alpha          = 0.05,
-  p_adjust       = "BH",
-  n_permutations = 299L,
-  seed           = 11L
+  theta = design, y = outputs, alpha = 0.05, p_adjust = "BH",
+  n_permutations = 299L, seed = 11L
 )
 fit
 ```
 
-The print method ranks parameters by their maximum HSIC across outputs.
-`slope` and `curvature` should be flagged identifiable with small
-p-values; `weak` may or may not survive depending on noise; `inert`
-should fall below the threshold.
+```{r screen-table, echo = FALSE}
+screen_df <- as.data.frame(fit)
+knitr::kable(
+  screen_df, digits = c(0L, 0L, 4L, 4L, 4L),
+  col.names = c("Parameter", "Output", "HSIC statistic", "p-value",
+                "Adjusted p-value"),
+  caption = paste0(
+    "Every parameter against every output: ", nrow(screen_df),
+    " tests, p-values adjusted across the whole grid by ",
+    fit$p_adjust, "."
+  )
+)
+```
 
-## Visual diagnostic
+### The package's ranked diagnostic
 
-```{r plot, fig.cap = "Maximum HSIC-Sensitivity Index per parameter across the yield and biomass outputs, with the identifiability threshold marked."}
+```{r plot-ranked, fig.cap = "The package's own diagnostic: maximum HSIC statistic per parameter across the two outputs, with the identifiability threshold marked."}
 plot(fit)
 ```
 
-`slope` and `curvature` clear the threshold comfortably -- each drives
-one output almost deterministically by construction -- while `inert`
-sits at the floor and `weak` lands close to the boundary, reflecting
-its genuinely marginal effect on biomass. Only `slope`, `curvature`
-and (marginally) `weak` are candidates for the IES prior; `inert`
-would waste calibration budget.
+### The figure: the dependence the index is measuring
 
-## Handing off to PESTO
-
-The identifiable subset is precisely the set you would forward to
-`pesto_ies()` (PESTO's IES wrapper) as the parameter prior. In pseudo-R:
-
-    identifiable_params <- names(fit$identifiable)[fit$identifiable]
-    pesto::pesto_ies(..., params = identifiable_params, ...)
-
-For the cross-package workflow specification (kernR -> PESTO -> APSIM
-ensemble loop), see the architecture document
-`uq_ag_stack_design_v0.md`.
-
-## Tabular form
-
-For downstream reporting (or to feed into a manuscript table), call
-`as.data.frame()`:
-
-```{r as-df}
-df <- as.data.frame(fit)
-head(df)
+```{r fig-grid, eval = has_ggplot2, fig.height = 5.5, fig.cap = "Each design column against each simulator output, one panel per parameter-output pair. The screen's verdict is a number per panel; the panels show why. Yield rises linearly with slope, biomass traces a parabola in curvature and a shallow slope in weak, and every panel involving inert is a formless cloud."}
+grid_df <- do.call(rbind, lapply(colnames(design), function(p1) {
+  do.call(rbind, lapply(colnames(outputs), function(o1) {
+    data.frame(
+      parameter = p1, output = o1,
+      value = design[, p1], response = outputs[, o1],
+      stringsAsFactors = FALSE
+    )
+  }))
+}))
+ggplot2::ggplot(grid_df, ggplot2::aes(x = value, y = response)) +
+  ggplot2::geom_point(colour = "#3b528b", alpha = 0.7, size = 1.3) +
+  ggplot2::facet_grid(output ~ parameter, scales = "free") +
+  ggplot2::labs(
+    x = "parameter value (design units)",
+    y = "simulator output (arbitrary units)",
+    title = "What the screen is looking at"
+  ) +
+  ggplot2::theme_minimal()
 ```
+
+```{r fig-grid-skip, eval = !has_ggplot2, echo = FALSE, results = "asis"}
+cat("ggplot2 is not installed on this build, so the parameter-output",
+    "grid figure is skipped.\n")
+```
+
+### Handing the survivors to the calibration
+
+```{r handoff}
+identifiable_params <- names(fit$identifiable)[fit$identifiable]
+identifiable_params
+```
+
+Those names are the parameter set to pass to `PESTO::pesto_ies()` as the
+calibration prior; the parameters left out are the ones that would have
+consumed realisations without moving the outputs. The manifest contract
+that carries a PESTO ensemble on to the rest of the orchestra is
+documented in PESTO itself, and the vignette *Did the management change
+shift the simulated distribution?* shows a pair of those manifests being
+compared.
+
+## Read
+
+The screen recovers the construction. `slope` and `curvature` are ranked
+`r match("slope", names(sort(fit$max_statistic, decreasing = TRUE)))`
+and
+`r match("curvature", names(sort(fit$max_statistic, decreasing = TRUE)))`
+by maximum HSIC, with maximum
+HSIC statistics of `r signif(fit$max_statistic[["slope"]], 3)` and
+`r signif(fit$max_statistic[["curvature"]], 3)`, and their smallest
+adjusted p-values are
+`r signif(min(screen_df$p_value_adjusted[
+  screen_df$parameter == "slope"]), 3)` and
+`r signif(min(screen_df$p_value_adjusted[
+  screen_df$parameter == "curvature"]), 3)` against a permutation floor
+of `r round(1 / (fit$n_permutations + 1), 4)`. Each drives one output
+almost deterministically, and the corresponding panels of the figure are
+a straight line and a parabola. `weak` returns a maximum statistic of
+`r signif(fit$max_statistic[["weak"]], 3)` with a minimum adjusted
+p-value of `r signif(min(screen_df$p_value_adjusted[
+  screen_df$parameter == "weak"]), 3)`, and the screen calls it
+`r if (fit$identifiable[["weak"]]) "identifiable" else "not identifiable"`
+at `alpha` = `r fit$alpha`: its effect on biomass is real but small
+against the quadratic term, which is what the shallow trend in its panel
+shows. `inert` returns
+`r signif(fit$max_statistic[["inert"]], 3)` with a minimum adjusted
+p-value of `r signif(min(screen_df$p_value_adjusted[
+  screen_df$parameter == "inert"]), 3)` and is not identifiable, as
+built.
+
+`r length(identifiable_params)` of the `r length(fit$identifiable)`
+parameters survive the screen. Sending only those into the calibration
+is the saving: on a simulator where each realisation is a full model run,
+the parameters left out would have consumed the same budget as the
+parameters that matter and returned a wider posterior for it.
+
+## Limits
+
+The simulator here is a stub, chosen so that the right answer is known
+and the vignette runs in seconds; a real crop model has correlated
+parameters, interactions and outputs on very different scales, and the
+screen inherits all of that. This is a *first-order* screen: it tests
+each parameter against each output marginally, so a parameter that acts
+only through an interaction can pass unnoticed, which is exactly the case
+the total-order indices in *Which parameters change the shape of the
+output distribution?* are built for. A parameter declared not
+identifiable is not shown to be inert; it is shown to have no detectable
+effect at this design size, on these outputs, at this noise level, and a
+larger design can promote it. The reverse holds too: with many
+parameters and many outputs, unadjusted p-values would manufacture
+identifiable parameters, which is why the grid is adjusted by default.
+The screen also says nothing about the *sign* or the shape of an effect,
+only that one is present.
 
 ## Notes on practice
 
-- **Design size.** `n` should comfortably exceed the number of
-  parameters; we recommend `n >= 10p` as a starting point for
-  ag-systems-scale designs.
-- **Permutations.** 199-499 permutations is usually sufficient; the
-  minimum achievable p-value at `n_permutations` is
-  `1 / (n_permutations + 1)`, so `n_permutations >= 199` is the floor
-  for testing at `alpha = 0.05`.
-- **Multiple testing.** With many parameters and several outputs,
-  unadjusted p-values will produce spurious "identifiable" flags. The
-  default Benjamini-Hochberg adjustment controls the false discovery
-  rate across the `p x q` grid.
-- **Cost.** Kernel matrices are reused across the grid, so cost scales
-  as `O((p + q) n^2)` for kernel construction plus
-  `O(p q B n^2)` for the permutation null, where `B = n_permutations`.
+**Design size.** The number of design rows should comfortably exceed the
+number of parameters; `n` at least ten times the parameter count is a
+workable starting point at agricultural-systems scale.
+
+**Permutations.** The smallest p-value a permutation null can express is
+`1 / (n_permutations + 1)`, so testing at `alpha` = 0.05 needs at least
+199 permutations before adjustment; 199 to 499 covers most screens.
+
+**Multiple testing.** With `p` parameters and `q` outputs the screen runs
+`p` times `q` tests, and the default Benjamini-Hochberg adjustment
+controls the false discovery rate across that whole grid.
+
+**Cost.** Kernel matrices are reused across the grid, so construction
+costs order `(p + q) n^2` and the permutation null costs order
+`p q B n^2` for `B` permutations.
+
+## What to read next
+
+*Which parameters change the shape of the output distribution?* is the
+same kernel dependence measure used as a graded sensitivity index rather
+than a pass-or-fail screen, and adds total-order indices for interaction.
+*Scaling HSIC to large ensembles* covers what to do when the design grows
+past the point where an exact Gram matrix is affordable. *Did the
+management change shift the simulated distribution?* picks the story up
+after calibration, when two forward ensembles are to be compared.
 
 ## References
 
-- Hu, Z., Sejdinovic, D., & Evans, R. J. (2024).
-  *A kernel-based statistical test for causal inference with backdoor
-  adjustment.* Journal of Machine Learning Research, 25.
-- Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Schölkopf, B., &
-  Smola, A. J. (2008). A kernel statistical test of independence.
-  *NeurIPS*, 20.
 - Da Veiga, S. (2015). Global sensitivity analysis with dependence
-  measures. *Journal of Statistical Computation and Simulation*,
-  85(7), 1283-1305.
+  measures. *Journal of Statistical Computation and Simulation*, 85(7),
+  1283-1305.
+- Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
+  Smola, A. J. (2008). A kernel statistical test of independence.
+  *Advances in Neural Information Processing Systems*, 20.
+- Hu, R., Sejdinovic, D., & Evans, R. J. (2024). A kernel test for causal
+  association via noise contrastive backdoor adjustment. *Journal of
+  Machine Learning Research*, 25(160), 1-56.
+
+## Reproduce
+
+Seed `1` for the simulator noise and `seed = 11L` for both the
+Latin-hypercube design and the permutation null. Package versions follow.
+
+```{r session-info}
+sessionInfo()
+```

@@ -1,78 +1,98 @@
 ---
-title: "Posterior-Predictive Check with MMD"
-author: "Max Moldovan"
-date: "`r Sys.Date()`"
+title: "Is the calibrated model right about more than the mean?"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Posterior-Predictive Check with MMD}
+  %\VignetteIndexEntry{Is the calibrated model right about more than the mean?}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+<!-- Render time: ~2 s under rmarkdown::render(); macOS aarch64, R 4.5.2, one
+     core. Four posterior-predictive checks at 199 to 299 permutations on
+     ensembles of 300 draws against 30 held-out observations. -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.width = 6,
-  fig.height = 4,
+  fig.width = 7,
+  fig.height = 4.5,
   dpi = 150
 )
-set.seed(1)
+has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
 ```
 
-## The question
-
-After running an iterative ensemble smoother (PESTO, PEST++, EnKF, ...)
-against historical observations, *does the calibrated model produce a
-posterior-predictive distribution that is consistent with a held-out year
-or paddock?*
-
-The standard answer in PEST++-style workflows is RMSE on the
-posterior-predictive mean. That can only catch differences in central
-tendency. A distribution can match in mean but fail dramatically in
-variance, skewness, or tail probability -- precisely the failures that
-matter for climate-risk decisions.
-
-`mmd_ppc()` answers the distributional version of the question: are the
-posterior-predictive draws and the held-out observations samples from
-the same distribution? It is a model-free, kernel two-sample test
-(MMD) plus a Bayesian-flavoured *surprise* diagnostic.
-
-## The lightweight ensemble path
-
-`mmd_ppc()` also accepts a `pesto_ensemble` object built directly, as a
-lightweight alternative to the full `pesto_ensemble_manifest` S7 class
-that PESTO's native emitter produces (see "Cross-package handoff"
-below). Use this path for a synthetic worked example, or when the
-ensemble was assembled outside PESTO entirely.
-
-```{r ensemble}
+```{r library}
 library(kernR)
+```
 
-# True data-generating distribution: bivariate (yield, biomass)
-n_obs <- 30L
+## Why
 
-# Held-out observations from the "real" world
+A modeller has just finished a calibration and wants to know whether to
+believe it. *The ensemble smoother converged, the posterior-predictive
+mean sits within a few per cent of the held-out season, and the root mean
+squared error is the best I have had. But the decision I am supporting is
+about the bad years, so what I need to know is whether the predictive
+distribution is right, not whether its centre is. Is the held-out year a
+plausible draw from what the calibrated model predicts?* This vignette
+answers that on three synthetic ensembles: one calibrated correctly, one
+over-confident, and one displaced.
+
+## What
+
+`mmd_ppc()` is a posterior-predictive check built on a two-sample kernel
+test. It compares the posterior-predictive draws against a held-out
+sample with the Maximum Mean Discrepancy and scores the observed
+discrepancy against a permutation null, so a difference in spread,
+shape, modality or tail weight counts exactly as a difference in
+location does. That is the whole point: the standard check in an
+ensemble-smoother workflow is the root mean squared error of the
+posterior-predictive mean, and a distribution can match in mean while
+failing badly everywhere else.
+
+Alongside the p-value it reports `surprise_bits`, the Shannon
+information of the permutation p-value: 0 bits at a p-value of 1, and
+capped at the base-two logarithm of one more than the permutation count.
+It is an intuitive scalar summary of the same verdict, not a posterior
+probability and not the Bayesian-surprise divergence.
+
+`pesto_ensemble()` is the lightweight constructor: posterior draws,
+observations, and optional metadata. `mmd_ppc()` also consumes a
+`PESTO::pesto_ensemble_manifest()`, the C2 manifest contract PESTO's own
+emitter produces, through a dedicated method, and `outputs` restricts the
+check to named observation columns on that path.
+
+## Do
+
+### A held-out sample
+
+Thirty synthetic observations of a bivariate outcome, standing in for a
+year or a paddock kept out of the calibration.
+
+```{r observations}
+set.seed(1L)
+n_held <- 30L
 truth_mean <- c(yield = 4.5, biomass = 12.0)
-truth_sd   <- c(yield = 0.6, biomass = 1.5)
+truth_sd <- c(yield = 0.6, biomass = 1.5)
 observed <- cbind(
-  yield   = stats::rnorm(n_obs, truth_mean["yield"],   truth_sd["yield"]),
-  biomass = stats::rnorm(n_obs, truth_mean["biomass"], truth_sd["biomass"])
+  yield = rnorm(n_held, truth_mean[["yield"]], truth_sd[["yield"]]),
+  biomass = rnorm(n_held, truth_mean[["biomass"]],
+                  truth_sd[["biomass"]])
 )
 ```
 
-## Case A: well-calibrated posterior
+### A calibrated ensemble
 
 ```{r calibrated}
-M <- 300L
+n_draws <- 300L
 post_good <- cbind(
-  yield   = stats::rnorm(M, truth_mean["yield"],   truth_sd["yield"]),
-  biomass = stats::rnorm(M, truth_mean["biomass"], truth_sd["biomass"])
+  yield = rnorm(n_draws, truth_mean[["yield"]], truth_sd[["yield"]]),
+  biomass = rnorm(n_draws, truth_mean[["biomass"]],
+                  truth_sd[["biomass"]])
 )
 ens_good <- pesto_ensemble(
-  posterior = post_good,
-  observed  = observed,
-  metadata  = list(holdout_year = 2018L, ies_iters = 6L)
+  posterior = post_good, observed = observed,
+  metadata = list(holdout_year = 2018L, ies_iters = 6L)
 )
 ens_good
 
@@ -80,19 +100,18 @@ fit_good <- mmd_ppc(ens_good, n_permutations = 299L, seed = 1L)
 fit_good
 ```
 
-A small `surprise_bits` (well below `log2(B + 1)`) and a verdict of
-*consistent with observations* mean the calibrated model has not been
-falsified by the held-out data at the distributional level.
+### An over-confident ensemble
 
-## Case B: miscalibrated posterior (variance too narrow)
+The most common ensemble-smoother pathology: posterior draws clustered
+too tightly around the posterior mean. Here the spread is a third of what
+it should be, and the centre is exactly right.
 
-A common ensemble-smoother pathology is over-confidence: posterior draws
-clustered too tightly around the posterior mean.
-
-```{r miscalibrated-variance}
+```{r narrow}
 post_narrow <- cbind(
-  yield   = stats::rnorm(M, truth_mean["yield"],   truth_sd["yield"] / 3),
-  biomass = stats::rnorm(M, truth_mean["biomass"], truth_sd["biomass"] / 3)
+  yield = rnorm(n_draws, truth_mean[["yield"]],
+                truth_sd[["yield"]] / 3),
+  biomass = rnorm(n_draws, truth_mean[["biomass"]],
+                  truth_sd[["biomass"]] / 3)
 )
 ens_narrow <- pesto_ensemble(post_narrow, observed,
                              metadata = list(scenario = "narrow"))
@@ -100,122 +119,247 @@ fit_narrow <- mmd_ppc(ens_narrow, n_permutations = 299L, seed = 1L)
 fit_narrow
 ```
 
-The verdict here should be REJECT, with surprise well above the
-threshold of ~4.32 bits (the surprise corresponding to `p = 0.05`).
+### A displaced ensemble
 
-## Case C: miscalibrated posterior (mean-shifted)
-
-```{r miscalibrated-mean}
+```{r shifted}
 post_shifted <- cbind(
-  yield   = stats::rnorm(M, truth_mean["yield"]   + 0.8, truth_sd["yield"]),
-  biomass = stats::rnorm(M, truth_mean["biomass"] - 1.2, truth_sd["biomass"])
+  yield = rnorm(n_draws, truth_mean[["yield"]] + 0.8,
+                truth_sd[["yield"]]),
+  biomass = rnorm(n_draws, truth_mean[["biomass"]] - 1.2,
+                  truth_sd[["biomass"]])
 )
 ens_shifted <- pesto_ensemble(post_shifted, observed)
 fit_shifted <- mmd_ppc(ens_shifted, n_permutations = 299L, seed = 1L)
 fit_shifted
 ```
 
-## Comparing surprise across scenarios
-
-```{r summary-table}
-res <- list(
-  calibrated   = fit_good,
-  narrow       = fit_narrow,
-  mean_shifted = fit_shifted
+```{r summary-table, echo = FALSE}
+fits <- list(calibrated = fit_good, over_confident = fit_narrow,
+             displaced = fit_shifted)
+ppc_tab <- data.frame(
+  ensemble = c("calibrated", "over-confident", "displaced"),
+  rmse_of_mean = vapply(
+    list(post_good, post_narrow, post_shifted),
+    function(p1) {
+      sqrt(mean((colMeans(p1) - colMeans(observed))^2))
+    }, numeric(1L)
+  ),
+  statistic = vapply(fits, function(z) z$statistic, numeric(1L)),
+  p_value = vapply(fits, function(z) z$p_value, numeric(1L)),
+  surprise_bits = vapply(fits, function(z) z$surprise_bits, numeric(1L)),
+  reject = vapply(fits, function(z) z$reject, logical(1L)),
+  row.names = NULL, stringsAsFactors = FALSE
 )
-data.frame(
-  scenario      = names(res),
-  statistic     = vapply(res, function(z) z$statistic, numeric(1)),
-  p_value       = vapply(res, function(z) z$p_value, numeric(1)),
-  surprise_bits = vapply(res, function(z) z$surprise_bits, numeric(1)),
-  reject        = vapply(res, function(z) z$reject, logical(1)),
-  row.names     = NULL
+surprise_at_alpha <- -log2(fit_good$alpha)
+surprise_cap <- log2(fit_good$n_permutations + 1)
+knitr::kable(
+  ppc_tab, digits = c(0L, 3L, 4L, 4L, 2L, 0L),
+  col.names = c("Ensemble", "RMSE of the mean", "MMD statistic",
+                "p-value", "Surprise (bits)",
+                paste0("Reject at ", fit_good$alpha)),
+  caption = paste0(
+    "The three ensembles against the same ", n_held,
+    " held-out observations. Surprise is capped at ",
+    round(surprise_cap, 2), " bits by the ", fit_good$n_permutations,
+    "-permutation budget; ", round(surprise_at_alpha, 2),
+    " bits corresponds to a p-value of ", fit_good$alpha, "."
+  )
 )
 ```
 
-## Visual diagnostic
+### The package's own diagnostic
 
-The inherited `plot()` method shows the permutation null distribution
-with the observed MMD statistic marked:
-
-```{r plot, fig.cap = "Permutation null distribution of the MMD statistic for the narrow posterior-predictive ensemble, with the observed statistic marked against the held-out sample."}
+```{r plot-null, fig.cap = "Permutation null distribution of the MMD statistic for the over-confident ensemble, with the observed statistic marked against the held-out sample."}
 plot(fit_narrow)
 ```
 
-The observed statistic falls in the right tail of the permutation
-null, consistent with `fit_narrow`'s p-value: the narrow ensemble's
-predictive draws are distributionally distinguishable from the
-held-out observations, not merely off in their mean.
+### The figure: what each ensemble got wrong
 
-## Notes on practice
+```{r fig-predictive, eval = has_ggplot2, fig.height = 5, fig.cap = "Posterior-predictive distributions of the three ensembles against the held-out observations, shown as tick marks along the axis, one panel per output. The calibrated curve covers the observations; the over-confident curve is centred correctly and far too narrow to have produced them; the displaced curve has the right width in the wrong place. The root mean squared error of the mean cannot separate the first two."}
+pred_df <- do.call(rbind, lapply(
+  list(calibrated = post_good, `over-confident` = post_narrow,
+       displaced = post_shifted),
+  function(p1) {
+    data.frame(
+      value = as.numeric(p1),
+      output = rep(colnames(p1), each = nrow(p1)),
+      stringsAsFactors = FALSE
+    )
+  }
+))
+pred_df$ensemble <- rep(
+  c("calibrated", "over-confident", "displaced"),
+  each = length(post_good)
+)
+obs_df <- data.frame(
+  value = as.numeric(observed),
+  output = rep(colnames(observed), each = nrow(observed)),
+  stringsAsFactors = FALSE
+)
+ggplot2::ggplot(pred_df, ggplot2::aes(x = value, colour = ensemble)) +
+  ggplot2::geom_density(linewidth = 0.9) +
+  ggplot2::geom_rug(
+    data = obs_df, ggplot2::aes(x = value), inherit.aes = FALSE,
+    colour = "grey30", alpha = 0.8
+  ) +
+  ggplot2::facet_wrap(~output, scales = "free") +
+  ggplot2::scale_colour_viridis_d(name = "ensemble", end = 0.85) +
+  ggplot2::labs(
+    x = "output value", y = "posterior-predictive density",
+    title = "Three ensembles against the same held-out observations"
+  ) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(legend.position = "bottom")
+```
 
-- **Ensemble size.** Distributional power is set by both the ensemble
-  size `M` and the held-out sample size `n_obs`. For ag-scale problems
-  `M` in the low hundreds is usually sufficient; `n_obs >= 20` is a
-  practical floor.
-- **Permutations.** At `B = 299` the minimum achievable p-value is
-  `1 / 300 ~ 0.0033`; correspondingly the maximum surprise is
-  `log2(300) ~ 8.23` bits. Increase `B` when working in the small-p
-  regime.
-- **Interpreting surprise.** Surprise is Shannon information of the
-  permutation p-value: 0 bits at `p = 1`, 4.32 bits at `p = 0.05`, and
-  capped at `log2(B + 1)`. It is *not* the strict Bayesian-surprise
-  KL divergence; use it as an intuitive scalar verdict, not as a
-  posterior probability.
-- **Multi-dimensional outputs.** `mmd_ppc()` handles `d > 1` natively
-  via the kernel choice; the default RBF with median-heuristic
-  bandwidth is computed over the pooled posterior + observed sample.
+```{r fig-predictive-skip, eval = !has_ggplot2, echo = FALSE, results = "asis"}
+cat("ggplot2 is not installed on this build, so the",
+    "posterior-predictive figure is skipped.\n")
+```
 
-## Cross-package handoff
+### The same check on a PESTO manifest
 
-PESTO (from 0.3.0) ships a native ensemble emitter -- the
-`PESTO::pesto_ensemble_manifest` S7 class -- which `mmd_ppc()` consumes
-via a dedicated method. The lightweight `pesto_ensemble` S3 constructor
-from the section above is unchanged and remains supported for the
-cases that do not need the full manifest.
+PESTO's own emitter produces a `pesto_ensemble_manifest`, and `mmd_ppc()`
+consumes it through a dedicated method. Held-out observations are
+supplied explicitly, because the manifest's `obs_target` slot is the
+single point the posterior was fitted to and is not a valid two-sample
+comparator on its own.
 
-```{r,eval=requireNamespace("PESTO",quietly=TRUE)}
-library(PESTO)
-
-# Build a tiny synthetic manifest (in real workflows: come from
-# pesto_ies_callback() + as_manifest()).
-nreal <- 80L; nobs <- 3L
-post   <- matrix(rnorm(nreal * nobs), nreal, nobs)
-colnames(post) <- paste0("o", seq_len(nobs))
-m <- pesto_ensemble_manifest(
-  run_id          = "vignette_demo",
-  params          = data.frame(real_name = paste0("r", seq_len(nreal)),
-                                p1 = rnorm(nreal),
-                                p2 = rnorm(nreal),
-                                check.names = FALSE),
-  outputs         = data.frame(real_name = paste0("r", seq_len(nreal)),
-                                post, check.names = FALSE),
-  weights         = setNames(rep(1, nobs), colnames(post)),
-  obs_target      = setNames(rnorm(nobs),  colnames(post)),
-  data_hash       = "sha256:vignette_demo",
-  pesto_version   = as.character(packageVersion("PESTO")),
-  timestamp       = Sys.time(),
-  method          = "ies_callback",
-  noptmax         = 1L,
+```{r manifest-path}
+n_manifest <- 80L
+n_cols <- 3L
+post_manifest <- matrix(rnorm(n_manifest * n_cols), n_manifest, n_cols)
+colnames(post_manifest) <- paste0("o", seq_len(n_cols))
+manifest <- PESTO::pesto_ensemble_manifest(
+  run_id = "vignette_demo",
+  params = data.frame(
+    real_name = paste0("r", seq_len(n_manifest)),
+    p1 = rnorm(n_manifest), p2 = rnorm(n_manifest),
+    check.names = FALSE
+  ),
+  outputs = data.frame(
+    real_name = paste0("r", seq_len(n_manifest)), post_manifest,
+    check.names = FALSE
+  ),
+  weights = setNames(rep(1, n_cols), colnames(post_manifest)),
+  obs_target = setNames(rnorm(n_cols), colnames(post_manifest)),
+  data_hash = "sha256:vignette_demo",
+  pesto_version = as.character(packageVersion("PESTO")),
+  timestamp = Sys.time(),
+  method = "ies_callback",
+  noptmax = 1L,
   lambda_schedule = 1
 )
 
-# Out-of-sample PPC: supply held-out observations explicitly. The
-# manifest's `obs_target` slot is a single nobs-dim point (the data
-# the posterior was fit to) and is not a valid two-sample comparator
-# on its own.
-held_out <- matrix(rnorm(20L * nobs), 20L, nobs)
-colnames(held_out) <- colnames(post)
-mmd_ppc(m, observed = held_out, n_permutations = 199L, seed = 1L)
+held_out <- matrix(rnorm(20L * n_cols), 20L, n_cols)
+colnames(held_out) <- colnames(post_manifest)
+fit_manifest <- mmd_ppc(manifest, observed = held_out,
+                        n_permutations = 199L, seed = 1L)
+fit_manifest$p_value
 ```
 
-The `outputs =` argument focuses the check on specific observation
-columns (parallel to `dr_date_scenario()`'s convention).
+## Read
+
+The calibrated ensemble is not falsified. Its MMD statistic is
+`r signif(fit_good$statistic, 3)` with a p-value of
+`r round(fit_good$p_value, 3)` and
+`r round(fit_good$surprise_bits, 2)` bits of surprise, well below the
+`r round(surprise_at_alpha, 2)` bits that correspond to a p-value of
+`r fit_good$alpha`: the held-out observations are an unremarkable draw
+from what the model predicts.
+
+The over-confident ensemble is where the check earns its place. Its
+posterior mean is correct -- the root mean squared error of the mean is
+`r round(ppc_tab$rmse_of_mean[ppc_tab$ensemble == "over-confident"], 3)`
+against `r round(ppc_tab$rmse_of_mean[
+  ppc_tab$ensemble == "calibrated"], 3)` for the calibrated ensemble, so
+the standard diagnostic ranks the two as
+`r ifelse(abs(diff(ppc_tab$rmse_of_mean[1:2])) < 0.2,
+  "nearly equivalent", "clearly different")` -- and `mmd_ppc()` returns a
+statistic of
+`r signif(fit_narrow$statistic, 3)` with a p-value of
+`r round(fit_narrow$p_value, 4)` and
+`r round(fit_narrow$surprise_bits, 2)` bits of surprise, which is
+`r if (fit_narrow$reject) "a rejection" else "not a rejection"`. The
+figure shows why: the narrow curve is a spike where the observations are
+a spread.
+
+The displaced ensemble is rejected too, statistic
+`r signif(fit_shifted$statistic, 3)`, p-value
+`r round(fit_shifted$p_value, 4)`,
+`r round(fit_shifted$surprise_bits, 2)` bits, and this one the root mean
+squared error of the mean would also have caught, at
+`r round(ppc_tab$rmse_of_mean[ppc_tab$ensemble == "displaced"], 3)`. The
+value of the distributional check is not that it finds displacement; it
+is that it finds the over-confidence that displacement-based diagnostics
+cannot.
+
+The manifest path reaches the same machinery from PESTO's own object. On
+the synthetic manifest above, where the posterior draws and the held-out
+sample are both standard normal and no failure was built in, the check
+returns a p-value of `r round(fit_manifest$p_value, 3)`.
+
+## Limits
+
+All three ensembles are synthetic, and the failures were built in so that
+the verdicts could be read against a known answer. Distributional power
+is set by both the ensemble size and the held-out sample size; with
+`r n_held` held-out observations, only a fairly gross miscalibration is
+detectable, and a check that fails to reject is not evidence of
+calibration. The surprise measure is a monotone transformation of the
+p-value and carries no information the p-value does not: it inherits the
+permutation cap of `r round(surprise_cap, 2)` bits at
+`r fit_good$n_permutations` permutations, so it saturates instead of
+growing once the p-value hits its floor. This is a check against
+*held-out* data; run against the data the model was calibrated on, it
+tests goodness of fit rather than predictive adequacy and will be
+optimistic. Finally the check is silent about *why* an ensemble fails: it
+reports that the predictive distribution and the observations differ, and
+the figure, not the statistic, is what says whether the failure is in
+location, spread or shape.
+
+## Notes on practice
+
+**Ensemble and sample size.** An ensemble in the low hundreds is usually
+enough at agricultural scale; twenty held-out observations is a practical
+floor below which the test has little to work with.
+
+**Permutations.** At `r fit_good$n_permutations` permutations the
+smallest p-value is
+`r signif(1 / (fit_good$n_permutations + 1), 3)` and the largest surprise
+is `r round(surprise_cap, 2)` bits. Raise the budget when working near
+the floor.
+
+**Multi-dimensional outputs.** `mmd_ppc()` handles more than one output
+natively through the kernel; the default RBF bandwidth is set by the
+median heuristic over the pooled posterior and observed sample, so the
+output columns should be on comparable scales or standardised first.
+
+## What to read next
+
+*Are these draws calibrated, and do the engines agree?* asks the
+one-sample version of the same question, comparing draws against a target
+density rather than against held-out data, and adds the concordance test
+across several sources. *Did the management change shift the simulated
+distribution?* compares two calibrated ensembles against each other
+instead of against observations. *Getting started with kernR* introduces
+the MMD two-sample test this check is built on.
 
 ## References
 
 - Gelman, A., Meng, X.-L., & Stern, H. (1996). Posterior predictive
-  assessment of model fitness via realized discrepancies.
-  *Statistica Sinica*, 6(4), 733-760.
-- Gretton, A., Borgwardt, K. M., Rasch, M. J., Schölkopf, B., &
-  Smola, A. (2012). A kernel two-sample test. *JMLR*, 13, 723-773.
+  assessment of model fitness via realized discrepancies. *Statistica
+  Sinica*, 6(4), 733-760.
+- Gretton, A., Borgwardt, K. M., Rasch, M. J., Scholkopf, B., & Smola, A.
+  (2012). A kernel two-sample test. *Journal of Machine Learning
+  Research*, 13, 723-773.
+
+## Reproduce
+
+Seed `1` for the held-out sample and all three ensembles;
+`seed = 1L` passed to every check so the permutation draws are fixed.
+Package versions follow.
+
+```{r session-info}
+sessionInfo()
+```

@@ -1,5 +1,23 @@
 # kernR (development version)
 
+* All thirteen vignettes were rewritten to the orchestra vignette quality
+  bar: each opens with the question its reader would ask and answers it
+  explicitly, carries a human-readable title, follows a fixed Why / What /
+  Do / Read / Limits / What to read next / Reproduce shape, computes every
+  number in its prose rather than asserting it, and closes with its seed
+  and `sessionInfo()`. Three claims that the previous text asserted without
+  computing did not survive the rewrite and are now reported as measured:
+  the HSIC sensitivity scan needs a 600-row design, not 200, before the
+  mean-preserving variance parameter clears the adjusted threshold, and the
+  heavy-tail parameter still does not; the linear and Gaussian outer
+  kernels of `dist_regression()` recover a bag's spread equally well,
+  because the inner embedding already carries it; and the four
+  density-ratio backends of `bd_hsic_test()` disagree on a confounded
+  design, because the backend's weights also determine the permutation
+  clustering. `kernel_downscale()` is now shown on standardised inputs,
+  which is what the shared median-heuristic bandwidth requires. Figures are
+  `ggplot2`, which joins `Suggests`.
+
 * The manifest integrity hash uses `digest::digest()` instead of
   `tools::sha256sum()`, which only exists from R 4.5.0 (above the declared
   R >= 4.1.0 floor); `digest` is now an Import.

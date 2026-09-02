@@ -1,143 +1,317 @@
 ---
-title: "Distributional Treatment Effect Tests (DR-DATE / DR-DETT)"
-author: "Max Moldovan"
-date: "`r Sys.Date()`"
+title: "A treatment that changes the spread and not the mean"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Distributional Treatment Effect Tests (DR-DATE / DR-DETT)}
+  %\VignetteIndexEntry{A treatment that changes the spread and not the mean}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+<!-- Render time: ~2 s under rmarkdown::render(); macOS aarch64, R 4.5.2, one
+     core. Four doubly robust tests at 299 permutations on 300 to 400
+     observations, each with a propensity fit and an outcome fit. -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.width = 6,
-  fig.height = 4,
+  fig.width = 7,
+  fig.height = 4.5,
   dpi = 150
 )
+has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
 ```
 
-## Beyond Mean Effects
+```{r library}
+library(kernR)
+```
 
-Standard causal inference methods (Double ML, TMLE) test whether treatment
-shifts the *mean* outcome. But many real treatment effects are
-**distributional** -- they change variance, shape, or modality without
-necessarily changing the mean.
+## Why
 
-**DR-DATE** and **DR-DETT** (Fawkes, Hu, Evans & Sejdinovic, 2024) test
-for *any* distributional difference between Y(1) and Y(0), using doubly
-robust kernel embeddings.
+A risk analyst is looking at a management practice whose average did
+nothing. *The mean yield under the new practice is the same as under the
+old one, and every mean-based method I have tells me there is no effect.
+But the good years are better and the bad years are worse, and it is the
+bad years that decide whether the business survives. Is there a test that
+calls that an effect?* This vignette answers with the two doubly robust
+kernel tests for distributional treatment effects, on synthetic designs
+where the treatment shifts the mean, shifts only the variance, and acts
+on a subgroup with imperfect overlap.
 
-## Key Concepts
+## What
 
-- **DR-DATE** (Distributional Average Treatment Effect): Tests whether
-  P(Y(1)) = P(Y(0)) over the entire population.
-- **DR-DETT** (Distributional Effect on the Treated): Tests whether
-  P(Y(1)|T=1) = P(Y(0)|T=1), focusing on the treated subgroup. Requires
-  only one-sided overlap.
-- **Double robustness**: Consistent if either the propensity model or
-  the outcome model is correctly specified.
+`dr_date_test()` tests the Distributional Average Treatment Effect
+hypothesis $P(Y(1)) = P(Y(0))$ over the whole population: not whether the
+two potential-outcome distributions have the same mean, but whether they
+are the same distribution. It compares the two kernel mean embeddings, so
+a change in variance, skewness, modality or tail weight counts as an
+effect exactly as a shift in location does.
 
-## Example: Mean Shift (Detectable by All Methods)
+`dr_dett_test()` tests the Distributional Effect on the Treated,
+$P(Y(1) \mid T = 1) = P(Y(0) \mid T = 1)$, restricting the question to the
+units that were actually treated. That restriction buys a weaker
+assumption: it needs overlap only on one side, so covariate regions with
+no control units do not invalidate it.
+
+Both are doubly robust. Each combines a propensity model
+($P(T = 1 \mid X)$, fitted by `estimate_propensity()`) with an outcome
+model, and the estimator stays consistent if either of the two is
+correctly specified. `assess_overlap()` is the companion diagnostic for
+the positivity assumption both rely on. `kernel_causal_test()` reaches
+the same tests through a formula, with `method = "dr-date"` or
+`"dr-dett"`. Every call returns a `kernel_test_result` carrying the
+statistic, the permutation null, the p-value and the effective sample
+size of the weights.
+
+## Do
+
+### A mean shift, which any method would find
+
+A synthetic design of 300 observations: two covariates drive treatment
+assignment, and treatment adds a constant 1.0 to the outcome.
 
 ```{r mean-shift}
-library(kernR)
-set.seed(42)
+set.seed(42L)
+n_obs <- 300L
+x_cov <- matrix(rnorm(n_obs * 2L), n_obs, 2L)
+t_arm <- rbinom(n_obs, 1L, plogis(0.3 * x_cov[, 1L] - 0.2 * x_cov[, 2L]))
+y_shift <- t_arm * 1.0 + 0.5 * x_cov[, 1L] + rnorm(n_obs, sd = 0.5)
 
-n <- 300
-x <- matrix(rnorm(n * 2), n, 2)
-logit_p <- 0.3 * x[, 1] - 0.2 * x[, 2]
-t <- rbinom(n, 1, plogis(logit_p))
-y <- t * 1.0 + 0.5 * x[, 1] + rnorm(n, sd = 0.5) # Mean shift of 1.0
-
-result <- dr_date_test(y, t, x,
-  n_permutations = 200,
-  seed = 1
+fit_shift <- dr_date_test(y_shift, t_arm, x_cov,
+  n_permutations = 299L, seed = 1L
 )
-result
+fit_shift
 ```
 
-## Example: Variance Effect Only (Invisible to Mean-Based Tests)
+### A variance effect and nothing else
 
-This is where DR-DATE shines. The treatment changes the *variance* of
-the outcome but not the mean -- DML and TMLE would have zero power here.
+The same machinery on a synthetic design in which treatment multiplies
+the outcome's standard deviation by 2.5 and leaves the mean exactly where
+it was: each arm's noise is centred within the arm, so the treatment
+contributes no mean shift by construction rather than only in
+expectation. This is the design a mean-based method has no power against.
 
 ```{r variance-effect}
-set.seed(42)
-n <- 400
-x <- matrix(rnorm(n * 2), n, 2)
-t <- rbinom(n, 1, plogis(0.3 * x[, 1]))
-
-# Treatment doubles the variance but does NOT shift the mean
-y <- (1 - t) * rnorm(n, sd = 1) + t * rnorm(n, sd = 2.5) + 0.5 * x[, 1]
-
-cat("Mean difference:", mean(y[t == 1]) - mean(y[t == 0]), "\n")
-cat("SD treated:", sd(y[t == 1]), "  SD control:", sd(y[t == 0]), "\n")
-
-result_var <- dr_date_test(y, t, x,
-  n_permutations = 200,
-  outcome_model = "zero",
-  seed = 1
-)
-result_var
+set.seed(42L)
+n_var <- 400L
+x_var <- matrix(rnorm(n_var * 2L), n_var, 2L)
+t_var <- rbinom(n_var, 1L, plogis(0.3 * x_var[, 1L]))
+noise_treated <- rnorm(n_var, sd = 2.5)
+noise_control <- rnorm(n_var, sd = 1)
+noise_treated <- noise_treated - mean(noise_treated[t_var == 1L])
+noise_control <- noise_control - mean(noise_control[t_var == 0L])
+y_var <- (1L - t_var) * noise_control + t_var * noise_treated +
+  0.5 * x_var[, 1L]
 ```
 
-## DR-DETT: Effect on the Treated
+The mean-based reading of this design, for comparison: an ordinary least
+squares fit of the outcome on treatment and the two covariates, which is
+what a difference-in-means analysis amounts to once the covariates are
+adjusted for.
 
-When overlap is imperfect (some covariate regions have nearly all
-treated or all control units), DR-DETT is more robust because it
-requires only one-sided overlap.
+```{r variance-lm}
+lm_variance <- lm(y_var ~ t_var + x_var)
+lm_effect <- coef(lm_variance)[["t_var"]]
+lm_p <- summary(lm_variance)$coefficients["t_var", "Pr(>|t|)"]
+sd_treated <- sd(y_var[t_var == 1L])
+sd_control <- sd(y_var[t_var == 0L])
+round(c(lm_effect = lm_effect, lm_p = lm_p,
+        sd_treated = sd_treated, sd_control = sd_control), 3L)
+```
+
+```{r variance-effect-test}
+fit_variance <- dr_date_test(y_var, t_var, x_var,
+  n_permutations = 299L, outcome_model = "zero", seed = 1L
+)
+fit_variance
+```
+
+### The effect on the treated, with imperfect overlap
+
+A synthetic design in which treatment assignment depends more strongly on
+the first covariate, so some covariate regions carry almost no controls.
+`dr_dett_test()` needs overlap only on the treated side.
 
 ```{r dett}
-set.seed(42)
-n <- 300
-x <- matrix(rnorm(n * 2), n, 2)
-t <- rbinom(n, 1, plogis(0.5 * x[, 1]))
-y <- t * rnorm(n, mean = 0.5, sd = 1.5) + (1 - t) * rnorm(n) + x[, 1]
+set.seed(42L)
+n_dett <- 300L
+x_dett <- matrix(rnorm(n_dett * 2L), n_dett, 2L)
+t_dett <- rbinom(n_dett, 1L, plogis(0.5 * x_dett[, 1L]))
+y_dett <- t_dett * rnorm(n_dett, mean = 0.5, sd = 1.5) +
+  (1L - t_dett) * rnorm(n_dett) + x_dett[, 1L]
 
-result_dett <- dr_dett_test(y, t, x,
-  n_permutations = 200,
-  seed = 1
+overlap <- assess_overlap(
+  estimate_propensity(t_dett, x_dett)$scores, t_dett
 )
-result_dett
+overlap
+
+fit_dett <- dr_dett_test(y_dett, t_dett, x_dett,
+  n_permutations = 299L, seed = 1L
+)
+fit_dett
 ```
 
-## Comparing the Tests
-
-```{r comparison}
-cat("DR-DATE p-value:", result_var$p_value, "\n")
-cat("DR-DETT p-value:", result_dett$p_value, "\n")
-```
-
-## Using the Formula Interface
+### The same question through a formula
 
 ```{r formula}
-dat <- data.frame(y = y, treatment = t, x1 = x[, 1], x2 = x[, 2])
-result_f <- kernel_causal_test(
-  y ~ treatment | x1 + x2,
-  data = dat,
-  method = "dr-date",
-  n_permutations = 100,
-  seed = 1
+dat_dett <- data.frame(
+  y = y_dett, treatment = t_dett,
+  x1 = x_dett[, 1L], x2 = x_dett[, 2L]
 )
-result_f
+fit_formula <- kernel_causal_test(
+  y ~ treatment | x1 + x2,
+  data = dat_dett, method = "dr-date",
+  n_permutations = 299L, seed = 1L
+)
+fit_formula
 ```
 
-## When to Use Which Test
+### The figure: what the mean cannot show
 
-| Test | Detects | Overlap Requirement | Best For |
-|------|---------|---------------------|----------|
-| **DR-DATE** | Any distributional difference | Both sides | Population-level effects |
-| **DR-DETT** | Distributional effect on treated | One-sided only | Imperfect overlap; policy questions about treated |
-| **DML/TMLE** | Mean shifts only | Both sides | When only mean effects matter |
+```{r fig-spread, eval = has_ggplot2, fig.cap = "Covariate-adjusted outcome by arm on the variance-only design (residuals from a fit of the outcome on the two covariates). The two arm means, dashed vertical lines, sit almost on top of each other; the treated arm's distribution is more than twice as wide. A mean-based test compares the two dashed lines; DR-DATE compares the two curves."}
+resid_y <- residuals(lm(y_var ~ x_var))
+spread_df <- data.frame(
+  outcome = resid_y,
+  arm = ifelse(t_var == 1L, "treated", "control")
+)
+mean_df <- data.frame(
+  arm = c("control", "treated"),
+  outcome = c(mean(resid_y[t_var == 0L]), mean(resid_y[t_var == 1L]))
+)
+ggplot2::ggplot(spread_df, ggplot2::aes(x = outcome, fill = arm)) +
+  ggplot2::geom_density(alpha = 0.55, colour = NA) +
+  ggplot2::geom_vline(
+    data = mean_df,
+    ggplot2::aes(xintercept = outcome, colour = arm),
+    linetype = "dashed", linewidth = 0.8
+  ) +
+  ggplot2::scale_fill_viridis_d(name = "arm", end = 0.85) +
+  ggplot2::scale_colour_viridis_d(name = "arm", end = 0.85) +
+  ggplot2::labs(
+    x = "covariate-adjusted outcome (yield units)", y = "density",
+    title = "Equal means, unequal spread"
+  ) +
+  ggplot2::theme_minimal()
+```
+
+```{r fig-spread-skip, eval = !has_ggplot2, echo = FALSE, results = "asis"}
+cat("ggplot2 is not installed on this build, so the by-arm density",
+    "figure is skipped.\n")
+```
+
+```{r verdict-table, echo = FALSE}
+verdicts <- data.frame(
+  design = c("mean shift of 1.0", "variance only, mean preserved",
+             "effect on the treated", "effect on the treated, formula"),
+  test = c("dr_date_test()", "dr_date_test()", "dr_dett_test()",
+           "kernel_causal_test(dr-date)"),
+  statistic = c(fit_shift$statistic, fit_variance$statistic,
+                fit_dett$statistic, fit_formula$statistic),
+  p_value = c(fit_shift$p_value, fit_variance$p_value,
+              fit_dett$p_value, fit_formula$p_value),
+  ess = c(fit_shift$ess, fit_variance$ess, fit_dett$ess,
+          fit_formula$ess),
+  n_used = c(fit_shift$n, fit_variance$n, fit_dett$n, fit_formula$n),
+  stringsAsFactors = FALSE
+)
+verdicts$ess_pct <- 100 * verdicts$ess / verdicts$n_used
+any_ess_flag <- any(
+  c(fit_shift$ess_warning, fit_variance$ess_warning,
+    fit_dett$ess_warning, fit_formula$ess_warning)
+)
+knitr::kable(
+  verdicts[, c("design", "test", "statistic", "p_value", "ess",
+               "n_used", "ess_pct")],
+  digits = c(0L, 0L, 4L, 4L, 1L, 0L, 1L),
+  col.names = c("Design", "Test", "Statistic", "p-value", "ESS", "n",
+                "ESS (% of n)"),
+  caption = paste0(
+    "Doubly robust distributional verdicts on the three synthetic ",
+    "designs, each against a ", fit_shift$n_permutations,
+    "-draw permutation null."
+  )
+)
+```
+
+## Read
+
+The mean-shift design is the sanity check: DR-DATE returns a statistic of
+`r signif(fit_shift$statistic, 3)` with a p-value of
+`r round(fit_shift$p_value, 4)`, so the test finds the effect a
+difference-in-means would also have found.
+
+The variance-only design is the point of the vignette. The least squares
+treatment coefficient is `r round(lm_effect, 3)` yield units with a
+p-value of `r round(lm_p, 3)`, so the mean-based reading of this design
+is that nothing happened. Meanwhile the treated arm's standard deviation
+is `r round(sd_treated, 2)` against `r round(sd_control, 2)` in the
+control arm, more than double. DR-DATE returns
+`r signif(fit_variance$statistic, 3)` with a p-value of
+`r round(fit_variance$p_value, 4)`, the smallest value
+`r fit_variance$n_permutations` permutations can express. The figure
+shows why: the two dashed mean lines coincide and the two curves do not.
+An analyst deciding on downside risk cares about the curves.
+
+On the treated-effect design the propensity scores overlap over
+`r round(100 * overlap$overlap_fraction, 1)` per cent of their combined
+range, so positivity is imperfect but not broken; the overlap diagnostic
+`r if (overlap$overlap_warning) "flags this as poor overlap" else
+"does not flag it as poor overlap"`. DR-DETT returns
+`r signif(fit_dett$statistic, 3)` with a p-value of
+`r round(fit_dett$p_value, 4)`, which
+`r if (fit_dett$p_value < 0.05) "clears" else "does not clear"` the
+conventional five per cent threshold. The formula front door run on the same
+data through DR-DATE gives `r signif(fit_formula$statistic, 3)` and
+`r round(fit_formula$p_value, 4)`: the two estimands differ, so the two
+numbers are not expected to agree exactly, and the table reports both
+rather than choosing between them.
+
+Across the four rows the effective sample size of the weights runs from
+`r round(min(verdicts$ess_pct))` to `r round(max(verdicts$ess_pct))` per
+cent of the observations each test used. That is well clear of the ten
+per cent floor below which both tests set `ess_warning`, and on this run
+`r if (any_ess_flag) "at least one row trips that flag" else
+"no row trips that flag"`, so none of these verdicts rests on a handful
+of dominant weights.
+
+## Limits
+
+All four designs are synthetic, with the propensity model correctly
+specified by construction; double robustness is a guarantee about one of
+two models being right, not about both being wrong. These tests report
+that the two distributions differ, not how or by how much: a rejection
+here is a licence to look at the curves, not an effect size, and nothing
+in this vignette quantifies the change in the lower tail that motivated
+the question. The variance-only design uses `outcome_model = "zero"`,
+which leans the estimator entirely on the propensity side, and the
+default outcome model would be the better choice whenever the outcome is
+predictable from the covariates. Both tests assume positivity; DR-DETT
+relaxes it to one side but does not remove it, and the overlap
+diagnostic above is a summary of the propensity score, not a proof that
+the assumption holds. Permutation p-values cannot fall below
+`1 / (n_permutations + 1)`.
+
+## What to read next
+
+*Does the treatment cause the outcome, or do they share a cause?* handles
+the continuous-treatment version of the same causal question and shows
+the effective-sample-size gate declining a verdict outright. *When plots
+sit inside farms* runs these same tests on clustered designs, where the
+permutation null used here is not valid. *Did the management change shift
+the simulated distribution?* applies DR-DATE to a pair of simulator
+ensembles rather than to a field record.
 
 ## References
 
 - Fawkes, J., Hu, R., Evans, R. J., & Sejdinovic, D. (2024). Doubly
   robust kernel statistics for testing distributional treatment effects.
   *Transactions on Machine Learning Research*.
+
+## Reproduce
+
+Seed `42` for all three synthetic designs; `seed = 1L` passed to every
+test so the propensity fit, the outcome fit and the permutation draws are
+fixed. Package versions follow.
 
 ```{r session-info}
 sessionInfo()

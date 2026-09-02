@@ -1,159 +1,326 @@
 ---
-title: "Scaling HSIC with Nystrom and Random Fourier Features"
-author: "Max Moldovan"
-date: "`r Sys.Date()`"
+title: "Scaling HSIC to large ensembles"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Scaling HSIC with Nystrom and Random Fourier Features}
+  %\VignetteIndexEntry{Scaling HSIC to large ensembles}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+<!-- Render time: ~10 s under rmarkdown::render(); macOS aarch64, R 4.5.2,
+     one core. One reconstruction check at n = 80 and a four-point timing
+     grid from n = 250 to n = 2000; the exact test at n = 2000 dominates,
+     which is the vignette's point. -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.width = 6,
-  fig.height = 4,
+  fig.width = 7,
+  fig.height = 4.5,
   dpi = 150
 )
-set.seed(1)
+has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
 ```
 
-## The scaling wall
+```{r library}
+library(kernR)
+```
 
-Exact kernel methods carry an `O(n^2)` storage cost (the Gram matrix)
-and `O(n^2)` or `O(n^3)` compute per operation. For ag-systems
-ensembles in the low thousands of members, that wall hits around
-`n = 5000`: a 5000 x 5000 double-precision Gram matrix is 200 MB, and
-permutation HSIC iterates over it `B` times.
+## Why
 
-Two well-known low-rank approximations of a kernel matrix `K`
-(`n x n`) drop both costs to `O(n m)` for some rank `m << n`:
+An analyst has outgrown the exact test. *My ensemble used to have three
+hundred members and the independence test was instant. It now has
+several thousand, the Gram matrix alone is hundreds of megabytes, and
+every permutation iterates over it. I do not want a different test with
+different assumptions; I want the same test to finish. What does the
+approximation cost me, and does it change the verdict?* This vignette
+answers with the two low-rank approximations kernR ships, a
+reconstruction check against the exact kernel, and a timing grid from
+250 to 2000 observations.
 
-- **Nystrom** (Williams & Seeger, 2001) -- sample `m` landmark
-  observations, compute their Gram `W` (`m x m`) and cross-Gram `C`
-  (`n x m`), then `K \approx C W^{-1} C^\top = F F^\top` with
-  `F = C \cdot \mathrm{chol}(W)^{-1}`. Works for any kernel.
-- **Random Fourier Features** (Rahimi & Recht, 2007) -- for
-  shift-invariant kernels (currently RBF in kernR), draw
-  `\omega_k \sim N(0, \sigma^{-2} I)` and
-  `b_k \sim U[0, 2\pi]`; the feature map
-  `\phi(x) = \sqrt{2/D} \cos(\omega^\top x + b)` gives
-  `K \approx \Phi \Phi^\top` for `D` features. Data-independent (the
-  same random projection applies to any point cloud with the same
-  bandwidth).
+## What
 
-`hsic_test_nystrom()` wires both into a drop-in accelerated HSIC test.
+An exact kernel method stores an `n` by `n` Gram matrix and iterates over
+it once per permutation, so both memory and time grow with the square of
+the sample size. Two standard low-rank factorisations replace that matrix
+with a thin factor `F` such that `K` is approximately `F F'`, dropping
+the cost to order `n m` for a rank `m` much smaller than `n`.
 
-## A tiny correctness check
+`nystrom_factor()` implements the Nystrom method of Williams and Seeger
+(2001): sample $m$ landmark observations, compute their Gram matrix $W$
+($m$ by $m$) and the cross-Gram $C$ ($n$ by $m$), and approximate
 
-Both approximations recover the exact kernel as the rank approaches
-`n` (Nystrom) or as `D` grows (RFF).
+\[ K \approx C W^{-1} C^{\top} = F F^{\top}, \qquad
+   F = C \, \mathrm{chol}(W)^{-1}. \]
+
+It works for any kernel and is data-dependent, because the landmarks are
+drawn from the data.
+
+`rff_features()` implements Random Fourier Features (Rahimi and Recht,
+2007), available for shift-invariant kernels, which in kernR means the
+RBF kernel. Draw frequencies $\omega$ from a normal with covariance
+$\sigma^{-2} I$ and offsets $b$ uniform on $[0, 2\pi]$; the feature map
+
+\[ \phi(x) = \sqrt{2 / D} \, \cos(\omega^{\top} x + b) \]
+
+gives $K \approx \Phi \Phi^{\top}$ for $D$ features. The projection is
+data-independent, so the same random features apply to any point cloud at
+that bandwidth.
+
+`hsic_test_nystrom()` wires both into a drop-in accelerated independence
+test: `method` selects the factorisation and `m` sets the rank or the
+feature count. It returns the same `kernel_test_result` as `hsic_test()`.
+
+## Do
+
+### Does the factorisation reproduce the kernel?
+
+A synthetic cloud of 80 points in two dimensions, small enough that the
+exact Gram matrix can be compared against both approximations directly.
 
 ```{r correctness}
-library(kernR)
+set.seed(1L)
+n_check <- 80L
+x_check <- matrix(rnorm(n_check * 2L), n_check, 2L)
+kern <- kernel_spec("rbf", bandwidth = 1.0)
+k_full <- kernel_matrix(x_check, kernel = kern)
 
-n <- 80L
-x <- matrix(stats::rnorm(n * 2L), n, 2L)
-k <- kernel_spec("rbf", bandwidth = 1.0)
-K_full <- kernel_matrix(x, kernel = k)
+fac_ny <- nystrom_factor(x_check, kernel = kern, m = n_check - 1L,
+                         seed = 1L)
+k_ny <- tcrossprod(fac_ny$F)
 
-# Nystrom at near-full rank
-ny <- nystrom_factor(x, kernel = k, m = n - 1L, seed = 1L)
-K_ny <- tcrossprod(ny$F)
+fac_rf <- rff_features(x_check, kernel = kern, D = 1500L, seed = 1L)
+k_rf <- tcrossprod(fac_rf$F)
 
-# RFF at a moderate D
-rf <- rff_features(x, kernel = k, D = 1500L, seed = 1L)
-K_rf <- tcrossprod(rf$F)
-
-rel_err <- function(K_hat) {
-  sqrt(sum((K_full - K_hat)^2)) / sqrt(sum(K_full^2))
+rel_err <- function(k_hat) {
+  sqrt(sum((k_full - k_hat)^2)) / sqrt(sum(k_full^2))
 }
-data.frame(
+recon <- data.frame(
   method = c("nystrom", "rff"),
-  rank   = c(ncol(ny$F), ncol(rf$F)),
-  rel_err = c(rel_err(K_ny), rel_err(K_rf))
+  rank = c(ncol(fac_ny$F), ncol(fac_rf$F)),
+  rel_err = c(rel_err(k_ny), rel_err(k_rf)),
+  stringsAsFactors = FALSE
 )
 ```
 
-Both should produce small relative Frobenius error on this size.
+```{r correctness-table, echo = FALSE}
+knitr::kable(
+  recon, digits = c(0L, 0L, 6L),
+  col.names = c("Method", "Rank or features",
+                "Relative Frobenius error"),
+  caption = paste0(
+    "Reconstruction of the exact ", n_check, " by ", n_check,
+    " Gram matrix by each factorisation."
+  )
+)
+```
 
-## Scaling demonstration
+### What it costs and what it saves
 
-```{r scaling}
-benchmark_hsic <- function(n, m, B = 49L, seed = 1L) {
+The same independence test at four sample sizes, run exactly and through
+both approximations. The data are a synthetic pair with a genuine linear
+dependence, so all three tests should reject.
+
+```{r benchmark}
+benchmark_hsic <- function(n, m, n_perm = 49L, seed = 1L) {
   set.seed(seed)
-  xx <- stats::rnorm(n)
-  y  <- xx + stats::rnorm(n, sd = 0.5)
-
+  x_bench <- rnorm(n)
+  y_bench <- x_bench + rnorm(n, sd = 0.5)
   t_exact <- system.time(
-    res_exact <- hsic_test(xx, y, n_permutations = B, seed = seed)
-  )["elapsed"]
+    res_exact <- hsic_test(x_bench, y_bench, n_permutations = n_perm,
+                           seed = seed)
+  )[["elapsed"]]
   t_nystrom <- system.time(
-    res_nystrom <- hsic_test_nystrom(xx, y, m = m,
-                                     n_permutations = B, seed = seed)
-  )["elapsed"]
+    res_nystrom <- hsic_test_nystrom(x_bench, y_bench, m = m,
+                                     n_permutations = n_perm, seed = seed)
+  )[["elapsed"]]
   t_rff <- system.time(
-    res_rff <- hsic_test_nystrom(xx, y, method = "rff", m = m,
-                                 n_permutations = B, seed = seed)
-  )["elapsed"]
+    res_rff <- hsic_test_nystrom(x_bench, y_bench, method = "rff", m = m,
+                                 n_permutations = n_perm, seed = seed)
+  )[["elapsed"]]
   data.frame(
-    n         = n,
-    m         = m,
-    method    = c("hsic_test (exact)", "nystrom", "rff"),
-    elapsed_s = round(c(t_exact, t_nystrom, t_rff), 3),
-    p_value   = round(c(res_exact$p_value, res_nystrom$p_value,
-                        res_rff$p_value), 3)
+    n = n, m = m,
+    method = c("exact", "nystrom", "rff"),
+    elapsed_s = c(t_exact, t_nystrom, t_rff),
+    p_value = c(res_exact$p_value, res_nystrom$p_value, res_rff$p_value),
+    stringsAsFactors = FALSE
   )
 }
 
-benchmark_hsic(n = 500L,  m = 60L)
+bench <- rbind(
+  benchmark_hsic(n = 250L, m = 40L),
+  benchmark_hsic(n = 500L, m = 60L),
+  benchmark_hsic(n = 1000L, m = 80L),
+  benchmark_hsic(n = 2000L, m = 100L)
+)
 ```
 
-For larger `n`, the gap widens:
-
-```{r scaling-larger}
-benchmark_hsic(n = 1500L, m = 100L)
+```{r benchmark-slopes, echo = FALSE}
+log_slope <- function(method_name) {
+  sub_tab <- bench[bench$method == method_name, ]
+  unname(coef(lm(log(elapsed_s) ~ log(n), data = sub_tab))[2L])
+}
+slope_exact <- log_slope("exact")
+slope_nystrom <- log_slope("nystrom")
+slope_rff <- log_slope("rff")
 ```
 
-The verdict (reject vs accept) agrees across exact and approximate
-tests at moderate `m`; the approximation is for speed, not for
-detecting a different signal.
+```{r benchmark-table, echo = FALSE}
+knitr::kable(
+  bench, digits = c(0L, 0L, 0L, 3L, 4L),
+  col.names = c("n", "Rank m", "Method", "Elapsed (s)", "p-value"),
+  caption = paste0(
+    "Elapsed time and verdict for the exact test and the two ",
+    "approximations, at ", length(unique(bench$n)),
+    " sample sizes, 49 permutations each."
+  )
+)
+```
 
-## When to use which
+### The figure: where the two curves separate
 
-| Scenario | Pick |
-|---|---|
-| Small `n` (< 500) | `hsic_test()` -- exact, fast enough. |
-| Medium `n` (500-5000), any kernel | `hsic_test_nystrom(method = "nystrom")`. Choose `m` in `[50, 200]`. |
-| Large `n` (> 5000), RBF kernel | `hsic_test_nystrom(method = "rff")` with `D` in `[200, 1000]`. Data-independent projection; cheapest at large n. |
-| Repeated tests on different `y` with same `x` | Cache `nystrom_factor(x)` or `rff_features(x)` once; pass the factor in (future API). |
+```{r fig-scaling, eval = has_ggplot2, fig.cap = "Elapsed seconds against sample size for the exact HSIC test and the two low-rank approximations, on logarithmic axes. The exact curve rises with the square of the sample size; the approximate curves rise close to linearly, so the gap widens with every doubling."}
+ggplot2::ggplot(
+  bench, ggplot2::aes(x = n, y = elapsed_s, colour = method)
+) +
+  ggplot2::geom_line(linewidth = 0.9) +
+  ggplot2::geom_point(size = 2.5) +
+  ggplot2::scale_x_log10() +
+  ggplot2::scale_y_log10() +
+  ggplot2::scale_colour_viridis_d(name = "method", end = 0.85) +
+  ggplot2::labs(
+    x = "observations n (log scale)",
+    y = "elapsed time in seconds (log scale)",
+    title = "Cost of one HSIC test as the sample grows"
+  ) +
+  ggplot2::theme_minimal()
+```
+
+```{r fig-scaling-skip, eval = !has_ggplot2, echo = FALSE, results = "asis"}
+cat("ggplot2 is not installed on this build, so the scaling figure is",
+    "skipped.\n")
+```
+
+## Read
+
+Both factorisations reconstruct the exact Gram matrix closely. Nystrom at
+rank `r recon$rank[recon$method == "nystrom"]`, one below the sample
+size, has a relative Frobenius error of
+`r formatC(recon$rel_err[recon$method == "nystrom"], format = "e",
+   digits = 2L)`; Random Fourier
+Features at `r recon$rank[recon$method == "rff"]` features has
+`r signif(recon$rel_err[recon$method == "rff"], 3)`. The two get there
+differently: Nystrom converges as its rank approaches the sample size,
+Random Fourier Features as the feature count grows, and neither is exact.
+
+The timing grid is the argument. At `r min(bench$n)` observations the
+exact test takes
+`r signif(bench$elapsed_s[bench$n == min(bench$n) &
+  bench$method == "exact"], 2)` seconds and the difference hardly
+matters. At `r max(bench$n)` observations it takes
+`r signif(bench$elapsed_s[bench$n == max(bench$n) &
+  bench$method == "exact"], 3)` seconds against
+`r signif(bench$elapsed_s[bench$n == max(bench$n) &
+  bench$method == "nystrom"], 2)` for Nystrom and
+`r signif(bench$elapsed_s[bench$n == max(bench$n) &
+  bench$method == "rff"], 2)` for Random Fourier Features, a speed-up of
+about
+`r round(bench$elapsed_s[bench$n == max(bench$n) &
+  bench$method == "exact"] / bench$elapsed_s[bench$n == max(bench$n) &
+  bench$method == "nystrom"])`
+times. The figure shows the mechanism rather than the numbers. Fitting a
+straight line to each curve on logarithmic axes gives a slope of
+`r round(slope_exact, 2)` for the exact test against
+`r round(slope_nystrom, 2)` for Nystrom and `r round(slope_rff, 2)` for
+Random Fourier Features: the exact test tracks the square law its Gram
+matrix implies, and the two approximations grow substantially more
+slowly, so the gap is not a constant factor but one that widens with
+every doubling.
+
+The verdicts agree.
+`r sum(bench$method == "exact")` sample sizes, three methods each, and
+every p-value is
+`r signif(unique(bench$p_value), 3)`, which is the smallest value 49
+permutations can express. That the three methods agree at the
+permutation floor shows the approximation did not lose the signal; it is
+not a demonstration that they would agree on a borderline case, which
+would need a design near the threshold and many more permutations.
+
+## Limits
+
+The reconstruction check is run at 80 observations with Nystrom at
+near-full rank, which is the easiest case there is; at the ranks the
+timing grid uses, 40 to 100 against samples of 250 to 2000, the
+reconstruction error is larger and is not measured here. The timing grid
+is a single run per cell on one machine and one core, so the numbers are
+indicative and not a benchmark: the ratios are the durable part, the
+absolute seconds are not. The two approximations also change the
+estimator. The exact `hsic_test()` uses the unbiased HSIC estimator of
+Gretton and colleagues (2008); the low-rank path uses the biased form
+$n^{-2} \, \mathrm{tr}(H K_x H K_y)$, because that is what factors
+cleanly through a low-rank approximation. The bias is of order `1 / n`, which is
+negligible in exactly the large-sample regime where these approximations
+are worth using, and is not negligible at the small sample sizes where
+the exact test is affordable anyway. Finally, `hsic_test_nystrom()`
+recomputes its factorisation on every call, so repeated tests against the
+same covariate cannot yet share one cached factor even though
+`nystrom_factor()` and `rff_features()` expose it.
 
 ## Notes on practice
 
-- **Bias vs unbiased estimator.** The exact `hsic_test()` uses the
-  Gretton-2008 *unbiased* HSIC. The Nystrom/RFF version uses the
-  *biased* estimator `(1/n^2) tr(H K_x H K_y)`, because that form
-  factors cleanly through low-rank approximations. The bias is
-  `O(1/n)` -- negligible in the large-`n` regime where these
-  approximations are useful.
-- **Choosing `m` for Nystrom.** Rule of thumb: `m = ceiling(2 sqrt(n))`
-  is a defensible starting point. Diagnose via the Frobenius
-  reconstruction error on a small subsample if precision matters.
-- **Choosing `D` for RFF.** RFF variance scales as `O(1/D)`; the bias
-  is zero in expectation. Larger `D` is always better in accuracy but
-  costs memory; `D = 200-500` is usually adequate for verdict-style
-  tests.
-- **Reproducibility.** Both factorisations are randomised; pass `seed`
-  for deterministic output.
+**Choosing the method.** Below about 500 observations the exact test is
+fast enough and there is no reason to approximate. Between 500 and 5000,
+Nystrom works for any kernel; a rank in the range 50 to 200 is the usual
+choice. Above 5000 with an RBF kernel, Random Fourier Features is the
+cheapest option because its projection is data-independent; 200 to 1000
+features is usually adequate for a verdict.
+
+**Choosing the rank.** A rank of about twice the square root of the
+sample size is a defensible starting point for Nystrom. When precision
+matters, measure the reconstruction error on a small subsample as the
+first section of this vignette does.
+
+**Choosing the feature count.** The variance of a Random Fourier Feature
+approximation falls as one over the feature count and its bias is zero in
+expectation, so more features are always more accurate and cost more
+memory.
+
+**Reproducibility.** Both factorisations are randomised. Pass `seed` for
+deterministic output; without it, two runs of the same test give
+different numbers.
+
+## What to read next
+
+*Getting started with kernR* introduces the exact HSIC test these
+approximations stand in for. *Which parameters change the shape of the
+output distribution?* explains why the total-order sensitivity indices do
+not yet use these factorisations. *Are these draws calibrated, and do the
+engines agree?* covers `ksd_test_nystrom()` and
+`concordance_test_nystrom()`, the same idea applied to the
+goodness-of-fit and concordance tests.
 
 ## References
 
-- Williams, C. K. I., & Seeger, M. (2001). Using the Nystrom method
-  to speed up kernel machines. *NeurIPS*, 13.
-- Rahimi, A., & Recht, B. (2007). Random features for large-scale
-  kernel machines. *NeurIPS*, 20.
-- Gretton, A., Bousquet, O., Smola, A., & Schölkopf, B. (2005).
+- Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B., &
+  Smola, A. J. (2008). A kernel statistical test of independence.
+  *Advances in Neural Information Processing Systems*, 20.
+- Gretton, A., Bousquet, O., Smola, A., & Scholkopf, B. (2005).
   Measuring statistical dependence with Hilbert-Schmidt norms.
-  *ALT*, 63-77.
+  *Algorithmic Learning Theory*, 63-77.
+- Rahimi, A., & Recht, B. (2007). Random features for large-scale kernel
+  machines. *Advances in Neural Information Processing Systems*, 20.
+- Williams, C. K. I., & Seeger, M. (2001). Using the Nystrom method to
+  speed up kernel machines. *Advances in Neural Information Processing
+  Systems*, 13.
+
+## Reproduce
+
+Seed `1` for the reconstruction check and for every cell of the timing
+grid, passed to the factorisations and to the permutation null alike.
+Timings measured on macOS aarch64, R 4.5.2, one core. Package versions
+follow.
+
+```{r session-info}
+sessionInfo()
+```

@@ -1,133 +1,242 @@
 ---
-title: "Getting Started with kernR"
-author: "Max Moldovan"
-date: "`r Sys.Date()`"
+title: "Getting started with kernR"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Getting Started with kernR}
+  %\VignetteIndexEntry{Getting started with kernR}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+<!-- Render time: ~3 s under rmarkdown::render(); macOS aarch64, R 4.5.2, one
+     core. The permutation nulls here are small (199 to 999 draws on a few
+     hundred points), so the time is dominated by knitr overhead. -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.width = 6,
-  fig.height = 4,
+  fig.width = 7,
+  fig.height = 4.5,
   dpi = 150
 )
+has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
 ```
 
-## What is kernR?
+```{r library}
+library(kernR)
+```
 
-**kernR** provides kernel-based statistical tests for causal inference and
-distributional comparison. It implements:
+## Why
 
-- **HSIC test**: independence testing via the Hilbert-Schmidt Independence Criterion
-- **MMD test**: two-sample testing via Maximum Mean Discrepancy
-- **bd-HSIC test**: causal association testing with backdoor adjustment
-- **DR-DATE / DR-DETT**: doubly robust distributional treatment effect tests
+An analyst has two samples and two variables, and the question that
+matters is not about means. *My control and treated yields have the same
+average, so the t-test says nothing happened -- but the two histograms do
+not look alike. And this soil covariate has a Pearson correlation of
+roughly zero with yield, which I do not believe for a moment. What is the
+smallest thing I can write that tests the distributions themselves, and
+tests dependence without assuming it is linear?* This vignette answers
+both halves on two synthetic toys, and shows what the answer looks like
+when it comes back.
 
-This vignette covers the basics: kernels, MMD, and HSIC.
+## What
 
-## Kernel Basics
+Four objects and verbs carry this vignette. `kernel_spec()` declares the
+kernel -- the similarity function that turns raw observations into a Gram
+matrix -- with a family (`"rbf"`, `"matern"`, `"linear"`, `"polynomial"`)
+and a bandwidth, which is resolved from the data by the median heuristic
+unless a number is given. `kernel_matrix()` evaluates that specification
+on a data matrix and returns the Gram matrix itself, which is the only
+object the tests below ever see of the raw data.
 
-A *kernel* is a function that measures similarity between observations. kernR
-supports RBF (Gaussian), Matern, linear, and polynomial kernels.
+`mmd_test()` is the two-sample test: it compares the kernel mean
+embeddings of two samples through the Maximum Mean Discrepancy, so it
+sees any difference the kernel can represent, not just a shift in
+location. `hsic_test()` is the independence test: it computes the
+Hilbert-Schmidt Independence Criterion between two variables, which is
+zero if and only if they are independent under a characteristic kernel,
+so it detects curved dependence that a correlation coefficient reports as
+nothing. Both return a `kernel_test_result` carrying the observed
+statistic, the permutation null it was scored against, and the p-value
+that follows, and both take a `seed` so the permutation draw is
+reproducible.
+
+## Do
+
+### The kernel specification
 
 ```{r kernel-spec}
-library(kernR)
+k_default <- kernel_spec()
+k_default
 
-# Default: RBF kernel with automatic bandwidth (median heuristic)
-k <- kernel_spec()
-k
-
-# Fixed bandwidth
 k_fixed <- kernel_spec("rbf", bandwidth = 1.5)
 k_fixed
 
-# Linear kernel
-k_lin <- kernel_spec("linear")
-k_lin
+k_linear <- kernel_spec("linear")
+k_linear
 ```
 
-## Computing Kernel Matrices
+### The Gram matrix
+
+A synthetic toy: 100 draws from a standard bivariate normal, used only to
+show the shape of the object the tests consume.
 
 ```{r kernel-matrix}
-set.seed(42)
-x <- matrix(rnorm(200), 100, 2)
-
-# Compute the 100 x 100 kernel (Gram) matrix
-K <- kernel_matrix(x)
-dim(K)
-
-# Visualise a corner
-K[1:5, 1:5]
+set.seed(42L)
+x_toy <- matrix(rnorm(200L), 100L, 2L)
+gram <- kernel_matrix(x_toy)
+dim(gram)
+round(gram[1:4, 1:4], 3L)
 ```
 
-## Two-Sample Testing with MMD
+### Two samples, same distribution
 
-The MMD test asks: *do two samples come from the same distribution?*
+Two synthetic samples of 100 points each, both standard bivariate normal.
 
 ```{r mmd-same}
-set.seed(123)
-
-# Two samples from the same distribution
-x <- matrix(rnorm(200), 100, 2)
-y <- matrix(rnorm(200), 100, 2)
-
-result <- mmd_test(x, y, seed = 1)
-result
+set.seed(123L)
+x_a <- matrix(rnorm(200L), 100L, 2L)
+y_a <- matrix(rnorm(200L), 100L, 2L)
+mmd_null <- mmd_test(x_a, y_a, n_permutations = 999L, seed = 1L)
+mmd_null
 ```
 
-The p-value is large -- no evidence of different distributions. Now with a
-mean shift.
+### Two samples, one shifted
+
+The same comparison with the second sample's mean moved by 0.5 in both
+coordinates.
 
 ```{r mmd-different}
-y_shifted <- matrix(rnorm(200, mean = 0.5), 100, 2)
-result <- mmd_test(x, y_shifted, seed = 1)
-result
+y_shift <- matrix(rnorm(200L, mean = 0.5), 100L, 2L)
+mmd_shift <- mmd_test(x_a, y_shift, n_permutations = 999L, seed = 1L)
+mmd_shift
 ```
 
-The small p-value correctly detects the distributional difference.
+### Dependence a correlation cannot see
 
-## Independence Testing with HSIC
-
-HSIC tests whether two variables are independent -- including non-linear
-dependencies that correlation would miss.
+A synthetic toy in which the outcome is the square of the covariate plus
+noise: the dependence is exact, and the linear correlation is close to
+zero because the relationship is symmetric about the origin.
 
 ```{r hsic-nonlinear}
-set.seed(456)
-n <- 300
-x <- rnorm(n)
+set.seed(456L)
+n_hsic <- 300L
+x_q <- rnorm(n_hsic)
+y_q <- x_q^2 + rnorm(n_hsic, sd = 0.3)
+pearson_r <- cor(x_q, y_q)
+round(pearson_r, 3L)
 
-# Non-linear dependence: Y = X^2 + noise
-# Note: cor(x, y) is approximately 0 (no linear correlation)
-y <- x^2 + rnorm(n, sd = 0.3)
-cat("Pearson correlation:", round(cor(x, y), 3), "\n")
-
-# HSIC detects the non-linear dependence
-result <- hsic_test(x, y, seed = 1)
-result
+hsic_quad <- hsic_test(x_q, y_q, n_permutations = 999L, seed = 1L)
+hsic_quad
 ```
 
-HSIC successfully detects the quadratic relationship even though the
-Pearson correlation is near zero.
+### The figure: where the observed statistic sits
 
-## Visualising Results
-
-Every test result can be plotted to see where the observed statistic
-falls relative to the permutation null distribution:
-
-```{r plot-result, fig.cap = "HSIC permutation null distribution with observed statistic (dashed red line)."}
-plot(result)
+```{r fig-null, eval = has_ggplot2, fig.cap = "Permutation null distribution of the HSIC statistic on the quadratic toy (999 label permutations), with the observed statistic marked. The observed value sits far outside the range the null ever reaches, which is what a p-value at the permutation floor means."}
+null_df <- data.frame(statistic = hsic_quad$null_distribution)
+ggplot2::ggplot(null_df, ggplot2::aes(x = statistic)) +
+  ggplot2::geom_histogram(bins = 40L, fill = "#440154", colour = NA) +
+  ggplot2::geom_vline(
+    xintercept = hsic_quad$statistic, colour = "#FDE725", linewidth = 1
+  ) +
+  ggplot2::annotate(
+    "text", x = hsic_quad$statistic, y = Inf, hjust = 1.1, vjust = 2,
+    label = "observed", colour = "#FDE725"
+  ) +
+  ggplot2::labs(
+    x = "HSIC statistic (permutation draws, unitless)",
+    y = "permutation draws",
+    title = "HSIC permutation null against the observed statistic"
+  ) +
+  ggplot2::theme_minimal()
 ```
 
-## Next Steps
-- `vignette("kernR-bdhsic")` -- causal association testing with bd-HSIC
-- `vignette("kernR-drtest")` -- distributional treatment effect tests
-- `vignette("kernR-hierarchical")` -- tests for hierarchical/nested data
+```{r fig-null-skip, eval = !has_ggplot2, echo = FALSE, results = "asis"}
+cat("ggplot2 is not installed on this build, so the permutation-null",
+    "figure is skipped.\n")
+```
+
+### The three verdicts side by side
+
+```{r verdict-table, echo = FALSE}
+verdicts <- data.frame(
+  question = c(
+    "Two samples, same distribution",
+    "Two samples, mean shifted by 0.5",
+    "Quadratic dependence, correlation near zero"
+  ),
+  test = c("mmd_test()", "mmd_test()", "hsic_test()"),
+  statistic = c(mmd_null$statistic, mmd_shift$statistic,
+                hsic_quad$statistic),
+  p_value = c(mmd_null$p_value, mmd_shift$p_value, hsic_quad$p_value),
+  stringsAsFactors = FALSE
+)
+knitr::kable(
+  verdicts, digits = 4L,
+  col.names = c("Question", "Test", "Statistic", "p-value"),
+  caption = paste0(
+    "The three verdicts in this vignette, each scored against a ",
+    mmd_null$n_permutations, "-draw permutation null."
+  )
+)
+```
+
+## Read
+
+The two samples drawn from the same distribution give an MMD statistic of
+`r signif(mmd_null$statistic, 3)` and a p-value of
+`r round(mmd_null$p_value, 3)`: the observed discrepancy is an ordinary
+member of its own permutation null, so there is no evidence the two
+samples differ. Shifting the second sample's mean by 0.5 raises the
+statistic to `r signif(mmd_shift$statistic, 3)` and drops the p-value to
+`r round(mmd_shift$p_value, 4)`, the smallest value
+`r mmd_shift$n_permutations` permutations can express
+(`1 / (B + 1)` = `r round(1 / (mmd_shift$n_permutations + 1), 4)`), so the
+test has separated the two samples as decisively as this permutation
+budget allows.
+
+The quadratic toy is where the kernel earns its keep. The Pearson
+correlation between covariate and outcome is
+`r round(pearson_r, 3)`, near enough to zero that a linear screen would
+discard the covariate. HSIC returns
+`r signif(hsic_quad$statistic, 3)` against a null whose largest of
+`r hsic_quad$n_permutations` draws is only
+`r signif(max(hsic_quad$null_distribution), 3)`, giving a p-value of
+`r round(hsic_quad$p_value, 4)`: the dependence is real, strong, and
+invisible to correlation. The figure shows the separation directly -- the
+whole null sits in a narrow band near zero and the observed statistic is
+nowhere near it.
+
+## Limits
+
+Both toys here are synthetic and generously sized for the effects they
+carry, so they show that the tests work rather than how they behave at
+the margin. A permutation p-value cannot go below
+`1 / (n_permutations + 1)`, so a small p-value in this vignette reports
+the budget as much as the evidence; raise `n_permutations` before reading
+a small p-value as a magnitude. Neither test here adjusts for anything:
+`mmd_test()` and `hsic_test()` answer questions about association and
+distributional difference, and an association is not a causal effect
+whenever a common cause is in play. The tests that do adjust are the
+subject of the next two vignettes. Finally, both tests inherit the
+kernel's blind spots: a linear kernel cannot see the quadratic dependence
+above, and the median-heuristic bandwidth is a default, not a tuned
+choice.
+
+## What to read next
+
+*Does the treatment cause the outcome, or do they share a cause?*
+adds backdoor adjustment, so the association measured here becomes a
+causal one. *A treatment that changes the spread and not the mean* runs
+the doubly robust distributional tests for treatment effects that a
+mean-based method cannot see. *When plots sit inside farms* handles the
+clustered designs in which the permutation null used above is no longer
+valid.
+
+## Reproduce
+
+Seeds `42` (Gram matrix toy), `123` (two-sample toys) and `456`
+(quadratic toy) for data generation, and `seed = 1L` passed to every test
+so the permutation draws are fixed. Package versions follow.
 
 ```{r session-info}
 sessionInfo()

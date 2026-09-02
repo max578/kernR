@@ -1,182 +1,345 @@
 ---
-title: "Density-Ratio Backends and the proxymix Binding"
-author: "Max Moldovan"
-date: "`r Sys.Date()`"
+title: "Choosing a density-ratio backend"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Density-Ratio Backends and the proxymix Binding}
+  %\VignetteIndexEntry{Choosing a density-ratio backend}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include=FALSE}
+<!-- Render time: ~2 s under rmarkdown::render() with ranger, xgboost and
+     proxymix installed; a build missing any of the three renders faster,
+     with fewer rows in the comparison. macOS aarch64, R 4.5.2, one core. -->
+
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment  = "#>"
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  dpi = 150
 )
-have_proxymix <- requireNamespace("proxymix", quietly = TRUE)
+has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
 ```
 
-## The cross-package contract
+```{r library}
+library(kernR)
+```
 
-`kernR::estimate_density_ratio()` is the entry point for every kernR
-estimator that needs to reweight observational samples to an
-interventional distribution — most notably `bd_hsic_test()` for the
-backdoor-HSIC causal test. The function offers four density-ratio
-backends behind a single signature:
+## Why
 
-| Backend       | Family                          | When to use                                         |
-|---------------|---------------------------------|-----------------------------------------------------|
-| `logistic`    | Noise-contrastive classifier    | Default; robust on smooth, unimodal densities       |
-| `ranger`      | Random-forest classifier        | Flexible non-linear NCE; needs `ranger`             |
-| `xgboost`     | Gradient-boosted classifier     | Strong on tabular interactions; needs `xgboost`     |
-| `proxymix`    | Gaussian-mixture density ratio  | Multimodal/skewed densities; parametric alternative |
+An analyst has run the backdoor-adjusted test and does not like the
+diagnostics. *The causal test reweights my observational sample to look
+like an intervention, and it told me the effective sample size of those
+weights had collapsed. There are four backends behind that step and I
+have no idea which one to pick. What actually differs between them, and
+how would I tell on my own data which one is behaving?* This vignette
+puts all four on one confounded design and reads the weights they
+produce, then runs the causal test under each.
 
-The `proxymix` backend is the cross-package wedge between kernR (the
-distributional verdict layer of the UQ ag stack) and proxymix (the
-Gaussian-mixture proxy / KL-density-ratio bridge, Hoek & Elliott 2024).
-It fits one GMM to the joint sample cloud `(x, z)`, a second GMM to the
-product-of-marginals cloud `(x_perm, z)`, then evaluates the analytic
-ratio of the two mixture densities at each observation. No classifier
-calibration step — the ratio is closed-form in the fitted parameters.
+## What
 
-```{r dep-note, echo=FALSE, results='asis'}
-if (!have_proxymix) {
-  cat(
-    "> **Note.** The `proxymix` package is not installed in the current ",
-    "library; chunks that compare the GMM backend below are skipped. ",
-    "Install via `remotes::install_github(\"max578/proxymix\")` or from ",
-    "the local source tarball to reproduce the full comparison.\n\n",
-    sep = ""
-  )
+`estimate_density_ratio()` is the entry point for every kernR estimator
+that reweights an observational sample towards an interventional one,
+`bd_hsic_test()` chief among them. It offers four backends behind one
+signature, and `fit_density_ratio()` plus `predict_density_ratio()` split
+the same work into a fit step and a predict step for callers who need to
+apply the ratio to new points.
+
+Three of the four are noise-contrastive classifiers. A classifier is
+trained to tell the joint sample `(x, z)` from a product-of-marginals
+sample `(x_permuted, z)`, and the density ratio is recovered from its
+calibrated class probabilities. `logistic` is the default and fits a
+linear logit, which is robust on smooth unimodal densities and cheap.
+`ranger` fits a random forest, and `xgboost` gradient-boosted trees; both
+are flexible non-linear alternatives, and both need their own package.
+
+The fourth, `proxymix`, is parametric. It fits one Gaussian mixture to
+the joint cloud and a second to the product-of-marginals cloud, then
+evaluates the analytic ratio of the two mixture densities at each
+observation. There is no classifier calibration step, the ratio is closed
+form in the fitted parameters, and the fit carries its own convergence
+diagnostics; `bd_hsic_test()` gates its verdict on them. The proxymix
+package is a separate MIT-licensed package, consumed here as a soft
+dependency through `requireNamespace()`, so the binding is one way and
+kernR installs without it.
+
+`effective_sample_size()` is the diagnostic that decides whether any of
+this worked, and `plot_weights()` draws the weight distribution behind
+it.
+
+## Do
+
+### Which backends this build carries
+
+```{r backends}
+has_ranger <- requireNamespace("ranger", quietly = TRUE)
+has_xgboost <- requireNamespace("xgboost", quietly = TRUE)
+has_proxymix <- requireNamespace("proxymix", quietly = TRUE)
+c(ranger = has_ranger, xgboost = has_xgboost, proxymix = has_proxymix)
+```
+
+```{r backend-note, echo = FALSE, results = "asis"}
+missing_backends <- c("ranger", "xgboost", "proxymix")[
+  !c(has_ranger, has_xgboost, has_proxymix)
+]
+if (length(missing_backends) > 0L) {
+  cat("Not installed on this build, and therefore absent from every ",
+      "comparison below: ", paste(missing_backends, collapse = ", "),
+      ".\n\n", sep = "")
 }
 ```
 
-## Four backends, one problem
+### A confounded design
 
-A toy confounded design: `z` is a 2-D Gaussian confounder; `x` is a
-linear-Gaussian function of `z`; `y` carries a real causal effect from
-`x` plus a confounded path through `z`.
+A synthetic design of 200 observations: a two-column Gaussian confounder,
+a treatment that is a linear-Gaussian function of its first column, and
+an outcome carrying a genuine causal effect of 0.7 per unit of treatment
+plus a confounded path through the second column.
 
 ```{r data}
-suppressPackageStartupMessages(library(kernR))
 set.seed(2026L)
-n <- 200L
-z <- matrix(rnorm(n * 2L), n, 2L)
-x <- z[, 1L] + rnorm(n, sd = 0.5)
-y <- 0.7 * x + z[, 2L] + rnorm(n, sd = 0.4)
+n_obs <- 200L
+z_conf <- matrix(rnorm(n_obs * 2L), n_obs, 2L)
+x_treat <- z_conf[, 1L] + rnorm(n_obs, sd = 0.5)
+y_out <- 0.7 * x_treat + z_conf[, 2L] + rnorm(n_obs, sd = 0.4)
 ```
 
-Each backend produces a `density_ratio_fit` object exposing ESS and a
-weight vector. We tabulate them side-by-side.
+### The four ratios
 
-```{r logistic-ranger-xgb}
-dr_logistic <- estimate_density_ratio(x, z, method = "logistic", seed = 1L)
-dr_ranger <- if (requireNamespace("ranger", quietly = TRUE)) {
-  estimate_density_ratio(x, z, method = "ranger", seed = 1L)
-} else NULL
-dr_xgb <- if (requireNamespace("xgboost", quietly = TRUE)) {
-  estimate_density_ratio(x, z, method = "xgboost", seed = 1L)
-} else NULL
-```
-
-```{r proxymix-fit, eval=have_proxymix}
-dr_proxymix <- estimate_density_ratio(
-  x, z,
-  method = "proxymix",
-  proxymix_components = 2L,
-  seed = 1L
+```{r fits}
+dr_fits <- list(
+  logistic = estimate_density_ratio(x_treat, z_conf,
+                                    method = "logistic", seed = 1L)
 )
+if (has_ranger) {
+  dr_fits$ranger <- estimate_density_ratio(x_treat, z_conf,
+                                           method = "ranger", seed = 1L)
+}
+if (has_xgboost) {
+  dr_fits$xgboost <- estimate_density_ratio(x_treat, z_conf,
+                                            method = "xgboost", seed = 1L)
+}
+if (has_proxymix) {
+  dr_fits$proxymix <- estimate_density_ratio(
+    x_treat, z_conf, method = "proxymix", proxymix_components = 2L,
+    seed = 1L
+  )
+}
+names(dr_fits)
 ```
 
-```{r summary-table, echo=FALSE}
-rows <- list(
-  list(name = "logistic", fit = dr_logistic),
-  if (!is.null(dr_ranger)) list(name = "ranger",   fit = dr_ranger),
-  if (!is.null(dr_xgb))    list(name = "xgboost",  fit = dr_xgb),
-  if (have_proxymix)       list(name = "proxymix", fit = dr_proxymix)
-)
-rows <- Filter(Negate(is.null), rows)
-summary_df <- do.call(rbind, lapply(rows, function(r) {
-  w <- r$fit$weights
+```{r fits-table, echo = FALSE}
+weight_tab <- do.call(rbind, lapply(names(dr_fits), function(nm) {
+  w1 <- dr_fits[[nm]]$weights
   data.frame(
-    backend     = r$name,
-    ess         = round(r$fit$ess, 1),
-    min_weight  = signif(min(w), 3),
-    max_weight  = signif(max(w), 3),
+    backend = nm, ess = dr_fits[[nm]]$ess,
+    ess_fraction = dr_fits[[nm]]$ess / length(w1),
+    min_weight = min(w1), max_weight = max(w1),
     stringsAsFactors = FALSE
   )
 }))
-knitr::kable(summary_df, caption = "Density-ratio diagnostics across backends.")
-```
-
-## bd-HSIC under each backend
-
-```{r bdhsic-classifiers}
-res_logistic <- bd_hsic_test(
-  x, y, z, density_ratio = "logistic",
-  n_permutations = 199L, seed = 1L
+knitr::kable(
+  weight_tab, digits = c(0L, 1L, 3L, 3L, 3L), row.names = FALSE,
+  col.names = c("Backend", "ESS", "ESS / n", "Smallest weight",
+                "Largest weight"),
+  caption = paste0(
+    "Density-ratio weights on the same ", n_obs,
+    "-observation confounded design, one row per available backend."
+  )
 )
 ```
 
-```{r bdhsic-proxymix, eval=have_proxymix}
-res_proxymix <- bd_hsic_test(
-  x, y, z, density_ratio = "proxymix",
-  n_permutations = 199L, seed = 1L
-)
-```
+### The figure: the weights behind the diagnostic
 
-```{r bdhsic-table, echo=FALSE}
-rows2 <- list(
-  data.frame(backend = "logistic", statistic = signif(res_logistic$statistic, 3),
-             p_value = res_logistic$p_value, ess = round(res_logistic$ess, 1),
+```{r fig-weights, eval = has_ggplot2, fig.cap = "Distribution of the density-ratio weights produced by each available backend on the same design, on a logarithmic scale, with the unit weight that a perfectly balanced sample would carry marked. The effective sample size in the table above is a summary of exactly this spread: the wider the distribution, the fewer observations are really contributing."}
+weights_long <- do.call(rbind, lapply(names(dr_fits), function(nm) {
+  data.frame(backend = nm, weight = dr_fits[[nm]]$weights,
              stringsAsFactors = FALSE)
-)
-if (have_proxymix) {
-  rows2 <- c(rows2, list(
-    data.frame(backend = "proxymix", statistic = signif(res_proxymix$statistic, 3),
-               p_value = res_proxymix$p_value, ess = round(res_proxymix$ess, 1),
-               stringsAsFactors = FALSE)
-  ))
-}
-knitr::kable(do.call(rbind, rows2),
-             caption = "bd-HSIC test under each density-ratio backend.")
+}))
+ggplot2::ggplot(
+  weights_long, ggplot2::aes(x = weight, y = backend, colour = backend)
+) +
+  ggplot2::geom_vline(xintercept = 1, colour = "grey50",
+                      linetype = "dashed") +
+  ggplot2::geom_jitter(height = 0.18, alpha = 0.5, size = 1.3) +
+  ggplot2::scale_x_log10() +
+  ggplot2::scale_colour_viridis_d(name = NULL, end = 0.85,
+                                  guide = "none") +
+  ggplot2::labs(
+    x = "importance weight (log scale, unit weight dashed)",
+    y = NULL, title = "How wide the weights are, backend by backend"
+  ) +
+  ggplot2::theme_minimal()
 ```
 
-## When to reach for proxymix
+```{r fig-weights-skip, eval = !has_ggplot2, echo = FALSE, results = "asis"}
+cat("ggplot2 is not installed on this build, so the weight-distribution",
+    "figure is skipped.\n")
+```
 
-The classifier-based backends (`logistic`, `ranger`, `xgboost`) are the
-default for a reason: they tolerate misspecified densities, scale to
-high-dimensional `z`, and have well-understood calibration. Reach for
-`method = "proxymix"` when:
+### The causal test under each backend
 
-* the joint density is plausibly **multimodal** (multi-regime climate,
-  paddock × variety designs with distinct production zones, animal
-  cohorts with separable subpopulations) — a 2-component GMM
-  represents this cleanly where a classifier would smear across the
-  modes;
-* you need a **parametric** density-ratio whose components you can
-  inspect, hand off to a downstream Bayesian step (via
-  `proxymix::gmm_target_from_posterior()`), or use as the seed of a
-  KLD-EM refinement on a target you can evaluate but not sample from;
-* classifier calibration is unreliable on the cohort at hand
-  (small `n`, sharp class imbalance after the joint-vs-marginal split,
-  pathological feature scaling).
+Any backend whose weights collapse makes `bd_hsic_test()` raise its
+effective-sample-size warning. The runner below captures those messages
+instead of letting them print as conditions, so that they can be quoted
+where the prose reads them and the vignette still renders without
+warnings.
 
-The `proxymix` package is GRDC-firewalled (MIT, no GRDC IP flows in)
-and ships its full Gaussian-mixture proxy API independently of kernR.
-kernR consumes it as a soft dependency via `requireNamespace()` — the
-binding is one-way and rebuildable from the local
-`proxymix_*.tar.gz` source.
+```{r bdhsic-runs}
+gate_messages <- character(0)
+run_bd <- function(method) {
+  withCallingHandlers(
+    bd_hsic_test(
+      x_treat, y_out, z_conf, density_ratio = method,
+      n_permutations = 199L, seed = 1L
+    ),
+    warning = function(w) {
+      gate_messages[[method]] <<- conditionMessage(w)
+      invokeRestart("muffleWarning")
+    }
+  )
+}
+bd_fits <- lapply(stats::setNames(nm = names(dr_fits)), run_bd)
+names(gate_messages)
+```
+
+```{r bdhsic-table, echo = FALSE}
+bd_tab <- do.call(rbind, lapply(names(bd_fits), function(nm) {
+  f1 <- bd_fits[[nm]]
+  data.frame(
+    backend = nm, statistic = f1$statistic, p_value = f1$p_value,
+    ess = f1$ess, abstained = is_kernR_abstention(f1),
+    stringsAsFactors = FALSE
+  )
+}))
+knitr::kable(
+  bd_tab, digits = c(0L, 4L, 4L, 1L, 0L), row.names = FALSE,
+  col.names = c("Backend", "Statistic", "p-value", "ESS on the test split",
+                "Declined"),
+  caption = paste0(
+    "bd-HSIC on the same design under each available backend, ",
+    bd_fits[[1L]]$n_permutations, " cluster permutations."
+  )
+)
+```
+
+## Read
+
+The backend choice changes the answer on this design, which is the most
+useful thing this comparison has to report. The weights come out very
+differently: the effective sample size runs from
+`r round(min(weight_tab$ess), 1)` to `r round(max(weight_tab$ess), 1)`
+out of `r n_obs` observations,
+`r round(100 * min(weight_tab$ess_fraction))` to
+`r round(100 * max(weight_tab$ess_fraction))` per cent, and the largest
+single weight from
+`r round(min(weight_tab$max_weight), 2)` to
+`r round(max(weight_tab$max_weight), 2)`. The figure shows the same fact
+as a picture: `r weight_tab$backend[which.max(weight_tab$ess)]` produces
+a tight cloud around the unit weight, and
+`r weight_tab$backend[which.min(weight_tab$ess)]` a cloud spanning
+orders of magnitude.
+
+Those weights carry through to the verdict. The
+`r nrow(bd_tab)` backends return p-values of
+`r paste(paste0(bd_tab$backend, " ", round(bd_tab$p_value, 3)),
+   collapse = ", ")`, so on a design with a causal effect of 0.7 per unit
+built into it,
+`r sum(bd_tab$p_value <= 0.05)` of `r nrow(bd_tab)` detect it. The
+mechanism is not only that the statistic changes -- the four statistics
+all sit between `r signif(min(bd_tab$statistic), 3)` and
+`r signif(max(bd_tab$statistic), 3)`, within a factor of
+`r round(max(bd_tab$statistic) / min(bd_tab$statistic), 1)` of each
+other -- but that the *null* changes with it. Without an explicit
+`cluster_id`, `bd_hsic_test()` builds its permutation clusters from the
+density-ratio weights themselves, so a
+backend that produces different weights is scored against a different
+null distribution. Two backends can therefore agree on what they measured
+and disagree on what it means.
+
+The `proxymix` row is the one to read closely. Its effective sample size
+on the test split falls to `r round(bd_tab$ess[bd_tab$backend ==
+"proxymix"], 1)`, the gate fires, and the result is stamped as an
+abstention:
+`r bd_tab$abstained[bd_tab$backend == "proxymix"]` in the `Declined`
+column. A two-component mixture is the wrong model for a joint density
+with one mode, the fitted ratio is extreme where the two mixtures
+disagree in the tails, and the package refuses to stand behind the
+p-value that follows rather than reporting
+`r round(bd_tab$p_value[bd_tab$backend == "proxymix"], 3)` as a verdict.
+The gate says so in its own words:
+
+> `r gate_messages[["proxymix"]]`
+
+That is the behaviour to want from a backend that has been handed a
+density it cannot represent. *Does the treatment cause the outcome, or do
+they share a cause?* shows the same gate firing for the opposite reason,
+on a design with too many covariates rather than the wrong mixture.
+
+## Limits
+
+This is one synthetic design with a smooth, unimodal, two-dimensional
+joint density and 200 observations. It cannot rank the four backends in
+general, and the disagreement above should be read as a demonstration
+that backend choice is consequential, not as a ranking to carry to
+another data shape: a design with a multimodal joint density would be
+expected to reverse part of it. The classifier backends have a tuning
+surface this vignette does not touch -- forest size, boosting depth and
+rounds, the noise-sample count -- and only the defaults are compared. The
+proxymix backend is run with two mixture components against a design with
+one mode per cloud, which is deliberately the wrong specification and is
+why its weights are extreme; a fair comparison on a multimodal design
+would need its own vignette. Nothing here establishes which p-value is
+correct: the design has a real causal effect, so a backend that fails to
+detect it has lost power, but this single run cannot separate lost power
+from an unlucky permutation draw. Above all, no backend can establish
+that the adjustment set is complete, and an incomplete one produces a
+confident wrong answer under every backend at once.
+
+## When to reach for which
+
+The classifier backends are the default for good reasons: they tolerate a
+misspecified density, scale to a high-dimensional adjustment set, and
+their calibration is well understood. `logistic` is the right first
+choice, with `ranger` or `xgboost` when the conditional density is
+plainly non-linear in the confounders.
+
+Reach for `proxymix` when the joint density is plausibly **multimodal**,
+as it is under a multi-regime climate, a paddock by variety design with
+distinct production zones, or a cohort with separable subpopulations,
+where a two-component mixture represents the structure cleanly and a
+classifier smears across the modes; when a **parametric** ratio is wanted
+whose components can be inspected or handed to a downstream Bayesian
+step through `proxymix::gmm_target_from_posterior()`; or when classifier
+calibration is unreliable on the sample at hand, because it is small,
+because the joint against marginal split is sharply imbalanced, or
+because the features are pathologically scaled.
+
+## What to read next
+
+*Does the treatment cause the outcome, or do they share a cause?* is the
+test this backend choice feeds, and shows the effective-sample-size floor
+declining a verdict outright. *A treatment that changes the spread and
+not the mean* uses the related propensity-model choice for a binary
+treatment. *From a coarse grid to a paddock* uses proxymix from the other
+direction, as the fitter for the Gaussian-mixture prior that
+`aggregate_downscale()` inverts.
 
 ## References
 
-* Hoek, J. van der & Elliott, R. J. (2024). *Mixtures of multivariate
-  Gaussians.* Stochastic Analysis and Applications.
+- Hoek, J. van der, & Elliott, R. J. (2024). Mixtures of multivariate
+  Gaussians. *Stochastic Analysis and Applications*.
   DOI: 10.1080/07362994.2024.2372605.
-* Hu, R., Sejdinovic, D. & Evans, R. J. (2024). A kernel test for
-  causal association via noise contrastive backdoor adjustment.
-  *Journal of Machine Learning Research*, 25(160), 1–56.
+- Hu, R., Sejdinovic, D., & Evans, R. J. (2024). A kernel test for causal
+  association via noise contrastive backdoor adjustment. *Journal of
+  Machine Learning Research*, 25(160), 1-56.
+
+## Reproduce
+
+Seed `2026` for the confounded design; `seed = 1L` passed to every
+density-ratio fit and every test, so the classifier fits, the mixture
+fits and the permutation draws are all fixed. Package versions follow.
 
 ```{r session-info}
 sessionInfo()
