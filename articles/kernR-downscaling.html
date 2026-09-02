@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Kernel-Based Downscaling: Vector and Distribution Inputs • kernR</title>
+<title>From a coarse grid to a paddock • kernR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Kernel-Based Downscaling: Vector and Distribution Inputs">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="From a coarse grid to a paddock">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,10 +33,10 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting Started with kernR</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Causal Association Testing with bd-HSIC</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">Distributional Treatment Effect Tests (DR-DATE / DR-DETT)</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">Hierarchical and Nested Data</a></li>
+<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting started with kernR</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Does the treatment cause the outcome, or do they share a cause?</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">A treatment that changes the spread and not the mean</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">When plots sit inside farms</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -58,11 +58,8 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Kernel-Based Downscaling: Vector and Distribution Inputs</h1>
-                        <h4 data-toc-skip class="author">Max
-Moldovan</h4>
+      <h1>From a coarse grid to a paddock</h1>
             
-            <h4 data-toc-skip class="date">2026-08-25</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/max578/kernR/blob/main/vignettes/kernR-downscaling.Rmd" class="external-link"><code>vignettes/kernR-downscaling.Rmd</code></a></small>
       <div class="d-none name"><code>kernR-downscaling.Rmd</code></div>
@@ -70,75 +67,94 @@ Moldovan</h4>
 
     
     
+<!-- Render time: ~3 s under rmarkdown::render(); macOS aarch64, R 4.5.2, one
+     core. One conditional-mean-embedding fit with leave-one-out selection
+     of the ridge penalty, five distribution regressions on 60 bags, and two
+     aggregate inversions, one of them by importance sampling. -->
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
-<h2 id="three-flavours-of-kernel-downscaling">Three flavours of kernel downscaling<a class="anchor" aria-label="anchor" href="#three-flavours-of-kernel-downscaling"></a>
+<h2 id="why">Why<a class="anchor" aria-label="anchor" href="#why"></a>
 </h2>
-<p>kernR ships three downscaling primitives, covering distinct
-data-availability regimes:</p>
-<ol style="list-style-type: decimal">
-<li><p><strong><code><a href="../reference/kernel_downscale.html">kernel_downscale()</a></code></strong> – vector-in /
-vector-out. Conditional mean embedding (CME) regression: each training
-observation is a single coarse-resolution vector; predict
-fine-resolution outputs at new coarse inputs. Standard kernel ridge
-regression in conditional-distribution form. Used when “coarse” and
-“fine” live on the same kind of object (e.g. one row per year).</p></li>
-<li><p><strong><code><a href="../reference/dist_regression.html">dist_regression()</a></code></strong> – bag-in /
-vector-out. Distribution regression: each training input is a <em>bag of
-points</em> (a sample from a distribution); predict a scalar or vector
-at the bag level. Used when the coarse covariate is itself a
-distribution rather than a single vector – e.g. a paddock’s soil-core
-measurements, an ensemble of climate-model realisations.</p></li>
-<li><p><strong><code><a href="../reference/aggregate_downscale.html">aggregate_downscale()</a></code></strong> –
-aggregate-likelihood inversion of a <em>known</em> aggregator. No paired
-(coarse, fine) training data — only the aggregate observation
-<code>y</code> and the operator <code>T</code> such that
-<code>Y = T(X) + eps</code>. A Gaussian-mixture prior on the latent
-<code>X</code> is inverted in closed form (linear-Gaussian
-<code>T</code>) or by importance sampling within each prior component
-(non-linear <code>T</code>). The Sejdinovic kernel-downsizing /
-aggregate-likelihood direction; companion to the proxymix
-<code>from_aggregate_likelihood()</code> Tier-2 stub.</p></li>
-</ol>
-<p>The first two have closed-form solutions; the third has a closed form
-for linear aggregators and a Monte-Carlo path for non-linear. All three
-use orders of magnitude less data than deep-learning downscalers and
-carry interpretable bandwidth / regularisation / component-count
-knobs.</p>
+<p>An agronomist has the wrong resolution. <em>The climate product I can
+get is a grid cell far larger than any paddock I manage, and the
+decision I have to make is about a paddock. Sometimes I have historical
+paddock records to learn the step down from; sometimes what I have per
+paddock is a bag of soil cores rather than one number; and sometimes I
+have no paddock data at all, only the coarse observation and the
+knowledge that it is an average of the paddocks inside it. Are those
+three the same problem?</em> This vignette says they are three problems,
+gives the kernR primitive for each, and shows on synthetic data what
+each one needs and what it returns.</p>
 </div>
 <div class="section level2">
-<h2 id="kernel_downscale-coarse-climate-paddock-yield">(1) <code>kernel_downscale()</code>: coarse climate → paddock
-yield<a class="anchor" aria-label="anchor" href="#kernel_downscale-coarse-climate-paddock-yield"></a>
+<h2 id="what">What<a class="anchor" aria-label="anchor" href="#what"></a>
 </h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Training: 8 years of coarse climate -&gt; paddock-level yield/biomass</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">80L</span></span>
+<p><code><a href="../reference/kernel_downscale.html">kernel_downscale()</a></code> handles the case with paired training
+data. Each training row is one coarse-resolution vector and one
+fine-resolution vector, and the fit is a conditional mean embedding:
+kernel ridge regression in conditional-distribution form, with the ridge
+penalty chosen by leave-one-out cross-validation and the kernel
+bandwidths by the median heuristic. <code><a href="../reference/fit_cme.html">fit_cme()</a></code> exposes the
+same operator at a lower level for callers who want to build on the
+conditional embedding directly.</p>
+<p><code><a href="../reference/dist_regression.html">dist_regression()</a></code> handles the case where the coarse
+covariate is itself a <em>bag of points</em> rather than a vector: a
+paddock’s soil cores, an ensemble of climate realisations, a set of
+spectral samples. Each bag is summarised by its empirical kernel mean
+embedding, and an outer kernel on those embeddings carries the
+regression. <code>outer = "linear"</code> is the inner product of
+embeddings; <code>outer = "rbf"</code> is a Gaussian on embedding-space
+distance, and is the one to reach for when the map from embedding to
+target is itself non-linear. Bags may differ in size.</p>
+<p><code><a href="../reference/aggregate_downscale.html">aggregate_downscale()</a></code> handles the case with no paired
+data at all. What is available is an aggregate observation
+<code>y = T(x) + e</code> for a <em>known</em> operator <code>T</code> –
+a spatial or temporal average, a satellite footprint convolution, a
+mass-balance constraint – plus a parametric prior on the fine-scale
+latent <code>x</code>, which might come from
+<code><a href="https://max578.github.io/proxymix/reference/fit_proxymix.html" class="external-link">proxymix::fit_proxymix()</a></code> fitted to historical fine-scale
+data. For a linear operator the posterior is a per-component Kalman
+update with reweighted mixture weights, exact in closed form; for a
+non-linear operator it is importance sampling within each prior
+component, with the per-component effective sample size reported as the
+reliability diagnostic. <code><a href="../reference/posterior_sample_aggregate.html">posterior_sample_aggregate()</a></code> draws
+from the resulting mixture posterior.</p>
+</div>
+<div class="section level2">
+<h2 id="do">Do<a class="anchor" aria-label="anchor" href="#do"></a>
+</h2>
+<div class="section level3">
+<h3 id="paired-data-coarse-climate-to-paddock-yield">Paired data: coarse climate to paddock yield<a class="anchor" aria-label="anchor" href="#paired-data-coarse-climate-to-paddock-yield"></a>
+</h3>
+<p>A synthetic training set of 80 seasons. The coarse covariates are a
+mean monthly temperature and a cumulative rainfall; the fine-resolution
+outputs are a paddock yield, quadratic in temperature and linear in
+rainfall, and a biomass, linear in both.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="va">n_train</span> <span class="op">&lt;-</span> <span class="fl">80L</span></span>
 <span><span class="va">coarse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, mean <span class="op">=</span> <span class="fl">18</span>, sd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,    <span class="co"># mean monthly temperature</span></span>
-<span>    <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, mean <span class="op">=</span> <span class="fl">450</span>, sd <span class="op">=</span> <span class="fl">80</span><span class="op">)</span><span class="op">)</span>, <span class="co"># cumulative rainfall (mm)</span></span>
-<span>  ncol <span class="op">=</span> <span class="fl">2L</span>,</span>
-<span>  dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"temp"</span>, <span class="st">"rainfall"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_train</span>, mean <span class="op">=</span> <span class="fl">18</span>, sd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_train</span>, mean <span class="op">=</span> <span class="fl">450</span>, sd <span class="op">=</span> <span class="fl">80</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  ncol <span class="op">=</span> <span class="fl">2L</span>, dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"temp"</span>, <span class="st">"rainfall"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">truth</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">z</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span></span>
-<span>    yield   <span class="op">=</span> <span class="fl">0.02</span> <span class="op">*</span> <span class="va">z</span><span class="op">[</span>, <span class="st">"rainfall"</span><span class="op">]</span> <span class="op">-</span> <span class="fl">0.1</span> <span class="op">*</span> <span class="op">(</span><span class="va">z</span><span class="op">[</span>, <span class="st">"temp"</span><span class="op">]</span> <span class="op">-</span> <span class="fl">18</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span></span>
-<span>              <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>    yield <span class="op">=</span> <span class="fl">0.02</span> <span class="op">*</span> <span class="va">z</span><span class="op">[</span>, <span class="st">"rainfall"</span><span class="op">]</span> <span class="op">-</span> <span class="fl">0.1</span> <span class="op">*</span> <span class="op">(</span><span class="va">z</span><span class="op">[</span>, <span class="st">"temp"</span><span class="op">]</span> <span class="op">-</span> <span class="fl">18</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span>
 <span>    biomass <span class="op">=</span> <span class="fl">0.03</span> <span class="op">*</span> <span class="va">z</span><span class="op">[</span>, <span class="st">"rainfall"</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.05</span> <span class="op">*</span> <span class="va">z</span><span class="op">[</span>, <span class="st">"temp"</span><span class="op">]</span> <span class="op">+</span></span>
-<span>              <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="va">fine</span> <span class="op">&lt;-</span> <span class="fu">truth</span><span class="op">(</span><span class="va">coarse</span><span class="op">)</span></span></code></pre></div>
-<p>Predict at a held-out coarse grid:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">new_coarse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20L</span>, <span class="fl">18</span>, <span class="fl">2</span><span class="op">)</span>,</span>
-<span>    <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20L</span>, <span class="fl">450</span>, <span class="fl">80</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  ncol <span class="op">=</span> <span class="fl">2L</span>,</span>
-<span>  dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"temp"</span>, <span class="st">"rainfall"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20L</span>, <span class="fl">18</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20L</span>, <span class="fl">450</span>, <span class="fl">80</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  ncol <span class="op">=</span> <span class="fl">2L</span>, dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"temp"</span>, <span class="st">"rainfall"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_downscale.html">kernel_downscale</a></span><span class="op">(</span><span class="va">coarse</span>, <span class="va">fine</span>, <span class="va">new_coarse</span><span class="op">)</span></span>
-<span><span class="va">fit</span></span>
+<span><span class="va">fit_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_downscale.html">kernel_downscale</a></span><span class="op">(</span><span class="va">coarse</span>, <span class="va">fine</span>, <span class="va">new_coarse</span><span class="op">)</span></span>
+<span><span class="va">fit_raw</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Kernel Downscaling (CME)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -146,49 +162,157 @@ yield<a class="anchor" aria-label="anchor" href="#kernel_downscale-coarse-climat
 <span><span class="co">#&gt; Prediction points: 20 </span></span>
 <span><span class="co">#&gt; Output dims:      2 </span></span>
 <span><span class="co">#&gt; Kernel (coarse):  rbf (bw = 72.69)</span></span>
-<span><span class="co">#&gt; Lambda (ridge):   0.0003162</span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">prediction</span><span class="op">)</span></span>
-<span><span class="co">#&gt;           yield  biomass</span></span>
-<span><span class="co">#&gt; [1,] 10.1869683 16.11029</span></span>
-<span><span class="co">#&gt; [2,]  7.5849960 11.98351</span></span>
-<span><span class="co">#&gt; [3,]  9.0823386 15.11778</span></span>
-<span><span class="co">#&gt; [4,]  7.9127329 13.75706</span></span>
-<span><span class="co">#&gt; [5,]  0.8226318  9.93738</span></span>
-<span><span class="co">#&gt; [6,]  6.3918668 10.91197</span></span></code></pre></div>
-<p>The <code>lambda</code> was CV-selected via leave-one-out; the
-bandwidths follow the median heuristic per kernel. Both can be
-overridden.</p>
-<div class="section level3">
-<h3 id="when-to-reach-for-kernel_downscale">When to reach for <code>kernel_downscale()</code><a class="anchor" aria-label="anchor" href="#when-to-reach-for-kernel_downscale"></a>
-</h3>
-<ul>
-<li>Both training and prediction have the same coarse-resolution
-<em>shape</em>: each row is one coarse vector.</li>
-<li>You want point predictions at the fine resolution, not a full
-conditional distribution.</li>
-<li>Sample size in the tens-to-thousands range; closed-form ridge scales
-as <code>O(n^3)</code> for the train-time solve but predicts in
-<code>O(n_new * n_train)</code>.</li>
-</ul>
-<p>For very large training sets, plug <code><a href="../reference/nystrom_factor.html">nystrom_factor()</a></code>
-outputs into a custom CME by writing <code>K_x = F F^T</code> and
-re-solving the ridge in factor space – see [<code><a href="../reference/fit_cme.html">fit_cme()</a></code>] for
-the operator-level access.</p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="dist_regression-distribution-scalar">(2) <code>dist_regression()</code>: distribution → scalar<a class="anchor" aria-label="anchor" href="#dist_regression-distribution-scalar"></a>
-</h2>
-<p>The simplest illustrative case: predict the <em>mean</em> of a
-distribution from the distribution itself, given a finite sample.</p>
+<span><span class="co">#&gt; Lambda (ridge):   0.0003162</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">fit_raw</span><span class="op">$</span><span class="va">prediction</span>, <span class="fl">3L</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       yield biomass</span></span>
+<span><span class="co">#&gt; [1,] 10.187  16.110</span></span>
+<span><span class="co">#&gt; [2,]  7.585  11.984</span></span>
+<span><span class="co">#&gt; [3,]  9.082  15.118</span></span>
+<span><span class="co">#&gt; [4,]  7.913  13.757</span></span>
+<span><span class="co">#&gt; [5,]  0.823   9.937</span></span>
+<span><span class="co">#&gt; [6,]  6.392  10.912</span></span></code></pre></div>
+<p>The two coarse columns are on very different scales: temperature has
+a standard deviation of about 2 and rainfall about 80. The median
+heuristic resolves one bandwidth for the joint input, so on the raw
+scale the pairwise distances are almost entirely rainfall and the
+temperature response is nearly invisible to the kernel. Standardising
+both columns before the fit is the fix, and the comparison below is
+worth making explicitly because it is the most common way a conditional
+mean embedding underperforms in practice.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fl">60L</span></span>
-<span><span class="va">mu_train</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">M</span>, <span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="va">bags_train</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">mu_train</span>, <span class="kw">function</span><span class="op">(</span><span class="va">m</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">40L</span>, mean <span class="op">=</span> <span class="va">m</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">coarse_centre</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">coarse</span><span class="op">)</span></span>
+<span><span class="va">coarse_scale</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">coarse</span>, <span class="fl">2L</span>, <span class="va">sd</span><span class="op">)</span></span>
+<span><span class="va">coarse_std</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">coarse</span>, center <span class="op">=</span> <span class="va">coarse_centre</span>, scale <span class="op">=</span> <span class="va">coarse_scale</span><span class="op">)</span></span>
+<span><span class="va">new_std</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">new_coarse</span>, center <span class="op">=</span> <span class="va">coarse_centre</span>, scale <span class="op">=</span> <span class="va">coarse_scale</span><span class="op">)</span></span>
+<span><span class="va">fit_cme_paddock</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_downscale.html">kernel_downscale</a></span><span class="op">(</span><span class="va">coarse_std</span>, <span class="va">fine</span>, <span class="va">new_std</span><span class="op">)</span></span>
+<span><span class="va">fit_cme_paddock</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Kernel Downscaling (CME)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Training pairs:   80 </span></span>
+<span><span class="co">#&gt; Prediction points: 20 </span></span>
+<span><span class="co">#&gt; Output dims:      2 </span></span>
+<span><span class="co">#&gt; Kernel (coarse):  rbf (bw =  1.64)</span></span>
+<span><span class="co">#&gt; Lambda (ridge):   0.001</span></span></code></pre></div>
+<table class="table">
+<caption>Prediction error at 20 held-out coarse points, against a fresh
+draw from the same generating process, on the raw and standardised input
+scales.</caption>
+<colgroup>
+<col width="9%">
+<col width="15%">
+<col width="7%">
+<col width="24%">
+<col width="31%">
+<col width="12%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Output</th>
+<th align="left">Fit</th>
+<th align="right">RMSE</th>
+<th align="right">SD of held-out draw</th>
+<th align="right">Noise SD in the generator</th>
+<th align="right">RMSE / SD</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">yield</td>
+<td align="left">raw scale</td>
+<td align="right">1.320</td>
+<td align="right">1.746</td>
+<td align="right">0.5</td>
+<td align="right">0.756</td>
+</tr>
+<tr class="even">
+<td align="left">biomass</td>
+<td align="left">raw scale</td>
+<td align="right">0.688</td>
+<td align="right">2.591</td>
+<td align="right">0.7</td>
+<td align="right">0.266</td>
+</tr>
+<tr class="odd">
+<td align="left">yield</td>
+<td align="left">standardised</td>
+<td align="right">0.509</td>
+<td align="right">1.746</td>
+<td align="right">0.5</td>
+<td align="right">0.292</td>
+</tr>
+<tr class="even">
+<td align="left">biomass</td>
+<td align="left">standardised</td>
+<td align="right">0.819</td>
+<td align="right">2.591</td>
+<td align="right">0.7</td>
+<td align="right">0.316</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3">
+<h3 id="the-figure-the-downscaled-surface-against-the-field-it-came-from">The figure: the downscaled surface against the field it came
+from<a class="anchor" aria-label="anchor" href="#the-figure-the-downscaled-surface-against-the-field-it-came-from"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">surface_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    rainfall <span class="op">=</span> <span class="va">new_coarse</span><span class="op">[</span>, <span class="st">"rainfall"</span><span class="op">]</span>,</span>
+<span>    value <span class="op">=</span> <span class="va">fit_cme_paddock</span><span class="op">$</span><span class="va">prediction</span><span class="op">[</span>, <span class="st">"yield"</span><span class="op">]</span>,</span>
+<span>    output <span class="op">=</span> <span class="st">"yield"</span>, source <span class="op">=</span> <span class="st">"downscaled prediction"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    rainfall <span class="op">=</span> <span class="va">new_coarse</span><span class="op">[</span>, <span class="st">"rainfall"</span><span class="op">]</span>, value <span class="op">=</span> <span class="va">new_truth</span><span class="op">[</span>, <span class="st">"yield"</span><span class="op">]</span>,</span>
+<span>    output <span class="op">=</span> <span class="st">"yield"</span>, source <span class="op">=</span> <span class="st">"fresh draw from the field"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    rainfall <span class="op">=</span> <span class="va">new_coarse</span><span class="op">[</span>, <span class="st">"rainfall"</span><span class="op">]</span>,</span>
+<span>    value <span class="op">=</span> <span class="va">fit_cme_paddock</span><span class="op">$</span><span class="va">prediction</span><span class="op">[</span>, <span class="st">"biomass"</span><span class="op">]</span>,</span>
+<span>    output <span class="op">=</span> <span class="st">"biomass"</span>, source <span class="op">=</span> <span class="st">"downscaled prediction"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    rainfall <span class="op">=</span> <span class="va">new_coarse</span><span class="op">[</span>, <span class="st">"rainfall"</span><span class="op">]</span>, value <span class="op">=</span> <span class="va">new_truth</span><span class="op">[</span>, <span class="st">"biomass"</span><span class="op">]</span>,</span>
+<span>    output <span class="op">=</span> <span class="st">"biomass"</span>, source <span class="op">=</span> <span class="st">"fresh draw from the field"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
+<span>  <span class="va">surface_df</span>,</span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">rainfall</span>, y <span class="op">=</span> <span class="va">value</span>, colour <span class="op">=</span> <span class="va">source</span>, shape <span class="op">=</span> <span class="va">source</span><span class="op">)</span></span>
+<span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">2.2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">output</span>, scales <span class="op">=</span> <span class="st">"free_y"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_colour_viridis_d</a></span><span class="op">(</span>name <span class="op">=</span> <span class="cn">NULL</span>, end <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_shape_manual</a></span><span class="op">(</span>name <span class="op">=</span> <span class="cn">NULL</span>, values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4L</span>, <span class="fl">16L</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="st">"coarse cumulative rainfall (mm)"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"fine-resolution output"</span>,</span>
+<span>    title <span class="op">=</span> <span class="st">"Downscaled prediction against the field"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
+<div class="figure">
+<img src="kernR-downscaling_files/figure-html/fig-surface-1.png" class="r-plt" alt="Downscaled prediction against the coarse rainfall input at the 20 held-out points (line and points), with a fresh draw from the generating process at the same points for comparison (crosses). The conditional mean embedding recovers the rainfall response in both outputs; the vertical scatter of the crosses around the line is the noise the fit is not trying to reproduce." width="1050"><p class="caption">
+Downscaled prediction against the coarse rainfall input at the 20
+held-out points (line and points), with a fresh draw from the generating
+process at the same points for comparison (crosses). The conditional
+mean embedding recovers the rainfall response in both outputs; the
+vertical scatter of the crosses around the line is the noise the fit is
+not trying to reproduce.
+</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="bags-of-points-distribution-regression">Bags of points: distribution regression<a class="anchor" aria-label="anchor" href="#bags-of-points-distribution-regression"></a>
+</h3>
+<p>The simplest illustrative target: recover the mean of a distribution
+from a finite sample of it. Sixty synthetic bags, forty points each.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2L</span><span class="op">)</span></span>
+<span><span class="va">n_bags</span> <span class="op">&lt;-</span> <span class="fl">60L</span></span>
+<span><span class="va">mu_train</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n_bags</span>, <span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">bags_train</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">mu_train</span>, <span class="kw">function</span><span class="op">(</span><span class="va">m1</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">40L</span>, mean <span class="op">=</span> <span class="va">m1</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
-<span></span>
 <span><span class="va">fit_dr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dist_regression.html">dist_regression</a></span><span class="op">(</span><span class="va">bags_train</span>, y <span class="op">=</span> <span class="va">mu_train</span>, outer <span class="op">=</span> <span class="st">"linear"</span><span class="op">)</span></span>
 <span><span class="va">fit_dr</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -198,300 +322,415 @@ distribution from the distribution itself, given a finite sample.</p>
 <span><span class="co">#&gt; Bag sizes:        40-40 (median 40)</span></span>
 <span><span class="co">#&gt; Point dim:         1 </span></span>
 <span><span class="co">#&gt; Output dim:        1 </span></span>
-<span><span class="co">#&gt; Inner kernel:      rbf (bw =  2.01)</span></span>
+<span><span class="co">#&gt; Inner kernel:      rbf (bw = 2.149)</span></span>
 <span><span class="co">#&gt; Outer kernel:      linear</span></span>
-<span><span class="co">#&gt; Ridge lambda:      0.0001</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Predict on fresh bags</span></span>
-<span><span class="va">M_new</span> <span class="op">&lt;-</span> <span class="fl">10L</span></span>
-<span><span class="va">mu_new</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">M_new</span>, <span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="va">bags_new</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">mu_new</span>, <span class="kw">function</span><span class="op">(</span><span class="va">m</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">40L</span>, mean <span class="op">=</span> <span class="va">m</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Ridge lambda:      3.162e-05</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">n_new</span> <span class="op">&lt;-</span> <span class="fl">10L</span></span>
+<span><span class="va">mu_new</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n_new</span>, <span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">bags_new</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">mu_new</span>, <span class="kw">function</span><span class="op">(</span><span class="va">m1</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">40L</span>, mean <span class="op">=</span> <span class="va">m1</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_dr</span>, <span class="va">bags_new</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  truth      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">mu_new</span>, <span class="fl">3L</span><span class="op">)</span>,</span>
-<span>  prediction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">pred</span>,    <span class="fl">3L</span><span class="op">)</span>,</span>
-<span>  abs_error  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">pred</span> <span class="op">-</span> <span class="va">mu_new</span><span class="op">)</span>, <span class="fl">3L</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt;     truth prediction abs_error</span></span>
-<span><span class="co">#&gt; 1  -2.258     -2.039     0.219</span></span>
-<span><span class="co">#&gt; 2   0.256      0.323     0.067</span></span>
-<span><span class="co">#&gt; 3  -0.717     -0.658     0.059</span></span>
-<span><span class="co">#&gt; 4  -0.159     -0.066     0.094</span></span>
-<span><span class="co">#&gt; 5   2.827      2.855     0.028</span></span>
-<span><span class="co">#&gt; 6  -2.241     -2.323     0.082</span></span>
-<span><span class="co">#&gt; 7   0.338      0.684     0.346</span></span>
-<span><span class="co">#&gt; 8  -1.333     -1.112     0.221</span></span>
-<span><span class="co">#&gt; 9   0.221      0.325     0.104</span></span>
-<span><span class="co">#&gt; 10  1.103      1.140     0.036</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="bag-level-vector-targets">Bag-level vector targets<a class="anchor" aria-label="anchor" href="#bag-level-vector-targets"></a>
-</h3>
-<p><code>y</code> can also be a matrix when each bag carries multiple
-scalar targets:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<span><span class="va">pred_dr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_dr</span>, <span class="va">bags_new</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Distribution regression on 10 fresh bags of 40
+points.</caption>
+<thead><tr class="header">
+<th align="right">True bag mean</th>
+<th align="right">Prediction</th>
+<th align="right">Absolute error</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">2.396</td>
+<td align="right">2.365</td>
+<td align="right">0.031</td>
+</tr>
+<tr class="even">
+<td align="right">2.816</td>
+<td align="right">2.651</td>
+<td align="right">0.165</td>
+</tr>
+<tr class="odd">
+<td align="right">2.864</td>
+<td align="right">3.403</td>
+<td align="right">0.539</td>
+</tr>
+<tr class="even">
+<td align="right">2.202</td>
+<td align="right">2.133</td>
+<td align="right">0.069</td>
+</tr>
+<tr class="odd">
+<td align="right">2.604</td>
+<td align="right">2.239</td>
+<td align="right">0.365</td>
+</tr>
+<tr class="even">
+<td align="right">-0.079</td>
+<td align="right">0.162</td>
+<td align="right">0.241</td>
+</tr>
+<tr class="odd">
+<td align="right">1.156</td>
+<td align="right">1.152</td>
+<td align="right">0.004</td>
+</tr>
+<tr class="even">
+<td align="right">-1.846</td>
+<td align="right">-1.800</td>
+<td align="right">0.046</td>
+</tr>
+<tr class="odd">
+<td align="right">-1.586</td>
+<td align="right">-1.695</td>
+<td align="right">0.109</td>
+</tr>
+<tr class="even">
+<td align="right">0.175</td>
+<td align="right">0.210</td>
+<td align="right">0.035</td>
+</tr>
+</tbody>
+</table>
+<p>Targets may be vectors as well as scalars, one column per bag-level
+quantity.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">y_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="va">mu_train</span>, mean_sq <span class="op">=</span> <span class="va">mu_train</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">fit_mv</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dist_regression.html">dist_regression</a></span><span class="op">(</span><span class="va">bags_train</span>, y <span class="op">=</span> <span class="va">y_mat</span>, outer <span class="op">=</span> <span class="st">"linear"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_mv</span>, <span class="va">bags_new</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;            mean   mean_sq</span></span>
-<span><span class="co">#&gt; [1,] -2.0388518 4.4290140</span></span>
-<span><span class="co">#&gt; [2,]  0.3229703 0.2034361</span></span>
-<span><span class="co">#&gt; [3,] -0.6579623 0.6030948</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_mv</span>, <span class="va">bags_new</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span>, <span class="fl">3L</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       mean mean_sq</span></span>
+<span><span class="co">#&gt; [1,] 2.374   5.762</span></span>
+<span><span class="co">#&gt; [2,] 2.627   6.990</span></span>
+<span><span class="co">#&gt; [3,] 3.286  10.461</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="outer-kernel-choice">Outer kernel choice<a class="anchor" aria-label="anchor" href="#outer-kernel-choice"></a>
+<h3 id="choosing-the-outer-kernel">Choosing the outer kernel<a class="anchor" aria-label="anchor" href="#choosing-the-outer-kernel"></a>
 </h3>
-<ul>
-<li>
-<strong><code>outer = "linear"</code></strong> – inner-product of
-empirical embeddings. Most appropriate when the target is well captured
-by the first moment of the bag (e.g. predicting bag mean).</li>
-<li>
-<strong><code>outer = "rbf"</code></strong> – Gaussian on
-embedding-space distance. Picks up higher-order distributional features.
-Use when the target depends on more than the bag mean (variance, skew,
-tails). Bandwidth follows the median heuristic on the embedding-space
-pairwise distances.</li>
-</ul>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Variance-targeting example: zero-mean bags with varying SDs</span></span>
-<span><span class="va">s_train</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">M</span>, <span class="fl">0.5</span>, <span class="fl">2.5</span><span class="op">)</span></span>
-<span><span class="va">bags_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">s_train</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">60L</span>, mean <span class="op">=</span> <span class="fl">0</span>, sd <span class="op">=</span> <span class="va">s</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<p>The outer kernel governs the regression on embedding space, not what
+the embedding can represent. The synthetic bags below are all centred at
+zero and differ only in their spread, so the target is a property of the
+bag that no bag mean carries, and the two outer kernels can be compared
+on it directly.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">3L</span><span class="op">)</span></span>
+<span><span class="va">sd_train</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n_bags</span>, <span class="fl">0.5</span>, <span class="fl">2.5</span><span class="op">)</span></span>
+<span><span class="va">bags_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">sd_train</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s1</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">60L</span>, mean <span class="op">=</span> <span class="fl">0</span>, sd <span class="op">=</span> <span class="va">s1</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">fit_linear</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dist_regression.html">dist_regression</a></span><span class="op">(</span><span class="va">bags_var</span>, y <span class="op">=</span> <span class="va">sd_train</span>, outer <span class="op">=</span> <span class="st">"linear"</span><span class="op">)</span></span>
+<span><span class="va">fit_rbf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dist_regression.html">dist_regression</a></span><span class="op">(</span><span class="va">bags_var</span>, y <span class="op">=</span> <span class="va">sd_train</span>, outer <span class="op">=</span> <span class="st">"rbf"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Linear outer: insensitive to bag SD (means are all near zero)</span></span>
-<span><span class="va">fit_lin</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dist_regression.html">dist_regression</a></span><span class="op">(</span><span class="va">bags_var</span>, y <span class="op">=</span> <span class="va">s_train</span>, outer <span class="op">=</span> <span class="st">"linear"</span><span class="op">)</span></span>
-<span><span class="va">fit_lin</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Kernel Distribution Regression</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Training bags:     60 </span></span>
-<span><span class="co">#&gt; Bag sizes:        60-60 (median 60)</span></span>
-<span><span class="co">#&gt; Point dim:         1 </span></span>
-<span><span class="co">#&gt; Output dim:        1 </span></span>
-<span><span class="co">#&gt; Inner kernel:      rbf (bw = 1.518)</span></span>
-<span><span class="co">#&gt; Outer kernel:      linear</span></span>
-<span><span class="co">#&gt; Ridge lambda:      3.162e-05</span></span>
-<span></span>
-<span><span class="co"># RBF outer: embedding-space distance differs even with equal means</span></span>
-<span><span class="va">fit_rbf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dist_regression.html">dist_regression</a></span><span class="op">(</span><span class="va">bags_var</span>, y <span class="op">=</span> <span class="va">s_train</span>, outer <span class="op">=</span> <span class="st">"rbf"</span><span class="op">)</span></span>
-<span><span class="va">fit_rbf</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Kernel Distribution Regression</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Training bags:     60 </span></span>
-<span><span class="co">#&gt; Bag sizes:        60-60 (median 60)</span></span>
-<span><span class="co">#&gt; Point dim:         1 </span></span>
-<span><span class="co">#&gt; Output dim:        1 </span></span>
-<span><span class="co">#&gt; Inner kernel:      rbf (bw = 1.582)</span></span>
-<span><span class="co">#&gt; Outer kernel:      rbf (bw = 0.1897)</span></span>
-<span><span class="co">#&gt; Ridge lambda:      0.001</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="variable-bag-sizes">Variable bag sizes<a class="anchor" aria-label="anchor" href="#variable-bag-sizes"></a>
-</h3>
-<p>Bag sizes may differ across the design (e.g. paddocks with different
-numbers of soil cores). The double-sum embedding handles this naturally
-via <code><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean()</a></code> over the inner Gram:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">mu_v</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">20L</span>, <span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">bags_v</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">mu_v</span>, <span class="kw">function</span><span class="op">(</span><span class="va">m</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">n_i</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">20</span><span class="op">:</span><span class="fl">80</span>, <span class="fl">1L</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_i</span>, mean <span class="op">=</span> <span class="va">m</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="va">sd_new</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">30L</span>, <span class="fl">0.5</span>, <span class="fl">2.5</span><span class="op">)</span></span>
+<span><span class="va">bags_sd_new</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">sd_new</span>, <span class="kw">function</span><span class="op">(</span><span class="va">s1</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">60L</span>, mean <span class="op">=</span> <span class="fl">0</span>, sd <span class="op">=</span> <span class="va">s1</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">rmse_outer</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  linear <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_linear</span>, <span class="va">bags_sd_new</span><span class="op">)</span> <span class="op">-</span> <span class="va">sd_new</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  rbf <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit_rbf</span>, <span class="va">bags_sd_new</span><span class="op">)</span> <span class="op">-</span> <span class="va">sd_new</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  spread_of_target <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">sd_new</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">rmse_outer</span>, <span class="fl">3L</span><span class="op">)</span></span>
+<span><span class="co">#&gt;           linear              rbf spread_of_target </span></span>
+<span><span class="co">#&gt;            0.179            0.180            0.577</span></span></code></pre></div>
+<p>Bag sizes may differ across the design, which is what a set of
+paddocks with different numbers of soil cores looks like; the double-sum
+embedding averages over the inner Gram matrix, so nothing needs
+padding.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">4L</span><span class="op">)</span></span>
+<span><span class="va">mu_v</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">20L</span>, <span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">bags_v</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">mu_v</span>, <span class="kw">function</span><span class="op">(</span><span class="va">m1</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">20</span><span class="op">:</span><span class="fl">80</span>, <span class="fl">1L</span><span class="op">)</span>, mean <span class="op">=</span> <span class="va">m1</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="va">fit_v</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dist_regression.html">dist_regression</a></span><span class="op">(</span><span class="va">bags_v</span>, y <span class="op">=</span> <span class="va">mu_v</span>, outer <span class="op">=</span> <span class="st">"linear"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">fit_v</span><span class="op">$</span><span class="va">bags_train</span>, <span class="va">nrow</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">1L</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 23 80</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 24 77</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="when-to-reach-for-dist_regression">When to reach for <code>dist_regression()</code><a class="anchor" aria-label="anchor" href="#when-to-reach-for-dist_regression"></a>
+<h3 id="no-paired-data-inverting-a-known-aggregator">No paired data: inverting a known aggregator<a class="anchor" aria-label="anchor" href="#no-paired-data-inverting-a-known-aggregator"></a>
 </h3>
-<ul>
-<li>Each training row is itself a <em>collection of measurements</em>
-rather than a single vector (paddock soil cores, ensemble realisations,
-spectral samples, repeated experimental measurements).</li>
-<li>The target is a property of the underlying distribution, not of a
-single point.</li>
-<li>Sample size in bags: 10s-100s of points per bag; number of bags
-10s-low 1000s. Cost is <code>O(M^2 \cdot \bar{m}^2)</code> for the inner
-Gram where <code>M</code> is bag count, <code>\bar{m}</code> mean bag
-size.</li>
-</ul>
-</div>
-</div>
-<div class="section level2">
-<h2 id="aggregate_downscale-aggregate-likelihood-inversion">(3) <code>aggregate_downscale()</code>: aggregate-likelihood
-inversion<a class="anchor" aria-label="anchor" href="#aggregate_downscale-aggregate-likelihood-inversion"></a>
-</h2>
-<p>Often the downscaling problem looks <strong>nothing</strong> like
-supervised regression: no paired (coarse, fine) data is available.
-Instead, the observation is <code>y = T(x) + eps</code> where
-<code>T</code> is a <em>known</em> operator (spatial average, temporal
-average, satellite footprint convolution, a non-linear sensor model),
-<code>eps</code> is observation noise, and a parametric prior on the
-fine-scale latent <code>x</code> is available — for example, fitted via
-<code><a href="https://max578.github.io/proxymix/reference/fit_proxymix.html" class="external-link">proxymix::fit_proxymix()</a></code> on historical fine-scale data, or
-specified directly. The job is to recover the posterior
-<code>p(x | y)</code>.</p>
-<p><code><a href="../reference/aggregate_downscale.html">aggregate_downscale()</a></code> dispatches on the aggregator’s
-class:</p>
-<ul>
-<li>
-<strong>Linear matrix <code>A</code></strong>
-(<code>y = A x + eps</code>): closed-form per-component Kalman update
-plus reweighted mixture weights. Cost
-<code>O(N (dim_x^3 + dim_y^3))</code>.</li>
-<li>
-<strong>Function <code>T(x)</code></strong> (non-linear): importance
-sampling within each prior component
-(<code>n_samples_per_component</code> draws, default 200). Per-component
-effective sample size is reported and an ESS-floor warning fires when IS
-collapses. Cost <code>O(N M (dim_x + dim_y))</code> per call.</li>
-</ul>
-<p>Linear example — spatial averaging of two adjacent paddocks against a
-two-cluster prior:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">A</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span>   <span class="co"># spatial average</span></span>
-<span><span class="va">prior</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  means       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>,</span>
+<p>Two adjacent paddocks are observed only through their spatial
+average. The prior on the pair is a synthetic two-component Gaussian
+mixture, one component near the origin and one near <code>(2, 2)</code>,
+and the observation points at the second.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">agg_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="va">latent_prior</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  means <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  covariances <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">2L</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">2L</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  weights     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span></span>
+<span>  weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co"># Observe an aggregate that points to the second cluster</span></span>
-<span><span class="va">fit_lin</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/aggregate_downscale.html">aggregate_downscale</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fl">1.8</span>, aggregator <span class="op">=</span> <span class="va">A</span>,</span>
-<span>                               latent_prior <span class="op">=</span> <span class="va">prior</span>, sigma_y <span class="op">=</span> <span class="fl">0.15</span><span class="op">)</span></span>
-<span><span class="va">fit_lin</span></span>
+<span><span class="va">fit_agg_lin</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/aggregate_downscale.html">aggregate_downscale</a></span><span class="op">(</span></span>
+<span>  y <span class="op">=</span> <span class="fl">1.8</span>, aggregator <span class="op">=</span> <span class="va">agg_matrix</span>, latent_prior <span class="op">=</span> <span class="va">latent_prior</span>,</span>
+<span>  sigma_y <span class="op">=</span> <span class="fl">0.15</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">fit_agg_lin</span></span>
 <span><span class="co">#&gt; Aggregate-likelihood downscaling</span></span>
 <span><span class="co">#&gt;   method:        linear_closed_form (linear)</span></span>
 <span><span class="co">#&gt;   components:    2</span></span>
 <span><span class="co">#&gt;   sigma_y:       0.15</span></span>
 <span><span class="co">#&gt;   posterior mean:  1.8,  1.8 </span></span>
 <span><span class="co">#&gt;   posterior wts: 0.045, 0.955</span></span></code></pre></div>
-<p>The posterior mixture weights shift toward the cluster consistent
-with the observation (here, the <code>(2, 2)</code> cluster). The
-per-component posterior is exact (Kalman update) and the cross-component
-law-of- total-covariance is honest.</p>
-<p>Non-linear example — a sinusoidal aggregator (sensor
-non-linearity):</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<p>A non-linear aggregator, standing in for a sensor whose response
+saturates, is handled by importance sampling within each prior
+component.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">agg_fn</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
-<span><span class="va">fit_nl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/aggregate_downscale.html">aggregate_downscale</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fl">0.5</span>, aggregator <span class="op">=</span> <span class="va">agg_fn</span>,</span>
-<span>                              latent_prior <span class="op">=</span> <span class="va">prior</span>, sigma_y <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span>                              n_samples_per_component <span class="op">=</span> <span class="fl">400L</span>,</span>
-<span>                              seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
-<span><span class="va">fit_nl</span><span class="op">$</span><span class="va">ess_per_component</span></span>
-<span><span class="co">#&gt; [1] 53.49922 42.53140</span></span>
-<span><span class="va">fit_nl</span><span class="op">$</span><span class="va">posterior_mean</span></span>
-<span><span class="co">#&gt; [1] 0.9601427 0.8983002</span></span></code></pre></div>
-<p>The per-component ESS is the reliability gate — if it collapses, the
-function warns and the posterior should be treated as exploratory. Draw
-posterior samples for downstream uncertainty propagation:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/posterior_sample_aggregate.html">posterior_sample_aggregate</a></span><span class="op">(</span><span class="va">fit_nl</span>, n <span class="op">=</span> <span class="fl">500L</span>, seed <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></span>
-<span><span class="co">#&gt;            [,1]       [,2]</span></span>
-<span><span class="co">#&gt; [1,]  0.6648714  1.3170075</span></span>
-<span><span class="co">#&gt; [2,] -0.2855020  0.9779909</span></span>
-<span><span class="co">#&gt; [3,]  1.4959683  2.6373047</span></span>
-<span><span class="co">#&gt; [4,] -0.1101655  0.1078616</span></span>
-<span><span class="co">#&gt; [5,]  2.2575797  1.6941538</span></span>
-<span><span class="co">#&gt; [6,]  0.3705832 -1.0080668</span></span></code></pre></div>
+<span><span class="va">fit_agg_nl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/aggregate_downscale.html">aggregate_downscale</a></span><span class="op">(</span></span>
+<span>  y <span class="op">=</span> <span class="fl">0.5</span>, aggregator <span class="op">=</span> <span class="va">agg_fn</span>, latent_prior <span class="op">=</span> <span class="va">latent_prior</span>,</span>
+<span>  sigma_y <span class="op">=</span> <span class="fl">0.1</span>, n_samples_per_component <span class="op">=</span> <span class="fl">400L</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">fit_agg_nl</span><span class="op">$</span><span class="va">ess_per_component</span>, <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 53.5 42.5</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">fit_agg_nl</span><span class="op">$</span><span class="va">posterior_mean</span>, <span class="fl">3L</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.960 0.898</span></span>
+<span><span class="va">fit_agg_nl</span><span class="op">$</span><span class="va">ess_warning</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">samples_agg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/posterior_sample_aggregate.html">posterior_sample_aggregate</a></span><span class="op">(</span><span class="va">fit_agg_nl</span>, n <span class="op">=</span> <span class="fl">500L</span>,</span>
+<span>                                          seed <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">samples_agg</span>, <span class="fl">3L</span><span class="op">)</span>, <span class="fl">3L</span><span class="op">)</span></span>
+<span><span class="co">#&gt;        [,1]  [,2]</span></span>
+<span><span class="co">#&gt; [1,]  0.665 1.317</span></span>
+<span><span class="co">#&gt; [2,] -0.286 0.978</span></span>
+<span><span class="co">#&gt; [3,]  1.496 2.637</span></span></code></pre></div>
+</div>
 <div class="section level3">
-<h3 id="when-to-reach-for-aggregate_downscale">When to reach for <code>aggregate_downscale()</code><a class="anchor" aria-label="anchor" href="#when-to-reach-for-aggregate_downscale"></a>
+<h3 id="the-three-primitives-side-by-side">The three primitives side by side<a class="anchor" aria-label="anchor" href="#the-three-primitives-side-by-side"></a>
 </h3>
-<ul>
-<li>Only <strong>aggregate</strong> observations are available (no
-paired fine-scale ground truth).</li>
-<li>The aggregation operator <code>T</code> is known (spatial averaging,
-temporal averaging, sensor convolution, mass-balance constraint).</li>
-<li>A parametric latent prior is available — e.g. from
-<code><a href="https://max578.github.io/proxymix/reference/fit_proxymix.html" class="external-link">proxymix::fit_proxymix()</a></code> on historical fine-scale data, or
-user-supplied from a domain model.</li>
-<li>You want a closed-form posterior when <code>T</code> is linear, or a
-clean importance-sampling pass when it is not — without committing to
-<ol start="2000" style="list-style-type: upper-roman"><li>
-</li></ol>
-</li>
-</ul>
-<p>Pair with <code><a href="https://max578.github.io/proxymix/reference/fit_proxymix.html" class="external-link">proxymix::fit_proxymix()</a></code> (the canonical prior
-fitter) and PESTO’s manifest contract (the cross-package handoff) for
-the full APSIM → posterior-prior → downscaled-fine-scale chain.</p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="comparison">Comparison<a class="anchor" aria-label="anchor" href="#comparison"></a>
-</h2>
 <table class="table">
+<caption>What each primitive needs and what it gives back.</caption>
 <colgroup>
-<col width="25%">
-<col width="25%">
-<col width="25%">
-<col width="25%">
+<col width="15%">
+<col width="19%">
+<col width="21%">
+<col width="43%">
 </colgroup>
 <thead><tr class="header">
-<th>Aspect</th>
-<th><code><a href="../reference/kernel_downscale.html">kernel_downscale()</a></code></th>
-<th><code><a href="../reference/dist_regression.html">dist_regression()</a></code></th>
-<th><code><a href="../reference/aggregate_downscale.html">aggregate_downscale()</a></code></th>
+<th align="left">Aspect</th>
+<th align="left">kernel_downscale()</th>
+<th align="left">dist_regression()</th>
+<th align="left">aggregate_downscale()</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Training data</td>
-<td>Paired (coarse, fine)</td>
-<td>Bags + scalar/vector targets</td>
-<td>None paired; aggregate <code>y</code> only</td>
+<td align="left">Training data</td>
+<td align="left">paired coarse and fine</td>
+<td align="left">bags plus bag-level targets</td>
+<td align="left">none paired, aggregate only</td>
 </tr>
 <tr class="even">
-<td>Coarse-fine map</td>
-<td>Learned (regression)</td>
-<td>Learned (regression)</td>
-<td>
-<strong>Known</strong> (<code>y = T(x) + eps</code>)</td>
+<td align="left">Coarse-to-fine map</td>
+<td align="left">learned by regression</td>
+<td align="left">learned by regression</td>
+<td align="left">known operator</td>
 </tr>
 <tr class="odd">
-<td>Latent prior</td>
-<td>Implicit (empirical)</td>
-<td>Implicit</td>
-<td>Explicit (parametric GMM)</td>
+<td align="left">Latent prior</td>
+<td align="left">implicit, empirical</td>
+<td align="left">implicit, empirical</td>
+<td align="left">explicit, parametric mixture</td>
 </tr>
 <tr class="even">
-<td>Closed form</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes (linear <code>T</code>) / IS (non-linear)</td>
+<td align="left">Closed form</td>
+<td align="left">yes</td>
+<td align="left">yes</td>
+<td align="left">yes for a linear operator, importance sampling
+otherwise</td>
 </tr>
 <tr class="odd">
-<td>Multi-output</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
+<td align="left">Multi-output</td>
+<td align="left">yes</td>
+<td align="left">yes</td>
+<td align="left">yes</td>
 </tr>
 <tr class="even">
-<td>Posterior uncertainty</td>
-<td>Point + ridge CI</td>
-<td>Point + ridge CI</td>
-<td>Full mixture posterior</td>
+<td align="left">Uncertainty returned</td>
+<td align="left">point plus ridge interval</td>
+<td align="left">point plus ridge interval</td>
+<td align="left">full mixture posterior</td>
 </tr>
 </tbody>
 </table>
+</div>
+</div>
+<div class="section level2">
+<h2 id="read">Read<a class="anchor" aria-label="anchor" href="#read"></a>
+</h2>
+<p>The input scale matters more than anything else in this fit. On the
+raw scale the conditional mean embedding predicts yield at the 20
+held-out coarse points with a root mean squared error of 1.32, which is
+76 per cent of the spread of the held-out values and far above the
+irreducible floor of 0.5 that the generator’s own noise sets.
+Standardising the two coarse columns first brings it to 0.509,
+essentially the noise floor: the fit now recovers the yield response as
+well as anyone could. Biomass moves the other way by a smaller amount,
+from 0.688 to 0.819 against its own noise floor of 0.7, because biomass
+depends on rainfall much more strongly than on temperature and the
+raw-scale bandwidth was already tuned to rainfall. The single shared
+bandwidth is what forces the trade: it is the reason to standardise, and
+the reason a per-column bandwidth would be the better tool if one output
+needed a different resolution from another. The ridge penalty chosen by
+leave-one-out on the standardised fit was 1.00e-03. The figure shows the
+standardised fit as a surface rather than a number: the predictions
+trace the rainfall response cleanly in both outputs, and the crosses
+scatter around them by roughly the noise that was put in.</p>
+<p>Distribution regression recovers the bag means it was asked for:
+across the 10 fresh bags the mean absolute error is 0.16 on bag means
+spanning -1.85 to 2.86, and the largest single error is 0.539.</p>
+<p>The spread-only bags settle what the outer kernel does and does not
+do. Both outer kernels recover the bag standard deviation well: the
+linear one gives a root mean squared error of 0.179 and the Gaussian one
+0.18, against a target spread of 0.577, so on this design the two are
+indistinguishable. That is worth stating plainly, because the natural
+expectation is the opposite. A linear <em>outer</em> kernel is not a
+linear model of the bag: the inner RBF kernel embeds each bag as a
+function, and a bag with a wider spread has a visibly different
+embedding from a narrow one at the same mean, so the higher moment is
+already carried before the outer kernel sees anything. The outer kernel
+chooses how the regression behaves on embedding space, and the Gaussian
+one earns its keep when that relationship is itself non-linear, not
+merely when the target is a higher moment.</p>
+<p>The linear aggregate inversion moves the posterior weight where the
+observation points. The prior gave the two components weights of 0.5 and
+0.5; after observing an average of 1.8 with a noise standard deviation
+of 0.15, the posterior weights are 0.045 and 0.955, and the posterior
+mean is 1.8, 1.8, close to the <code>(2, 2)</code> component the
+observation is consistent with. The non-linear inversion is where the
+reliability diagnostic earns its place: its per-component effective
+sample sizes are 53.5 and 42.5 out of 400 importance draws each, and
+<code>ess_warning</code> is FALSE. A collapsed effective sample size
+there means the posterior is being carried by a handful of draws and
+should be read as exploratory rather than as a result.</p>
+</div>
+<div class="section level2">
+<h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
+</h2>
+<p>Every dataset here is synthetic, with the generating process known
+and the coarse-to-fine relationship smooth; a real downscaling problem
+has covariate shift between the training seasons and the season to be
+predicted, which none of these primitives detects.
+<code><a href="../reference/kernel_downscale.html">kernel_downscale()</a></code> returns a conditional <em>mean</em>, not
+a conditional distribution, so it gives a point prediction with a ridge
+interval and cannot answer a question about the fine-scale tail; the
+closed-form solve costs order <code>n^3</code> at training time, which
+bounds the training set well before the prediction step becomes the
+constraint. <code><a href="../reference/dist_regression.html">dist_regression()</a></code> assumes the bags are samples
+from the distributions of interest, so a bag that is systematically
+sampled – the cores taken from the accessible corner of the paddock –
+biases the embedding with no diagnostic to say so.
+<code><a href="../reference/aggregate_downscale.html">aggregate_downscale()</a></code> requires the aggregator to be
+<em>known</em>, and its answer is only as good as the latent prior it
+inverts: a prior that excludes the truth returns a confident posterior
+in the wrong place. The per-component effective sample size on the
+non-linear path is the one reliability gate in this vignette, and it
+detects importance-sampling collapse, not prior misspecification.</p>
+</div>
+<div class="section level2">
+<h2 id="notes-on-practice">Notes on practice<a class="anchor" aria-label="anchor" href="#notes-on-practice"></a>
+</h2>
+<p><strong>Sizing a conditional mean embedding.</strong> Both training
+and prediction inputs must have the same coarse-resolution shape, one
+vector per row. The closed-form ridge solve costs order <code>n^3</code>
+at training time and predicts in order <code>n_new</code> times
+<code>n_train</code>, so the training set is the binding constraint;
+standardise the input columns before fitting unless they are already on
+a common scale.</p>
+<p><strong>Sizing a distribution regression.</strong> Tens to hundreds
+of points per bag and tens to low thousands of bags is the range this
+construction is built for. The inner Gram matrices cost order
+<code>M^2</code> times the square of the mean bag size, where
+<code>M</code> is the number of bags, so bag size is the more expensive
+of the two dimensions.</p>
+<p><strong>Sizing an aggregate inversion.</strong> The linear path costs
+order <code>N</code> times the cube of the latent dimension plus the
+cube of the observation dimension, for <code>N</code> prior components.
+The non-linear path costs order <code>N</code> times the draws per
+component times the sum of the two dimensions, and its
+<code>n_samples_per_component</code> should be raised until the
+per-component effective sample sizes are a workable fraction of it.</p>
+<p><strong>Reproducibility.</strong> The non-linear aggregate path and
+<code><a href="../reference/posterior_sample_aggregate.html">posterior_sample_aggregate()</a></code> are randomised; pass
+<code>seed</code> to both.</p>
+</div>
+<div class="section level2">
+<h2 id="what-to-read-next">What to read next<a class="anchor" aria-label="anchor" href="#what-to-read-next"></a>
+</h2>
+<p><em>Which parameters are worth calibrating?</em> and <em>Did the
+management change shift the simulated distribution?</em> cover the
+calibration step that usually produces the ensemble a latent prior is
+fitted to. <em>Choosing a density-ratio backend</em> describes the
+proxymix binding, whose <code>fit_proxymix()</code> is the canonical
+fitter for the Gaussian-mixture prior <code><a href="../reference/aggregate_downscale.html">aggregate_downscale()</a></code>
+inverts. <em>Scaling HSIC to large ensembles</em> covers the low-rank
+factorisations that would be the route to a conditional mean embedding
+on a training set too large for an exact solve.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <ul>
+<li>Muandet, K., Fukumizu, K., Sriperumbudur, B., &amp; Scholkopf, B.
+(2017). Kernel mean embedding of distributions: a review and beyond.
+<em>Foundations and Trends in Machine Learning</em>, 10(1-2),
+1-141.</li>
 <li>Park, J., Muandet, K., Fukumizu, K., &amp; Sejdinovic, D. (2013).
-<em>Kernel embeddings of conditional distributions.</em> IEEE Signal
-Processing Magazine, 30(4), 98-111.</li>
-<li>Szabó, Z., Sriperumbudur, B. K., Póczos, B., &amp; Gretton, A.
+Kernel embeddings of conditional distributions. <em>IEEE Signal
+Processing Magazine</em>, 30(4), 98-111.</li>
+<li>Szabo, Z., Sriperumbudur, B. K., Poczos, B., &amp; Gretton, A.
 (2016). Learning theory for distribution regression. <em>Journal of
 Machine Learning Research</em>, 17(152), 1-40.</li>
-<li>Muandet, K., Fukumizu, K., Sriperumbudur, B., &amp; Schölkopf, B.
-(2017). <em>Kernel mean embedding of distributions: A review and
-beyond.</em> Foundations and Trends in Machine Learning, 10(1-2),
-1-141.</li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="reproduce">Reproduce<a class="anchor" aria-label="anchor" href="#reproduce"></a>
+</h2>
+<p>Seeds <code>1</code> (paired climate toy), <code>2</code> (bags for
+the mean target), <code>3</code> (spread-only bags), <code>4</code>
+(variable-size bags), and <code>seed = 1L</code> and
+<code>seed = 2L</code> for the importance sampler and the posterior
+draw. Package versions follow.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">#&gt;  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">#&gt; [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: UTC</span></span>
+<span><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt; [1] kernR_0.8.2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.51         </span></span>
+<span><span class="co">#&gt;  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         </span></span>
+<span><span class="co">#&gt;  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  </span></span>
+<span><span class="co">#&gt; [10] data.table_1.18.6.1 jsonlite_2.0.0      labeling_0.4.3     </span></span>
+<span><span class="co">#&gt; [13] glue_1.8.1          htmltools_0.5.9     PESTO_0.10.1       </span></span>
+<span><span class="co">#&gt; [16] ragg_1.5.2          sass_0.4.10         scales_1.4.0       </span></span>
+<span><span class="co">#&gt; [19] rmarkdown_2.32      grid_4.6.1          evaluate_1.0.5     </span></span>
+<span><span class="co">#&gt; [22] jquerylib_0.1.4     fastmap_1.2.0       yaml_2.3.12        </span></span>
+<span><span class="co">#&gt; [25] lifecycle_1.0.5     compiler_4.6.1      RColorBrewer_1.1-3 </span></span>
+<span><span class="co">#&gt; [28] fs_2.1.0            Rcpp_1.1.2          farver_2.1.2       </span></span>
+<span><span class="co">#&gt; [31] systemfonts_1.3.2   digest_0.6.39       viridisLite_0.4.3  </span></span>
+<span><span class="co">#&gt; [34] R6_2.6.1            bslib_0.12.0        withr_3.0.3        </span></span>
+<span><span class="co">#&gt; [37] tools_4.6.1         gtable_0.3.6        pkgdown_2.2.1      </span></span>
+<span><span class="co">#&gt; [40] ggplot2_4.0.3       cachem_1.1.0        desc_1.4.3</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -1,173 +1,260 @@
-# Getting Started with kernR
-
-## What is kernR?
-
-**kernR** provides kernel-based statistical tests for causal inference
-and distributional comparison. It implements:
-
-- **HSIC test**: independence testing via the Hilbert-Schmidt
-  Independence Criterion
-- **MMD test**: two-sample testing via Maximum Mean Discrepancy
-- **bd-HSIC test**: causal association testing with backdoor adjustment
-- **DR-DATE / DR-DETT**: doubly robust distributional treatment effect
-  tests
-
-This vignette covers the basics: kernels, MMD, and HSIC.
-
-## Kernel Basics
-
-A *kernel* is a function that measures similarity between observations.
-kernR supports RBF (Gaussian), Matern, linear, and polynomial kernels.
+# Getting started with kernR
 
 ``` r
 
 library(kernR)
+```
 
-# Default: RBF kernel with automatic bandwidth (median heuristic)
-k <- kernel_spec()
-k
+## Why
+
+An analyst has two samples and two variables, and the question that
+matters is not about means. *My control and treated yields have the same
+average, so the t-test says nothing happened – but the two histograms do
+not look alike. And this soil covariate has a Pearson correlation of
+roughly zero with yield, which I do not believe for a moment. What is
+the smallest thing I can write that tests the distributions themselves,
+and tests dependence without assuming it is linear?* This vignette
+answers both halves on two synthetic toys, and shows what the answer
+looks like when it comes back.
+
+## What
+
+Four objects and verbs carry this vignette.
+[`kernel_spec()`](https://max578.github.io/kernR/reference/kernel_spec.md)
+declares the kernel – the similarity function that turns raw
+observations into a Gram matrix – with a family (`"rbf"`, `"matern"`,
+`"linear"`, `"polynomial"`) and a bandwidth, which is resolved from the
+data by the median heuristic unless a number is given.
+[`kernel_matrix()`](https://max578.github.io/kernR/reference/kernel_matrix.md)
+evaluates that specification on a data matrix and returns the Gram
+matrix itself, which is the only object the tests below ever see of the
+raw data.
+
+[`mmd_test()`](https://max578.github.io/kernR/reference/mmd_test.md) is
+the two-sample test: it compares the kernel mean embeddings of two
+samples through the Maximum Mean Discrepancy, so it sees any difference
+the kernel can represent, not just a shift in location.
+[`hsic_test()`](https://max578.github.io/kernR/reference/hsic_test.md)
+is the independence test: it computes the Hilbert-Schmidt Independence
+Criterion between two variables, which is zero if and only if they are
+independent under a characteristic kernel, so it detects curved
+dependence that a correlation coefficient reports as nothing. Both
+return a `kernel_test_result` carrying the observed statistic, the
+permutation null it was scored against, and the p-value that follows,
+and both take a `seed` so the permutation draw is reproducible.
+
+## Do
+
+### The kernel specification
+
+``` r
+
+k_default <- kernel_spec()
+k_default
 #> Kernel specification:
 #>   Type: rbf 
 #>   Bandwidth: median heuristic
 
-# Fixed bandwidth
 k_fixed <- kernel_spec("rbf", bandwidth = 1.5)
 k_fixed
 #> Kernel specification:
 #>   Type: rbf 
 #>   Bandwidth: 1.5
 
-# Linear kernel
-k_lin <- kernel_spec("linear")
-k_lin
+k_linear <- kernel_spec("linear")
+k_linear
 #> Kernel specification:
 #>   Type: linear
 ```
 
-## Computing Kernel Matrices
+### The Gram matrix
+
+A synthetic toy: 100 draws from a standard bivariate normal, used only
+to show the shape of the object the tests consume.
 
 ``` r
 
-set.seed(42)
-x <- matrix(rnorm(200), 100, 2)
-
-# Compute the 100 x 100 kernel (Gram) matrix
-K <- kernel_matrix(x)
-dim(K)
+set.seed(42L)
+x_toy <- matrix(rnorm(200L), 100L, 2L)
+gram <- kernel_matrix(x_toy)
+dim(gram)
 #> [1] 100 100
-
-# Visualise a corner
-K[1:5, 1:5]
-#>           [,1]      [,2]      [,3]      [,4]      [,5]
-#> [1,] 1.0000000 0.4756935 0.3143356 0.8270120 0.4183694
-#> [2,] 0.4756935 1.0000000 0.3693844 0.6637695 0.4666851
-#> [3,] 0.3143356 0.3693844 1.0000000 0.1985930 0.9776208
-#> [4,] 0.8270120 0.6637695 0.1985930 1.0000000 0.2845859
-#> [5,] 0.4183694 0.4666851 0.9776208 0.2845859 1.0000000
+round(gram[1:4, 1:4], 3L)
+#>       [,1]  [,2]  [,3]  [,4]
+#> [1,] 1.000 0.476 0.314 0.827
+#> [2,] 0.476 1.000 0.369 0.664
+#> [3,] 0.314 0.369 1.000 0.199
+#> [4,] 0.827 0.664 0.199 1.000
 ```
 
-## Two-Sample Testing with MMD
+### Two samples, same distribution
 
-The MMD test asks: *do two samples come from the same distribution?*
+Two synthetic samples of 100 points each, both standard bivariate
+normal.
 
 ``` r
 
-set.seed(123)
-
-# Two samples from the same distribution
-x <- matrix(rnorm(200), 100, 2)
-y <- matrix(rnorm(200), 100, 2)
-
-result <- mmd_test(x, y, seed = 1)
-result
+set.seed(123L)
+x_a <- matrix(rnorm(200L), 100L, 2L)
+y_a <- matrix(rnorm(200L), 100L, 2L)
+mmd_null <- mmd_test(x_a, y_a, n_permutations = 999L, seed = 1L)
+mmd_null
 #> 
 #>    MMD Test
 #> 
 #> Statistic: -0.004145 
-#> P-value:   0.7465 
+#> P-value:   0.7570 
 #> N:         200 
-#> Perms:     500 
+#> Perms:     999 
 #> Kernel X:  rbf (bw =  1.61)
 ```
 
-The p-value is large – no evidence of different distributions. Now with
-a mean shift.
+### Two samples, one shifted
+
+The same comparison with the second sample’s mean moved by 0.5 in both
+coordinates.
 
 ``` r
 
-y_shifted <- matrix(rnorm(200, mean = 0.5), 100, 2)
-result <- mmd_test(x, y_shifted, seed = 1)
-result
+y_shift <- matrix(rnorm(200L, mean = 0.5), 100L, 2L)
+mmd_shift <- mmd_test(x_a, y_shift, n_permutations = 999L, seed = 1L)
+mmd_shift
 #> 
 #>    MMD Test
 #> 
-#> Statistic: 0.0789288 
-#> P-value:   0.0020 
+#> Statistic: 0.0660582 
+#> P-value:   0.0010 
 #> N:         200 
-#> Perms:     500 
-#> Kernel X:  rbf (bw = 1.686)
+#> Perms:     999 
+#> Kernel X:  rbf (bw = 1.705)
 ```
 
-The small p-value correctly detects the distributional difference.
+### Dependence a correlation cannot see
 
-## Independence Testing with HSIC
-
-HSIC tests whether two variables are independent – including non-linear
-dependencies that correlation would miss.
+A synthetic toy in which the outcome is the square of the covariate plus
+noise: the dependence is exact, and the linear correlation is close to
+zero because the relationship is symmetric about the origin.
 
 ``` r
 
-set.seed(456)
-n <- 300
-x <- rnorm(n)
+set.seed(456L)
+n_hsic <- 300L
+x_q <- rnorm(n_hsic)
+y_q <- x_q^2 + rnorm(n_hsic, sd = 0.3)
+pearson_r <- cor(x_q, y_q)
+round(pearson_r, 3L)
+#> [1] 0.022
 
-# Non-linear dependence: Y = X^2 + noise
-# Note: cor(x, y) is approximately 0 (no linear correlation)
-y <- x^2 + rnorm(n, sd = 0.3)
-cat("Pearson correlation:", round(cor(x, y), 3), "\n")
-#> Pearson correlation: 0.022
-
-# HSIC detects the non-linear dependence
-result <- hsic_test(x, y, seed = 1)
-result
+hsic_quad <- hsic_test(x_q, y_q, n_permutations = 999L, seed = 1L)
+hsic_quad
 #> 
 #>    HSIC Test
 #> 
 #> Statistic: 0.0258008 
-#> P-value:   0.0020 
+#> P-value:   0.0010 
 #> N:         300 
-#> Perms:     500 
+#> Perms:     999 
 #> Kernel X:  rbf (bw = 0.9644)
 #> Kernel Y:  rbf (bw = 0.8461)
 ```
 
-HSIC successfully detects the quadratic relationship even though the
-Pearson correlation is near zero.
-
-## Visualising Results
-
-Every test result can be plotted to see where the observed statistic
-falls relative to the permutation null distribution:
+### The figure: where the observed statistic sits
 
 ``` r
 
-plot(result)
+null_df <- data.frame(statistic = hsic_quad$null_distribution)
+ggplot2::ggplot(null_df, ggplot2::aes(x = statistic)) +
+  ggplot2::geom_histogram(bins = 40L, fill = "#440154", colour = NA) +
+  ggplot2::geom_vline(
+    xintercept = hsic_quad$statistic, colour = "#FDE725", linewidth = 1
+  ) +
+  ggplot2::annotate(
+    "text", x = hsic_quad$statistic, y = Inf, hjust = 1.1, vjust = 2,
+    label = "observed", colour = "#FDE725"
+  ) +
+  ggplot2::labs(
+    x = "HSIC statistic (permutation draws, unitless)",
+    y = "permutation draws",
+    title = "HSIC permutation null against the observed statistic"
+  ) +
+  ggplot2::theme_minimal()
 ```
 
-![HSIC permutation null distribution with observed statistic (dashed red
-line).](kernR-quickstart_files/figure-html/plot-result-1.png)
+![Permutation null distribution of the HSIC statistic on the quadratic
+toy (999 label permutations), with the observed statistic marked. The
+observed value sits far outside the range the null ever reaches, which
+is what a p-value at the permutation floor
+means.](kernR-quickstart_files/figure-html/fig-null-1.png)
 
-HSIC permutation null distribution with observed statistic (dashed red
-line).
+Permutation null distribution of the HSIC statistic on the quadratic toy
+(999 label permutations), with the observed statistic marked. The
+observed value sits far outside the range the null ever reaches, which
+is what a p-value at the permutation floor means.
 
-## Next Steps
+### The three verdicts side by side
 
-- [`vignette("kernR-bdhsic")`](https://max578.github.io/kernR/articles/kernR-bdhsic.md)
-  – causal association testing with bd-HSIC
-- [`vignette("kernR-drtest")`](https://max578.github.io/kernR/articles/kernR-drtest.md)
-  – distributional treatment effect tests
-- [`vignette("kernR-hierarchical")`](https://max578.github.io/kernR/articles/kernR-hierarchical.md)
-  – tests for hierarchical/nested data
+| Question                                    | Test        | Statistic | p-value |
+|:--------------------------------------------|:------------|----------:|--------:|
+| Two samples, same distribution              | mmd_test()  |   -0.0041 |   0.757 |
+| Two samples, mean shifted by 0.5            | mmd_test()  |    0.0661 |   0.001 |
+| Quadratic dependence, correlation near zero | hsic_test() |    0.0258 |   0.001 |
+
+The three verdicts in this vignette, each scored against a 999-draw
+permutation null. {.table}
+
+## Read
+
+The two samples drawn from the same distribution give an MMD statistic
+of -0.00414 and a p-value of 0.757: the observed discrepancy is an
+ordinary member of its own permutation null, so there is no evidence the
+two samples differ. Shifting the second sample’s mean by 0.5 raises the
+statistic to 0.0661 and drops the p-value to 0.001, the smallest value
+999 permutations can express (`1 / (B + 1)` = 0.001), so the test has
+separated the two samples as decisively as this permutation budget
+allows.
+
+The quadratic toy is where the kernel earns its keep. The Pearson
+correlation between covariate and outcome is 0.022, near enough to zero
+that a linear screen would discard the covariate. HSIC returns 0.0258
+against a null whose largest of 999 draws is only 0.00228, giving a
+p-value of 0.001: the dependence is real, strong, and invisible to
+correlation. The figure shows the separation directly – the whole null
+sits in a narrow band near zero and the observed statistic is nowhere
+near it.
+
+## Limits
+
+Both toys here are synthetic and generously sized for the effects they
+carry, so they show that the tests work rather than how they behave at
+the margin. A permutation p-value cannot go below
+`1 / (n_permutations + 1)`, so a small p-value in this vignette reports
+the budget as much as the evidence; raise `n_permutations` before
+reading a small p-value as a magnitude. Neither test here adjusts for
+anything:
+[`mmd_test()`](https://max578.github.io/kernR/reference/mmd_test.md) and
+[`hsic_test()`](https://max578.github.io/kernR/reference/hsic_test.md)
+answer questions about association and distributional difference, and an
+association is not a causal effect whenever a common cause is in play.
+The tests that do adjust are the subject of the next two vignettes.
+Finally, both tests inherit the kernel’s blind spots: a linear kernel
+cannot see the quadratic dependence above, and the median-heuristic
+bandwidth is a default, not a tuned choice.
+
+## What to read next
+
+*Does the treatment cause the outcome, or do they share a cause?* adds
+backdoor adjustment, so the association measured here becomes a causal
+one. *A treatment that changes the spread and not the mean* runs the
+doubly robust distributional tests for treatment effects that a
+mean-based method cannot see. *When plots sit inside farms* handles the
+clustered designs in which the permutation null used above is no longer
+valid.
+
+## Reproduce
+
+Seeds `42` (Gram matrix toy), `123` (two-sample toys) and `456`
+(quadratic toy) for data generation, and `seed = 1L` passed to every
+test so the permutation draws are fixed. Package versions follow.
 
 ``` r
 
@@ -199,14 +286,15 @@ sessionInfo()
 #>  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.51         
 #>  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         
 #>  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  
-#> [10] jsonlite_2.0.0      data.table_1.18.6.1 glue_1.8.1         
-#> [13] htmltools_0.5.9     PESTO_0.10.1        ragg_1.5.2         
-#> [16] sass_0.4.10         scales_1.4.0        rmarkdown_2.31     
-#> [19] grid_4.6.1          evaluate_1.0.5      jquerylib_0.1.4    
-#> [22] fastmap_1.2.0       yaml_2.3.12         lifecycle_1.0.5    
-#> [25] compiler_4.6.1      RColorBrewer_1.1-3  fs_2.1.0           
-#> [28] Rcpp_1.1.2          farver_2.1.2        systemfonts_1.3.2  
-#> [31] digest_0.6.39       R6_2.6.1            bslib_0.12.0       
-#> [34] gtable_0.3.6        tools_4.6.1         ggplot2_4.0.3      
-#> [37] pkgdown_2.2.1       cachem_1.1.0        desc_1.4.3
+#> [10] data.table_1.18.6.1 jsonlite_2.0.0      labeling_0.4.3     
+#> [13] glue_1.8.1          htmltools_0.5.9     PESTO_0.10.1       
+#> [16] ragg_1.5.2          sass_0.4.10         scales_1.4.0       
+#> [19] rmarkdown_2.32      grid_4.6.1          evaluate_1.0.5     
+#> [22] jquerylib_0.1.4     fastmap_1.2.0       yaml_2.3.12        
+#> [25] lifecycle_1.0.5     compiler_4.6.1      RColorBrewer_1.1-3 
+#> [28] fs_2.1.0            Rcpp_1.1.2          farver_2.1.2       
+#> [31] systemfonts_1.3.2   digest_0.6.39       R6_2.6.1           
+#> [34] bslib_0.12.0        withr_3.0.3         tools_4.6.1        
+#> [37] gtable_0.3.6        pkgdown_2.2.1       ggplot2_4.0.3      
+#> [40] cachem_1.1.0        desc_1.4.3
 ```

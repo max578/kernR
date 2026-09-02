@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Getting Started with kernR • kernR</title>
+<title>Getting started with kernR • kernR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Getting Started with kernR">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Getting started with kernR">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,10 +33,10 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting Started with kernR</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Causal Association Testing with bd-HSIC</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">Distributional Treatment Effect Tests (DR-DATE / DR-DETT)</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">Hierarchical and Nested Data</a></li>
+<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting started with kernR</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Does the treatment cause the outcome, or do they share a cause?</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">A treatment that changes the spread and not the mean</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">When plots sit inside farms</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -58,11 +58,8 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Getting Started with kernR</h1>
-                        <h4 data-toc-skip class="author">Max
-Moldovan</h4>
+      <h1>Getting started with kernR</h1>
             
-            <h4 data-toc-skip class="date">2026-08-25</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/max578/kernR/blob/main/vignettes/kernR-quickstart.Rmd" class="external-link"><code>vignettes/kernR-quickstart.Rmd</code></a></small>
       <div class="d-none name"><code>kernR-quickstart.Rmd</code></div>
@@ -70,176 +67,283 @@ Moldovan</h4>
 
     
     
+<!-- Render time: ~3 s under rmarkdown::render(); macOS aarch64, R 4.5.2, one
+     core. The permutation nulls here are small (199 to 999 draws on a few
+     hundred points), so the time is dominated by knitr overhead. -->
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
-<h2 id="what-is-kernr">What is kernR?<a class="anchor" aria-label="anchor" href="#what-is-kernr"></a>
+<h2 id="why">Why<a class="anchor" aria-label="anchor" href="#why"></a>
 </h2>
-<p><strong>kernR</strong> provides kernel-based statistical tests for
-causal inference and distributional comparison. It implements:</p>
-<ul>
-<li>
-<strong>HSIC test</strong>: independence testing via the
-Hilbert-Schmidt Independence Criterion</li>
-<li>
-<strong>MMD test</strong>: two-sample testing via Maximum Mean
-Discrepancy</li>
-<li>
-<strong>bd-HSIC test</strong>: causal association testing with
-backdoor adjustment</li>
-<li>
-<strong>DR-DATE / DR-DETT</strong>: doubly robust distributional
-treatment effect tests</li>
-</ul>
-<p>This vignette covers the basics: kernels, MMD, and HSIC.</p>
+<p>An analyst has two samples and two variables, and the question that
+matters is not about means. <em>My control and treated yields have the
+same average, so the t-test says nothing happened – but the two
+histograms do not look alike. And this soil covariate has a Pearson
+correlation of roughly zero with yield, which I do not believe for a
+moment. What is the smallest thing I can write that tests the
+distributions themselves, and tests dependence without assuming it is
+linear?</em> This vignette answers both halves on two synthetic toys,
+and shows what the answer looks like when it comes back.</p>
 </div>
 <div class="section level2">
-<h2 id="kernel-basics">Kernel Basics<a class="anchor" aria-label="anchor" href="#kernel-basics"></a>
+<h2 id="what">What<a class="anchor" aria-label="anchor" href="#what"></a>
 </h2>
-<p>A <em>kernel</em> is a function that measures similarity between
-observations. kernR supports RBF (Gaussian), Matern, linear, and
-polynomial kernels.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Default: RBF kernel with automatic bandwidth (median heuristic)</span></span>
-<span><span class="va">k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_spec.html">kernel_spec</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">k</span></span>
+<p>Four objects and verbs carry this vignette.
+<code><a href="../reference/kernel_spec.html">kernel_spec()</a></code> declares the kernel – the similarity function
+that turns raw observations into a Gram matrix – with a family
+(<code>"rbf"</code>, <code>"matern"</code>, <code>"linear"</code>,
+<code>"polynomial"</code>) and a bandwidth, which is resolved from the
+data by the median heuristic unless a number is given.
+<code><a href="../reference/kernel_matrix.html">kernel_matrix()</a></code> evaluates that specification on a data
+matrix and returns the Gram matrix itself, which is the only object the
+tests below ever see of the raw data.</p>
+<p><code><a href="../reference/mmd_test.html">mmd_test()</a></code> is the two-sample test: it compares the
+kernel mean embeddings of two samples through the Maximum Mean
+Discrepancy, so it sees any difference the kernel can represent, not
+just a shift in location. <code><a href="../reference/hsic_test.html">hsic_test()</a></code> is the independence
+test: it computes the Hilbert-Schmidt Independence Criterion between two
+variables, which is zero if and only if they are independent under a
+characteristic kernel, so it detects curved dependence that a
+correlation coefficient reports as nothing. Both return a
+<code>kernel_test_result</code> carrying the observed statistic, the
+permutation null it was scored against, and the p-value that follows,
+and both take a <code>seed</code> so the permutation draw is
+reproducible.</p>
+</div>
+<div class="section level2">
+<h2 id="do">Do<a class="anchor" aria-label="anchor" href="#do"></a>
+</h2>
+<div class="section level3">
+<h3 id="the-kernel-specification">The kernel specification<a class="anchor" aria-label="anchor" href="#the-kernel-specification"></a>
+</h3>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">k_default</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_spec.html">kernel_spec</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">k_default</span></span>
 <span><span class="co">#&gt; Kernel specification:</span></span>
 <span><span class="co">#&gt;   Type: rbf </span></span>
 <span><span class="co">#&gt;   Bandwidth: median heuristic</span></span>
 <span></span>
-<span><span class="co"># Fixed bandwidth</span></span>
 <span><span class="va">k_fixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_spec.html">kernel_spec</a></span><span class="op">(</span><span class="st">"rbf"</span>, bandwidth <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span></span>
 <span><span class="va">k_fixed</span></span>
 <span><span class="co">#&gt; Kernel specification:</span></span>
 <span><span class="co">#&gt;   Type: rbf </span></span>
 <span><span class="co">#&gt;   Bandwidth: 1.5</span></span>
 <span></span>
-<span><span class="co"># Linear kernel</span></span>
-<span><span class="va">k_lin</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_spec.html">kernel_spec</a></span><span class="op">(</span><span class="st">"linear"</span><span class="op">)</span></span>
-<span><span class="va">k_lin</span></span>
+<span><span class="va">k_linear</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_spec.html">kernel_spec</a></span><span class="op">(</span><span class="st">"linear"</span><span class="op">)</span></span>
+<span><span class="va">k_linear</span></span>
 <span><span class="co">#&gt; Kernel specification:</span></span>
 <span><span class="co">#&gt;   Type: linear</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="computing-kernel-matrices">Computing Kernel Matrices<a class="anchor" aria-label="anchor" href="#computing-kernel-matrices"></a>
-</h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span>, <span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Compute the 100 x 100 kernel (Gram) matrix</span></span>
-<span><span class="va">K</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_matrix.html">kernel_matrix</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">K</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 100 100</span></span>
-<span></span>
-<span><span class="co"># Visualise a corner</span></span>
-<span><span class="va">K</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span></span>
-<span><span class="co">#&gt;           [,1]      [,2]      [,3]      [,4]      [,5]</span></span>
-<span><span class="co">#&gt; [1,] 1.0000000 0.4756935 0.3143356 0.8270120 0.4183694</span></span>
-<span><span class="co">#&gt; [2,] 0.4756935 1.0000000 0.3693844 0.6637695 0.4666851</span></span>
-<span><span class="co">#&gt; [3,] 0.3143356 0.3693844 1.0000000 0.1985930 0.9776208</span></span>
-<span><span class="co">#&gt; [4,] 0.8270120 0.6637695 0.1985930 1.0000000 0.2845859</span></span>
-<span><span class="co">#&gt; [5,] 0.4183694 0.4666851 0.9776208 0.2845859 1.0000000</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="two-sample-testing-with-mmd">Two-Sample Testing with MMD<a class="anchor" aria-label="anchor" href="#two-sample-testing-with-mmd"></a>
-</h2>
-<p>The MMD test asks: <em>do two samples come from the same
-distribution?</em></p>
+<div class="section level3">
+<h3 id="the-gram-matrix">The Gram matrix<a class="anchor" aria-label="anchor" href="#the-gram-matrix"></a>
+</h3>
+<p>A synthetic toy: 100 draws from a standard bivariate normal, used
+only to show the shape of the object the tests consume.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Two samples from the same distribution</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span>, <span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span>, <span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mmd_test.html">mmd_test</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">result</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42L</span><span class="op">)</span></span>
+<span><span class="va">x_toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200L</span><span class="op">)</span>, <span class="fl">100L</span>, <span class="fl">2L</span><span class="op">)</span></span>
+<span><span class="va">gram</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_matrix.html">kernel_matrix</a></span><span class="op">(</span><span class="va">x_toy</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">gram</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 100 100</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">gram</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">3L</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       [,1]  [,2]  [,3]  [,4]</span></span>
+<span><span class="co">#&gt; [1,] 1.000 0.476 0.314 0.827</span></span>
+<span><span class="co">#&gt; [2,] 0.476 1.000 0.369 0.664</span></span>
+<span><span class="co">#&gt; [3,] 0.314 0.369 1.000 0.199</span></span>
+<span><span class="co">#&gt; [4,] 0.827 0.664 0.199 1.000</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="two-samples-same-distribution">Two samples, same distribution<a class="anchor" aria-label="anchor" href="#two-samples-same-distribution"></a>
+</h3>
+<p>Two synthetic samples of 100 points each, both standard bivariate
+normal.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123L</span><span class="op">)</span></span>
+<span><span class="va">x_a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200L</span><span class="op">)</span>, <span class="fl">100L</span>, <span class="fl">2L</span><span class="op">)</span></span>
+<span><span class="va">y_a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200L</span><span class="op">)</span>, <span class="fl">100L</span>, <span class="fl">2L</span><span class="op">)</span></span>
+<span><span class="va">mmd_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mmd_test.html">mmd_test</a></span><span class="op">(</span><span class="va">x_a</span>, <span class="va">y_a</span>, n_permutations <span class="op">=</span> <span class="fl">999L</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="va">mmd_null</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    MMD Test</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Statistic: -0.004145 </span></span>
-<span><span class="co">#&gt; P-value:   0.7465 </span></span>
+<span><span class="co">#&gt; P-value:   0.7570 </span></span>
 <span><span class="co">#&gt; N:         200 </span></span>
-<span><span class="co">#&gt; Perms:     500 </span></span>
+<span><span class="co">#&gt; Perms:     999 </span></span>
 <span><span class="co">#&gt; Kernel X:  rbf (bw =  1.61)</span></span></code></pre></div>
-<p>The p-value is large – no evidence of different distributions. Now
-with a mean shift.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">y_shifted</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span>, mean <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>, <span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mmd_test.html">mmd_test</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y_shifted</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">result</span></span>
+</div>
+<div class="section level3">
+<h3 id="two-samples-one-shifted">Two samples, one shifted<a class="anchor" aria-label="anchor" href="#two-samples-one-shifted"></a>
+</h3>
+<p>The same comparison with the second sample’s mean moved by 0.5 in
+both coordinates.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">y_shift</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200L</span>, mean <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>, <span class="fl">100L</span>, <span class="fl">2L</span><span class="op">)</span></span>
+<span><span class="va">mmd_shift</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mmd_test.html">mmd_test</a></span><span class="op">(</span><span class="va">x_a</span>, <span class="va">y_shift</span>, n_permutations <span class="op">=</span> <span class="fl">999L</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="va">mmd_shift</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    MMD Test</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Statistic: 0.0789288 </span></span>
-<span><span class="co">#&gt; P-value:   0.0020 </span></span>
+<span><span class="co">#&gt; Statistic: 0.0660582 </span></span>
+<span><span class="co">#&gt; P-value:   0.0010 </span></span>
 <span><span class="co">#&gt; N:         200 </span></span>
-<span><span class="co">#&gt; Perms:     500 </span></span>
-<span><span class="co">#&gt; Kernel X:  rbf (bw = 1.686)</span></span></code></pre></div>
-<p>The small p-value correctly detects the distributional
-difference.</p>
+<span><span class="co">#&gt; Perms:     999 </span></span>
+<span><span class="co">#&gt; Kernel X:  rbf (bw = 1.705)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="independence-testing-with-hsic">Independence Testing with HSIC<a class="anchor" aria-label="anchor" href="#independence-testing-with-hsic"></a>
-</h2>
-<p>HSIC tests whether two variables are independent – including
-non-linear dependencies that correlation would miss.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">456</span><span class="op">)</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">300</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<div class="section level3">
+<h3 id="dependence-a-correlation-cannot-see">Dependence a correlation cannot see<a class="anchor" aria-label="anchor" href="#dependence-a-correlation-cannot-see"></a>
+</h3>
+<p>A synthetic toy in which the outcome is the square of the covariate
+plus noise: the dependence is exact, and the linear correlation is close
+to zero because the relationship is symmetric about the origin.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">456L</span><span class="op">)</span></span>
+<span><span class="va">n_hsic</span> <span class="op">&lt;-</span> <span class="fl">300L</span></span>
+<span><span class="va">x_q</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_hsic</span><span class="op">)</span></span>
+<span><span class="va">y_q</span> <span class="op">&lt;-</span> <span class="va">x_q</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_hsic</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<span><span class="va">pearson_r</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">x_q</span>, <span class="va">y_q</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">pearson_r</span>, <span class="fl">3L</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.022</span></span>
 <span></span>
-<span><span class="co"># Non-linear dependence: Y = X^2 + noise</span></span>
-<span><span class="co"># Note: cor(x, y) is approximately 0 (no linear correlation)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Pearson correlation:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Pearson correlation: 0.022</span></span>
-<span></span>
-<span><span class="co"># HSIC detects the non-linear dependence</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_test.html">hsic_test</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">result</span></span>
+<span><span class="va">hsic_quad</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_test.html">hsic_test</a></span><span class="op">(</span><span class="va">x_q</span>, <span class="va">y_q</span>, n_permutations <span class="op">=</span> <span class="fl">999L</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="va">hsic_quad</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    HSIC Test</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Statistic: 0.0258008 </span></span>
-<span><span class="co">#&gt; P-value:   0.0020 </span></span>
+<span><span class="co">#&gt; P-value:   0.0010 </span></span>
 <span><span class="co">#&gt; N:         300 </span></span>
-<span><span class="co">#&gt; Perms:     500 </span></span>
+<span><span class="co">#&gt; Perms:     999 </span></span>
 <span><span class="co">#&gt; Kernel X:  rbf (bw = 0.9644)</span></span>
 <span><span class="co">#&gt; Kernel Y:  rbf (bw = 0.8461)</span></span></code></pre></div>
-<p>HSIC successfully detects the quadratic relationship even though the
-Pearson correlation is near zero.</p>
 </div>
-<div class="section level2">
-<h2 id="visualising-results">Visualising Results<a class="anchor" aria-label="anchor" href="#visualising-results"></a>
-</h2>
-<p>Every test result can be plotted to see where the observed statistic
-falls relative to the permutation null distribution:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="the-figure-where-the-observed-statistic-sits">The figure: where the observed statistic sits<a class="anchor" aria-label="anchor" href="#the-figure-where-the-observed-statistic-sits"></a>
+</h3>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">null_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>statistic <span class="op">=</span> <span class="va">hsic_quad</span><span class="op">$</span><span class="va">null_distribution</span><span class="op">)</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">null_df</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">statistic</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html" class="external-link">geom_histogram</a></span><span class="op">(</span>bins <span class="op">=</span> <span class="fl">40L</span>, fill <span class="op">=</span> <span class="st">"#440154"</span>, colour <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span></span>
+<span>    xintercept <span class="op">=</span> <span class="va">hsic_quad</span><span class="op">$</span><span class="va">statistic</span>, colour <span class="op">=</span> <span class="st">"#FDE725"</span>, linewidth <span class="op">=</span> <span class="fl">1</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/annotate.html" class="external-link">annotate</a></span><span class="op">(</span></span>
+<span>    <span class="st">"text"</span>, x <span class="op">=</span> <span class="va">hsic_quad</span><span class="op">$</span><span class="va">statistic</span>, y <span class="op">=</span> <span class="cn">Inf</span>, hjust <span class="op">=</span> <span class="fl">1.1</span>, vjust <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>    label <span class="op">=</span> <span class="st">"observed"</span>, colour <span class="op">=</span> <span class="st">"#FDE725"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="st">"HSIC statistic (permutation draws, unitless)"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"permutation draws"</span>,</span>
+<span>    title <span class="op">=</span> <span class="st">"HSIC permutation null against the observed statistic"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
-<img src="kernR-quickstart_files/figure-html/plot-result-1.png" class="r-plt" alt="HSIC permutation null distribution with observed statistic (dashed red line)." width="900"><p class="caption">
-HSIC permutation null distribution with observed statistic (dashed red
-line).
+<img src="kernR-quickstart_files/figure-html/fig-null-1.png" class="r-plt" alt="Permutation null distribution of the HSIC statistic on the quadratic toy (999 label permutations), with the observed statistic marked. The observed value sits far outside the range the null ever reaches, which is what a p-value at the permutation floor means." width="1050"><p class="caption">
+Permutation null distribution of the HSIC statistic on the quadratic toy
+(999 label permutations), with the observed statistic marked. The
+observed value sits far outside the range the null ever reaches, which
+is what a p-value at the permutation floor means.
 </p>
 </div>
 </div>
+<div class="section level3">
+<h3 id="the-three-verdicts-side-by-side">The three verdicts side by side<a class="anchor" aria-label="anchor" href="#the-three-verdicts-side-by-side"></a>
+</h3>
+<table class="table">
+<caption>The three verdicts in this vignette, each scored against a
+999-draw permutation null.</caption>
+<colgroup>
+<col width="59%">
+<col width="16%">
+<col width="13%">
+<col width="10%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Question</th>
+<th align="left">Test</th>
+<th align="right">Statistic</th>
+<th align="right">p-value</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Two samples, same distribution</td>
+<td align="left">mmd_test()</td>
+<td align="right">-0.0041</td>
+<td align="right">0.757</td>
+</tr>
+<tr class="even">
+<td align="left">Two samples, mean shifted by 0.5</td>
+<td align="left">mmd_test()</td>
+<td align="right">0.0661</td>
+<td align="right">0.001</td>
+</tr>
+<tr class="odd">
+<td align="left">Quadratic dependence, correlation near zero</td>
+<td align="left">hsic_test()</td>
+<td align="right">0.0258</td>
+<td align="right">0.001</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <div class="section level2">
-<h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
+<h2 id="read">Read<a class="anchor" aria-label="anchor" href="#read"></a>
 </h2>
-<ul>
-<li>
-<code><a href="../articles/kernR-bdhsic.html">vignette("kernR-bdhsic")</a></code> – causal association testing
-with bd-HSIC</li>
-<li>
-<code><a href="../articles/kernR-drtest.html">vignette("kernR-drtest")</a></code> – distributional treatment
-effect tests</li>
-<li>
-<code><a href="../articles/kernR-hierarchical.html">vignette("kernR-hierarchical")</a></code> – tests for
-hierarchical/nested data</li>
-</ul>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<p>The two samples drawn from the same distribution give an MMD
+statistic of -0.00414 and a p-value of 0.757: the observed discrepancy
+is an ordinary member of its own permutation null, so there is no
+evidence the two samples differ. Shifting the second sample’s mean by
+0.5 raises the statistic to 0.0661 and drops the p-value to 0.001, the
+smallest value 999 permutations can express (<code>1 / (B + 1)</code> =
+0.001), so the test has separated the two samples as decisively as this
+permutation budget allows.</p>
+<p>The quadratic toy is where the kernel earns its keep. The Pearson
+correlation between covariate and outcome is 0.022, near enough to zero
+that a linear screen would discard the covariate. HSIC returns 0.0258
+against a null whose largest of 999 draws is only 0.00228, giving a
+p-value of 0.001: the dependence is real, strong, and invisible to
+correlation. The figure shows the separation directly – the whole null
+sits in a narrow band near zero and the observed statistic is nowhere
+near it.</p>
+</div>
+<div class="section level2">
+<h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
+</h2>
+<p>Both toys here are synthetic and generously sized for the effects
+they carry, so they show that the tests work rather than how they behave
+at the margin. A permutation p-value cannot go below
+<code>1 / (n_permutations + 1)</code>, so a small p-value in this
+vignette reports the budget as much as the evidence; raise
+<code>n_permutations</code> before reading a small p-value as a
+magnitude. Neither test here adjusts for anything:
+<code><a href="../reference/mmd_test.html">mmd_test()</a></code> and <code><a href="../reference/hsic_test.html">hsic_test()</a></code> answer questions
+about association and distributional difference, and an association is
+not a causal effect whenever a common cause is in play. The tests that
+do adjust are the subject of the next two vignettes. Finally, both tests
+inherit the kernel’s blind spots: a linear kernel cannot see the
+quadratic dependence above, and the median-heuristic bandwidth is a
+default, not a tuned choice.</p>
+</div>
+<div class="section level2">
+<h2 id="what-to-read-next">What to read next<a class="anchor" aria-label="anchor" href="#what-to-read-next"></a>
+</h2>
+<p><em>Does the treatment cause the outcome, or do they share a
+cause?</em> adds backdoor adjustment, so the association measured here
+becomes a causal one. <em>A treatment that changes the spread and not
+the mean</em> runs the doubly robust distributional tests for treatment
+effects that a mean-based method cannot see. <em>When plots sit inside
+farms</em> handles the clustered designs in which the permutation null
+used above is no longer valid.</p>
+</div>
+<div class="section level2">
+<h2 id="reproduce">Reproduce<a class="anchor" aria-label="anchor" href="#reproduce"></a>
+</h2>
+<p>Seeds <code>42</code> (Gram matrix toy), <code>123</code> (two-sample
+toys) and <code>456</code> (quadratic toy) for data generation, and
+<code>seed = 1L</code> passed to every test so the permutation draws are
+fixed. Package versions follow.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -268,16 +372,17 @@ hierarchical/nested data</li>
 <span><span class="co">#&gt;  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.51         </span></span>
 <span><span class="co">#&gt;  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         </span></span>
 <span><span class="co">#&gt;  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  </span></span>
-<span><span class="co">#&gt; [10] jsonlite_2.0.0      data.table_1.18.6.1 glue_1.8.1         </span></span>
-<span><span class="co">#&gt; [13] htmltools_0.5.9     PESTO_0.10.1        ragg_1.5.2         </span></span>
-<span><span class="co">#&gt; [16] sass_0.4.10         scales_1.4.0        rmarkdown_2.31     </span></span>
-<span><span class="co">#&gt; [19] grid_4.6.1          evaluate_1.0.5      jquerylib_0.1.4    </span></span>
-<span><span class="co">#&gt; [22] fastmap_1.2.0       yaml_2.3.12         lifecycle_1.0.5    </span></span>
-<span><span class="co">#&gt; [25] compiler_4.6.1      RColorBrewer_1.1-3  fs_2.1.0           </span></span>
-<span><span class="co">#&gt; [28] Rcpp_1.1.2          farver_2.1.2        systemfonts_1.3.2  </span></span>
-<span><span class="co">#&gt; [31] digest_0.6.39       R6_2.6.1            bslib_0.12.0       </span></span>
-<span><span class="co">#&gt; [34] gtable_0.3.6        tools_4.6.1         ggplot2_4.0.3      </span></span>
-<span><span class="co">#&gt; [37] pkgdown_2.2.1       cachem_1.1.0        desc_1.4.3</span></span></code></pre></div>
+<span><span class="co">#&gt; [10] data.table_1.18.6.1 jsonlite_2.0.0      labeling_0.4.3     </span></span>
+<span><span class="co">#&gt; [13] glue_1.8.1          htmltools_0.5.9     PESTO_0.10.1       </span></span>
+<span><span class="co">#&gt; [16] ragg_1.5.2          sass_0.4.10         scales_1.4.0       </span></span>
+<span><span class="co">#&gt; [19] rmarkdown_2.32      grid_4.6.1          evaluate_1.0.5     </span></span>
+<span><span class="co">#&gt; [22] jquerylib_0.1.4     fastmap_1.2.0       yaml_2.3.12        </span></span>
+<span><span class="co">#&gt; [25] lifecycle_1.0.5     compiler_4.6.1      RColorBrewer_1.1-3 </span></span>
+<span><span class="co">#&gt; [28] fs_2.1.0            Rcpp_1.1.2          farver_2.1.2       </span></span>
+<span><span class="co">#&gt; [31] systemfonts_1.3.2   digest_0.6.39       R6_2.6.1           </span></span>
+<span><span class="co">#&gt; [34] bslib_0.12.0        withr_3.0.3         tools_4.6.1        </span></span>
+<span><span class="co">#&gt; [37] gtable_0.3.6        pkgdown_2.2.1       ggplot2_4.0.3      </span></span>
+<span><span class="co">#&gt; [40] cachem_1.1.0        desc_1.4.3</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

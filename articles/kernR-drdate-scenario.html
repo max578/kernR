@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>DR-DATE for APSIM Scenario Counterfactuals • kernR</title>
+<title>Did the management change shift the simulated distribution? • kernR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="DR-DATE for APSIM Scenario Counterfactuals">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Did the management change shift the simulated distribution?">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,10 +33,10 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting Started with kernR</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Causal Association Testing with bd-HSIC</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">Distributional Treatment Effect Tests (DR-DATE / DR-DETT)</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">Hierarchical and Nested Data</a></li>
+<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting started with kernR</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Does the treatment cause the outcome, or do they share a cause?</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">A treatment that changes the spread and not the mean</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">When plots sit inside farms</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -58,7 +58,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>DR-DATE for APSIM Scenario Counterfactuals</h1>
+      <h1>Did the management change shift the simulated distribution?</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/max578/kernR/blob/main/vignettes/kernR-drdate-scenario.Rmd" class="external-link"><code>vignettes/kernR-drdate-scenario.Rmd</code></a></small>
@@ -67,22 +67,10 @@
 
     
     
-<div class="section level2">
-<h2 id="the-ag-scenario-question">The ag-scenario question<a class="anchor" aria-label="anchor" href="#the-ag-scenario-question"></a>
-</h2>
-<p>Given an APSIM model calibrated on observational data, we want to
-ask: <em>does an intervention (e.g. stubble retention) shift the
-distribution of simulated outputs?</em> The canonical setup is
-<strong>one PESTO posterior, forward-simulated under two
-scenarios</strong> — baseline management and the intervention. With
-identical parameter posteriors, the question reduces to a balanced
-two-sample distributional comparison on outputs.</p>
-<p><code><a href="../reference/dr_date_scenario.html">dr_date_scenario()</a></code> runs the DR-DATE statistic of
-Fawkes-Hu-Evans- Sejdinovic (2024) over a pair of PESTO 0.3.0
-<code>pesto_ensemble_manifest</code> objects. With identical parameter
-columns, the doubly-robust correction collapses to a balanced MMD on the
-outputs; with different parameter posteriors, the DR adjustment absorbs
-the covariate shift (provided positivity holds).</p>
+<!-- Render time: ~1 s under rmarkdown::render(); macOS aarch64, R 4.5.2, one
+     core. One in-process ensemble-smoother calibration of 60 realisations
+     over a linear-Gaussian forward model, then three scenario tests at 99
+     to 299 permutations. -->
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/PESTO" class="external-link">PESTO</a></span><span class="op">)</span></span>
@@ -91,83 +79,118 @@ the covariate shift (provided positivity holds).</p>
 <span><span class="co">#&gt; The following object is masked from 'package:kernR':</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;     verify_manifest</span></span></code></pre></div>
+<div class="section level2">
+<h2 id="why">Why<a class="anchor" aria-label="anchor" href="#why"></a>
+</h2>
+<p>A systems modeller has one calibrated crop model and two management
+rules. <em>I calibrated the model once against the site record, then ran
+the posterior forward twice: once under the current stubble management
+and once under retention. The two mean yields differ by less than the
+spread of either, so the difference in means tells me nothing. What I
+want to know is whether the whole distribution of simulated outcomes
+moved, and I want the comparison to refuse to run if the two ensembles
+are not actually comparable.</em> This vignette answers that on a pair
+of ensemble manifests, with a synthetic forward model standing in for
+the simulator.</p>
 </div>
 <div class="section level2">
-<h2 id="one-calibration-two-scenarios">One calibration, two scenarios<a class="anchor" aria-label="anchor" href="#one-calibration-two-scenarios"></a>
+<h2 id="what">What<a class="anchor" aria-label="anchor" href="#what"></a>
 </h2>
-<p>We use a synthetic linear-Gaussian forward model in place of APSIM so
-the vignette runs without an APSIM install. Replace <code>forward</code>
-with <code>PESTO::apsim_callback(...)</code> to drive a real APSIM
-ensemble.</p>
+<p>The canonical structure is one calibration and two forward runs. The
+ensemble smoother produces a single parameter posterior; that posterior
+is pushed forward under each management scenario; and the question
+becomes a balanced two-sample comparison on the outputs.</p>
+<p><code><a href="https://max578.github.io/PESTO/reference/pesto_ies_callback.html" class="external-link">PESTO::pesto_ies_callback()</a></code> runs the ensemble smoother
+in process against any R forward model, and
+<code><a href="https://max578.github.io/PESTO/reference/apsim_callback.html" class="external-link">PESTO::apsim_callback()</a></code> is the adapter that makes a real
+APSIM run play that part. <code><a href="https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html" class="external-link">PESTO::pesto_ensemble_manifest()</a></code>
+packages a run as the orchestra’s manifest object, the C2 contract in
+the federation’s contract index: the parameter ensemble, the output
+ensemble, the observation targets, the weights, and the provenance
+fields that make two runs comparable or prove that they are not.</p>
+<p><code><a href="../reference/dr_date_scenario.html">dr_date_scenario()</a></code> takes two of those manifests and runs
+the DR-DATE statistic of Fawkes, Hu, Evans and Sejdinovic (2024) over
+their outputs. When the two manifests share a parameter posterior, the
+doubly robust correction collapses to a balanced Maximum Mean
+Discrepancy on the outputs. When they do not, because the two scenarios
+were calibrated against different data, the doubly robust adjustment
+absorbs the covariate shift in parameter space, provided positivity
+holds. <code>output</code> restricts the test to named observation
+columns.</p>
+</div>
+<div class="section level2">
+<h2 id="do">Do<a class="anchor" aria-label="anchor" href="#do"></a>
+</h2>
+<div class="section level3">
+<h3 id="one-calibration">One calibration<a class="anchor" aria-label="anchor" href="#one-calibration"></a>
+</h3>
+<p>A synthetic linear-Gaussian forward model stands in for APSIM so that
+this vignette runs without a simulator installed. Replace
+<code>forward</code> with <code><a href="https://max578.github.io/PESTO/reference/apsim_callback.html" class="external-link">PESTO::apsim_callback()</a></code> to drive
+a real ensemble.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">npar</span>  <span class="op">&lt;-</span> <span class="fl">2L</span></span>
-<span><span class="va">nobs</span>  <span class="op">&lt;-</span> <span class="fl">4L</span></span>
-<span><span class="va">nreal</span> <span class="op">&lt;-</span> <span class="fl">60L</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">20260516L</span><span class="op">)</span></span>
+<span><span class="va">n_par</span> <span class="op">&lt;-</span> <span class="fl">2L</span></span>
+<span><span class="va">n_obs</span> <span class="op">&lt;-</span> <span class="fl">4L</span></span>
+<span><span class="va">n_real</span> <span class="op">&lt;-</span> <span class="fl">60L</span></span>
 <span><span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">0.05</span></span>
 <span></span>
-<span><span class="va">G</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">nobs</span> <span class="op">*</span> <span class="va">npar</span><span class="op">)</span>, <span class="va">nobs</span>, <span class="va">npar</span><span class="op">)</span></span>
-<span><span class="va">y_obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">G</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.0</span>, <span class="op">-</span><span class="fl">0.5</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">nobs</span>, sd <span class="op">=</span> <span class="va">sigma</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">y_obs</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"o"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">nobs</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">design_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span> <span class="op">*</span> <span class="va">n_par</span><span class="op">)</span>, <span class="va">n_obs</span>, <span class="va">n_par</span><span class="op">)</span></span>
+<span><span class="va">y_obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">design_matrix</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.0</span>, <span class="op">-</span><span class="fl">0.5</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span>, sd <span class="op">=</span> <span class="va">sigma</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">y_obs</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"o"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_obs</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">prior</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">nreal</span> <span class="op">*</span> <span class="va">npar</span><span class="op">)</span>, <span class="va">nreal</span>, <span class="va">npar</span>,</span>
-<span>                dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"p1"</span>, <span class="st">"p2"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">forward</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span> <span class="va">theta</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">G</span><span class="op">)</span></span></code></pre></div>
-<p>Calibrate <strong>once</strong> with PESTO’s in-process IES
-driver:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://max578.github.io/PESTO/reference/pesto_ies_callback.html" class="external-link">pesto_ies_callback</a></span><span class="op">(</span></span>
-<span>  forward_model  <span class="op">=</span> <span class="va">forward</span>,</span>
-<span>  prior_ensemble <span class="op">=</span> <span class="va">prior</span>,</span>
-<span>  obs            <span class="op">=</span> <span class="va">y_obs</span>,</span>
-<span>  obs_sd         <span class="op">=</span> <span class="va">sigma</span>,</span>
-<span>  noptmax        <span class="op">=</span> <span class="fl">3L</span>,</span>
-<span>  verbose        <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="va">prior</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_real</span> <span class="op">*</span> <span class="va">n_par</span><span class="op">)</span>, <span class="va">n_real</span>, <span class="va">n_par</span>,</span>
+<span>  dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"p1"</span>, <span class="st">"p2"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">forward</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span> <span class="va">theta</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">design_matrix</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">fit_ies</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://max578.github.io/PESTO/reference/pesto_ies_callback.html" class="external-link">pesto_ies_callback</a></span><span class="op">(</span></span>
+<span>  forward_model <span class="op">=</span> <span class="va">forward</span>, prior_ensemble <span class="op">=</span> <span class="va">prior</span>, obs <span class="op">=</span> <span class="va">y_obs</span>,</span>
+<span>  obs_sd <span class="op">=</span> <span class="va">sigma</span>, noptmax <span class="op">=</span> <span class="fl">3L</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Now forward-simulate that posterior under two scenarios. The
-intervention here is a deterministic shift on the outputs — in a real ag
-application this would be e.g. a stubble-retention management rule that
-changes APSIM’s predicted yield trajectory.</p>
+</div>
+<div class="section level3">
+<h3 id="two-forward-runs-from-that-one-posterior">Two forward runs from that one posterior<a class="anchor" aria-label="anchor" href="#two-forward-runs-from-that-one-posterior"></a>
+</h3>
+<p>The intervention here is a deterministic shift of 0.6 on every
+output. In an agricultural application it would be a management rule
+that changes the simulated yield trajectory.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">par_post</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span></span>
+<span>  <span class="va">fit_ies</span><span class="op">$</span><span class="va">par_ensemble</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"p1"</span>, <span class="st">"p2"</span><span class="op">)</span>, with <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">out_baseline</span> <span class="op">&lt;-</span> <span class="va">par_post</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">design_matrix</span><span class="op">)</span></span>
+<span><span class="va">out_intervention</span> <span class="op">&lt;-</span> <span class="va">out_baseline</span> <span class="op">+</span> <span class="fl">0.6</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">out_baseline</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">y_obs</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">out_intervention</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">y_obs</span><span class="op">)</span></span></code></pre></div>
+<p>Each scenario is wrapped as a manifest. The two share the same
+parameter posterior, which is what makes this the canonical
+construction.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">par_post</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">par_ensemble</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"p1"</span>, <span class="st">"p2"</span><span class="op">)</span>, with <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="va">out_base</span>   <span class="op">&lt;-</span> <span class="va">par_post</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">G</span><span class="op">)</span></span>
-<span><span class="va">out_intv</span>   <span class="op">&lt;-</span> <span class="va">out_base</span> <span class="op">+</span> <span class="fl">0.6</span>                       <span class="co"># the intervention</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">out_base</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">out_intv</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">y_obs</span><span class="op">)</span></span></code></pre></div>
-<p>Wrap each scenario as a manifest. <strong>The two manifests share the
-same parameter posterior</strong> — that’s the canonical structure.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">real_names</span> <span class="op">&lt;-</span> <span class="va">fit</span><span class="op">$</span><span class="va">par_ensemble</span><span class="op">$</span><span class="va">real_name</span></span>
+<code class="sourceCode R"><span><span class="va">real_names</span> <span class="op">&lt;-</span> <span class="va">fit_ies</span><span class="op">$</span><span class="va">par_ensemble</span><span class="op">$</span><span class="va">real_name</span></span>
 <span></span>
-<span><span class="va">m_baseline</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html" class="external-link">pesto_ensemble_manifest</a></span><span class="op">(</span></span>
-<span>  run_id          <span class="op">=</span> <span class="st">"wagga_baseline_2026"</span>,</span>
-<span>  params          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>real_name <span class="op">=</span> <span class="va">real_names</span>, <span class="va">par_post</span>,</span>
-<span>                               check.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
-<span>  outputs         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>real_name <span class="op">=</span> <span class="va">real_names</span>, <span class="va">out_base</span>,</span>
-<span>                               check.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
-<span>  weights         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">/</span> <span class="va">sigma</span>, <span class="va">nobs</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">y_obs</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  obs_target      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="va">y_obs</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">y_obs</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  data_hash       <span class="op">=</span> <span class="st">"sha256:vignette_baseline"</span>,</span>
-<span>  pesto_version   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"PESTO"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  timestamp       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  method          <span class="op">=</span> <span class="st">"ies_callback"</span>,</span>
-<span>  noptmax         <span class="op">=</span> <span class="fl">3L</span>,</span>
-<span>  lambda_schedule <span class="op">=</span> <span class="fl">1</span></span>
-<span><span class="op">)</span></span>
+<span><span class="va">make_manifest</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">run_id</span>, <span class="va">outputs</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html" class="external-link">pesto_ensemble_manifest</a></span><span class="op">(</span></span>
+<span>    run_id <span class="op">=</span> <span class="va">run_id</span>,</span>
+<span>    params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>real_name <span class="op">=</span> <span class="va">real_names</span>, <span class="va">par_post</span>,</span>
+<span>                        check.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>    outputs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>real_name <span class="op">=</span> <span class="va">real_names</span>, <span class="va">outputs</span>,</span>
+<span>                         check.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>    weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">/</span> <span class="va">sigma</span>, <span class="va">n_obs</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">y_obs</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    obs_target <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="va">y_obs</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">y_obs</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    data_hash <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"sha256:vignette_"</span>, <span class="va">run_id</span><span class="op">)</span>,</span>
+<span>    pesto_version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"PESTO"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    timestamp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    method <span class="op">=</span> <span class="st">"ies_callback"</span>,</span>
+<span>    noptmax <span class="op">=</span> <span class="fl">3L</span>,</span>
+<span>    lambda_schedule <span class="op">=</span> <span class="fl">1</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span></span>
 <span></span>
-<span><span class="va">m_intervention</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html" class="external-link">pesto_ensemble_manifest</a></span><span class="op">(</span></span>
-<span>  run_id          <span class="op">=</span> <span class="st">"wagga_stubble_2026"</span>,</span>
-<span>  params          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>real_name <span class="op">=</span> <span class="va">real_names</span>, <span class="va">par_post</span>,</span>
-<span>                               check.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,     <span class="co"># SAME params</span></span>
-<span>  outputs         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>real_name <span class="op">=</span> <span class="va">real_names</span>, <span class="va">out_intv</span>,</span>
-<span>                               check.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
-<span>  weights         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">/</span> <span class="va">sigma</span>, <span class="va">nobs</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">y_obs</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  obs_target      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="va">y_obs</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">y_obs</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  data_hash       <span class="op">=</span> <span class="st">"sha256:vignette_intervention"</span>,</span>
-<span>  pesto_version   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"PESTO"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  timestamp       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  method          <span class="op">=</span> <span class="st">"ies_callback"</span>,</span>
-<span>  noptmax         <span class="op">=</span> <span class="fl">3L</span>,</span>
-<span>  lambda_schedule <span class="op">=</span> <span class="fl">1</span></span>
-<span><span class="op">)</span></span>
+<span><span class="va">m_baseline</span> <span class="op">&lt;-</span> <span class="fu">make_manifest</span><span class="op">(</span><span class="st">"wagga_baseline_2026"</span>, <span class="va">out_baseline</span><span class="op">)</span></span>
+<span><span class="va">m_intervention</span> <span class="op">&lt;-</span> <span class="fu">make_manifest</span><span class="op">(</span><span class="st">"wagga_stubble_2026"</span>, <span class="va">out_intervention</span><span class="op">)</span></span>
 <span><span class="va">m_baseline</span></span>
 <span><span class="co">#&gt; &lt;pesto_ensemble_manifest&gt; schema 1.1.0</span></span>
 <span><span class="co">#&gt;   run_id        : wagga_baseline_2026</span></span>
@@ -175,33 +198,31 @@ same parameter posterior</strong> — that’s the canonical structure.</p>
 <span><span class="co">#&gt;   ensemble      : 60 realisations x 2 parameters | 4 observations</span></span>
 <span><span class="co">#&gt;   failure rate  : 0.00%</span></span>
 <span><span class="co">#&gt;   pesto version : 0.10.1  apsim: NA</span></span>
-<span><span class="co">#&gt;   timestamp     : 2026-08-25T10:15:47+0000</span></span>
-<span><span class="co">#&gt;   data hash     : sha256:vignette_baseline</span></span></code></pre></div>
-<p>In production you would build these manifests via
-<code><a href="https://max578.github.io/PESTO/reference/as_manifest.html" class="external-link">as_manifest()</a></code> on two separate IES runs <em>only when the
-scenarios genuinely produced different calibration data</em>. For the
-“did the intervention shift the forward outputs?” question, the
-same-posterior construction above is the right one.</p>
+<span><span class="co">#&gt;   timestamp     : 2026-09-02T08:20:50+0000</span></span>
+<span><span class="co">#&gt;   data hash     : sha256:vignette_wagga_baseline_2026</span></span></code></pre></div>
+<p>In production the two manifests come from
+<code><a href="https://max578.github.io/PESTO/reference/as_manifest.html" class="external-link">PESTO::as_manifest()</a></code> on two separate calibrations, but only
+when the scenarios genuinely produced different calibration data. For
+the question <em>did the intervention shift the forward outputs?</em>
+the shared-posterior construction above is the right one.</p>
 </div>
-<div class="section level2">
-<h2 id="run-the-dr-date-scenario-test">Run the DR-DATE scenario test<a class="anchor" aria-label="anchor" href="#run-the-dr-date-scenario-test"></a>
-</h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dr_date_scenario.html">dr_date_scenario</a></span><span class="op">(</span></span>
-<span>  baseline       <span class="op">=</span> <span class="va">m_baseline</span>,</span>
-<span>  intervention   <span class="op">=</span> <span class="va">m_intervention</span>,</span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">299L</span>,</span>
-<span>  seed           <span class="op">=</span> <span class="fl">1L</span></span>
+<div class="section level3">
+<h3 id="the-scenario-test">The scenario test<a class="anchor" aria-label="anchor" href="#the-scenario-test"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res_shift</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dr_date_scenario.html">dr_date_scenario</a></span><span class="op">(</span></span>
+<span>  baseline <span class="op">=</span> <span class="va">m_baseline</span>, intervention <span class="op">=</span> <span class="va">m_intervention</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">299L</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>
+<span><span class="va">res_shift</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    DR-DATE (scenario) Test</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Statistic: 0.788964 </span></span>
+<span><span class="co">#&gt; Statistic: 0.800734 </span></span>
 <span><span class="co">#&gt; P-value:   0.0033 </span></span>
 <span><span class="co">#&gt; N:         120 </span></span>
 <span><span class="co">#&gt; Perms:     299 </span></span>
-<span><span class="co">#&gt; Kernel Y:  rbf (bw = 1.199)</span></span>
+<span><span class="co">#&gt; Kernel Y:  rbf (bw = 1.193)</span></span>
 <span><span class="co">#&gt; ESS:       59.4 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Scenario contrast</span></span>
@@ -211,105 +232,203 @@ same-posterior construction above is the right one.</p>
 <span><span class="co">#&gt;   PESTO versions: baseline=0.10.1, intervention=0.10.1</span></span>
 <span><span class="co">#&gt;   fidelity      : baseline=single, intervention=single</span></span>
 <span><span class="co">#&gt;   Verdict:        REJECT (distributions differ; intervention has effect)</span></span></code></pre></div>
-<p>With a clear distributional shift, the test should reject and return
-a low <code>p_value</code>. The <code>Verdict</code> line gives the
-directly actionable read.</p>
 </div>
-<div class="section level2">
-<h2 id="null-case-same-outputs">Null case — same outputs<a class="anchor" aria-label="anchor" href="#null-case-same-outputs"></a>
-</h2>
-<p>If the intervention has no effect (shift = 0), the two output
-distributions are identical and the test should fail to reject:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">out_null</span> <span class="op">&lt;-</span> <span class="va">out_base</span>                       <span class="co"># no intervention effect</span></span>
-<span><span class="va">m_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://max578.github.io/PESTO/reference/pesto_ensemble_manifest.html" class="external-link">pesto_ensemble_manifest</a></span><span class="op">(</span></span>
-<span>  run_id          <span class="op">=</span> <span class="st">"wagga_baseline_replicate"</span>,</span>
-<span>  params          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>real_name <span class="op">=</span> <span class="va">real_names</span>, <span class="va">par_post</span>,</span>
-<span>                               check.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
-<span>  outputs         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>real_name <span class="op">=</span> <span class="va">real_names</span>, <span class="va">out_null</span>,</span>
-<span>                               check.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
-<span>  weights         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">/</span> <span class="va">sigma</span>, <span class="va">nobs</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">y_obs</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  obs_target      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="va">y_obs</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">y_obs</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  data_hash       <span class="op">=</span> <span class="st">"sha256:vignette_null"</span>,</span>
-<span>  pesto_version   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"PESTO"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  timestamp       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  method          <span class="op">=</span> <span class="st">"ies_callback"</span>,</span>
-<span>  noptmax         <span class="op">=</span> <span class="fl">3L</span>,</span>
-<span>  lambda_schedule <span class="op">=</span> <span class="fl">1</span></span>
-<span><span class="op">)</span></span>
+<div class="section level3">
+<h3 id="the-null-case">The null case<a class="anchor" aria-label="anchor" href="#the-null-case"></a>
+</h3>
+<p>The same comparison against a replicate of the baseline, with no
+intervention effect at all.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">m_replicate</span> <span class="op">&lt;-</span> <span class="fu">make_manifest</span><span class="op">(</span><span class="st">"wagga_baseline_replicate"</span>, <span class="va">out_baseline</span><span class="op">)</span></span>
 <span><span class="va">res_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dr_date_scenario.html">dr_date_scenario</a></span><span class="op">(</span></span>
-<span>  baseline       <span class="op">=</span> <span class="va">m_baseline</span>,</span>
-<span>  intervention   <span class="op">=</span> <span class="va">m_null</span>,</span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">299L</span>,</span>
-<span>  seed           <span class="op">=</span> <span class="fl">2L</span></span>
+<span>  baseline <span class="op">=</span> <span class="va">m_baseline</span>, intervention <span class="op">=</span> <span class="va">m_replicate</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">299L</span>, seed <span class="op">=</span> <span class="fl">2L</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">res_null</span><span class="op">$</span><span class="va">p_value</span></span>
-<span><span class="co">#&gt; [1] 0.96</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.6333333</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="what-gets-validated">What gets validated<a class="anchor" aria-label="anchor" href="#what-gets-validated"></a>
-</h2>
-<p><code><a href="../reference/dr_date_scenario.html">dr_date_scenario()</a></code> hard-stops if the two manifests don’t
-agree on:</p>
-<ul>
-<li>parameter column names (you can’t compare incompatible priors),</li>
-<li>observation column names (you can’t compare different outputs),</li>
-<li>PESTO major.minor version (forward / backward incompatibility
-safety).</li>
-</ul>
-<p>This is by design — silent comparison of incompatible scenarios is a
-worse failure mode than a noisy abort.</p>
-</div>
-<div class="section level2">
-<h2 id="output-sub-selection">Output sub-selection<a class="anchor" aria-label="anchor" href="#output-sub-selection"></a>
-</h2>
-<p>For ensembles with many output columns, focus the test on the outputs
-of scientific interest with <code>output =</code>:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/dr_date_scenario.html">dr_date_scenario</a></span><span class="op">(</span></span>
-<span>  <span class="va">m_baseline</span>, <span class="va">m_intervention</span>,</span>
-<span>  output         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"o1"</span>, <span class="st">"o3"</span><span class="op">)</span>,     <span class="co"># subset</span></span>
+<div class="section level3">
+<h3 id="restricting-the-test-to-named-outputs">Restricting the test to named outputs<a class="anchor" aria-label="anchor" href="#restricting-the-test-to-named-outputs"></a>
+</h3>
+<p>For an ensemble with many output columns, <code>output</code> focuses
+the comparison on the ones the decision turns on.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res_subset</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dr_date_scenario.html">dr_date_scenario</a></span><span class="op">(</span></span>
+<span>  <span class="va">m_baseline</span>, <span class="va">m_intervention</span>, output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"o1"</span>, <span class="st">"o3"</span><span class="op">)</span>,</span>
 <span>  n_permutations <span class="op">=</span> <span class="fl">99L</span>, seed <span class="op">=</span> <span class="fl">3L</span></span>
-<span><span class="op">)</span><span class="op">$</span><span class="va">outputs_tested</span></span>
-<span><span class="co">#&gt; [1] "o1" "o3"</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span><span class="va">res_subset</span><span class="op">$</span><span class="va">outputs_tested</span></span>
+<span><span class="co">#&gt; [1] "o1" "o3"</span></span>
+<span><span class="va">res_subset</span><span class="op">$</span><span class="va">p_value</span></span>
+<span><span class="co">#&gt; [1] 0.01</span></span></code></pre></div>
+<table class="table">
+<caption>The three scenario comparisons in this vignette.</caption>
+<colgroup>
+<col width="53%">
+<col width="18%">
+<col width="12%">
+<col width="9%">
+<col width="6%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Comparison</th>
+<th align="left">Outputs tested</th>
+<th align="right">Statistic</th>
+<th align="right">p-value</th>
+<th align="right">ESS</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">baseline against intervention</td>
+<td align="left">o1, o2, o3, o4</td>
+<td align="right">0.8007</td>
+<td align="right">0.0033</td>
+<td align="right">59.4</td>
+</tr>
+<tr class="even">
+<td align="left">baseline against a replicate of itself</td>
+<td align="left">o1, o2, o3, o4</td>
+<td align="right">0.0000</td>
+<td align="right">0.6333</td>
+<td align="right">58.7</td>
+</tr>
+<tr class="odd">
+<td align="left">baseline against intervention, two outputs</td>
+<td align="left">o1, o3</td>
+<td align="right">0.9749</td>
+<td align="right">0.0100</td>
+<td align="right">59.4</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3">
+<h3 id="the-figure-the-ensembles-the-test-is-comparing">The figure: the ensembles the test is comparing<a class="anchor" aria-label="anchor" href="#the-figure-the-ensembles-the-test-is-comparing"></a>
+</h3>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ens_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">out_baseline</span><span class="op">)</span>,</span>
+<span>    output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">out_baseline</span><span class="op">)</span>, each <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">out_baseline</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    scenario <span class="op">=</span> <span class="st">"baseline"</span>, stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">out_intervention</span><span class="op">)</span>,</span>
+<span>    output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">out_intervention</span><span class="op">)</span>,</span>
+<span>                 each <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">out_intervention</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    scenario <span class="op">=</span> <span class="st">"intervention"</span>, stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">ens_df</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">value</span>, fill <span class="op">=</span> <span class="va">scenario</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density.html" class="external-link">geom_density</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.55</span>, colour <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">output</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_d</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"scenario"</span>, end <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="st">"simulated output (model units)"</span>, y <span class="op">=</span> <span class="st">"density"</span>,</span>
+<span>    title <span class="op">=</span> <span class="st">"Two scenarios from one calibrated posterior"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
+<div class="figure">
+<img src="kernR-drdate-scenario_files/figure-html/fig-scenarios-1.png" class="r-plt" alt="Forward-simulated output distributions under the two scenarios, one panel per observation column, across the 60 posterior realisations. The intervention shifts every column by the same amount, which is what the scenario test detects as one verdict over all four columns rather than four separate comparisons." width="1050"><p class="caption">
+Forward-simulated output distributions under the two scenarios, one
+panel per observation column, across the 60 posterior realisations. The
+intervention shifts every column by the same amount, which is what the
+scenario test detects as one verdict over all four columns rather than
+four separate comparisons.
+</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="what-the-comparison-refuses-to-do">What the comparison refuses to do<a class="anchor" aria-label="anchor" href="#what-the-comparison-refuses-to-do"></a>
+</h3>
+<p><code><a href="../reference/dr_date_scenario.html">dr_date_scenario()</a></code> stops rather than proceed when the
+two manifests disagree on the parameter column names, because
+incompatible priors cannot be compared; on the observation column names,
+because different outputs cannot be compared; or on the PESTO major and
+minor version, because a manifest written by one version is not
+guaranteed readable as the same object by another. A silent comparison
+of incompatible scenarios is a worse failure than a noisy refusal, which
+is why these are errors and not warnings.</p>
+</div>
 </div>
 <div class="section level2">
-<h2 id="when-parameter-posteriors-genuinely-differ">When parameter posteriors genuinely differ<a class="anchor" aria-label="anchor" href="#when-parameter-posteriors-genuinely-differ"></a>
+<h2 id="read">Read<a class="anchor" aria-label="anchor" href="#read"></a>
 </h2>
-<p>If the two scenarios came from <em>different calibration data</em>
-(so the two PESTO runs produced different posteriors), then
-<code>params</code> will differ between the two manifests. DR-DATE will
-then run its full doubly-robust correction, with one important caveat:
-it assumes <strong>positivity</strong> — every parameter region with
-non-zero baseline density also has non-zero intervention density (and
-vice versa). If the two posteriors are completely separated in parameter
-space, the test will see “perfect separation” in the propensity-model
-fit and become uninformative (<code>p_value ~ 1</code>). For that
-regime, use <code><a href="https://max578.github.io/PESTO/reference/pesto_ies_callback.html" class="external-link">PESTO::pesto_ies_callback()</a></code> with a shared prior
-+ overlapping calibration data, or restrict to outputs whose causal
-pathway is independent of the separating parameters.</p>
+<p>The shifted intervention is detected. The scenario test returns a
+statistic of 0.801 with a p-value of 0.0033, the smallest value 299
+permutations can express, across all 4 output columns of the manifest
+and 60 realisations per scenario. The effective sample size of the
+weights is 59.4 out of 120, and <code>ess_warning</code> is FALSE.</p>
+<p>Comparing the baseline against a replicate of itself returns a
+p-value of 0.633. The two ensembles are the same numbers, so the
+observed statistic is one draw from its own permutation null and the
+test correctly declines to find an effect; a scenario test that rejected
+here would be reporting the permutation scheme rather than the data.</p>
+<p>Restricting to two of the four output columns leaves the verdict
+intact, p-value 0.01 on o1 and o3 at 99 permutations, which is expected
+here because the intervention shifted every column equally. On a real
+intervention that moved one output and not another, the restricted and
+unrestricted tests would part company, and the restricted one is the
+question worth asking.</p>
+<p>The figure shows what the single verdict is summarising: four pairs
+of distributions, each pair separated by the same displacement. The test
+does not report four p-values with a multiplicity problem; it reports
+one verdict over the joint output, which is why the manifest carries all
+four columns rather than being called once per column.</p>
 </div>
 <div class="section level2">
-<h2 id="where-the-cross-package-plumbing-lives">Where the cross-package plumbing lives<a class="anchor" aria-label="anchor" href="#where-the-cross-package-plumbing-lives"></a>
+<h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
+</h2>
+<p>The forward model here is a synthetic linear-Gaussian stand-in and
+the intervention is a constant displacement, so this vignette
+demonstrates the plumbing and the verdict, not the behaviour of a crop
+model under a management change. The shared-posterior construction is
+the easy case: the doubly robust correction has nothing to correct, and
+the test reduces to a balanced two-sample comparison. When the two
+scenarios come from <em>different</em> calibration data the parameter
+posteriors differ, the full doubly robust correction runs, and it
+assumes positivity: every parameter region with non-zero density under
+one scenario must have non-zero density under the other. Two completely
+separated posteriors give the propensity model perfect separation and
+the test becomes uninformative, returning a p-value near one; the way
+out is a shared prior with overlapping calibration data, or a
+restriction to outputs whose causal pathway does not involve the
+separating parameters. The proxymix density-ratio backend that
+<code><a href="../reference/bd_hsic_test.html">bd_hsic_test()</a></code> already offers, and which <em>Choosing a
+density-ratio backend</em> compares, is not among this function’s
+propensity options. Finally the null case is a single draw and
+demonstrates a verdict, not a type-I error rate.</p>
+</div>
+<div class="section level2">
+<h2 id="what-to-read-next">What to read next<a class="anchor" aria-label="anchor" href="#what-to-read-next"></a>
+</h2>
+<p><em>A treatment that changes the spread and not the mean</em> is the
+same DR-DATE statistic applied to a field record rather than a pair of
+simulator ensembles, and explains the doubly robust construction. <em>Is
+the calibrated model right about more than the mean?</em> asks the other
+question one puts to a calibrated ensemble: not whether two scenarios
+differ, but whether either of them is consistent with data held out of
+the calibration. <em>Which parameters are worth calibrating?</em> covers
+the screen that decides which parameters enter the calibration in the
+first place.</p>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <ul>
-<li>Forward-model run: <code><a href="https://max578.github.io/PESTO/reference/pesto_ies_callback.html" class="external-link">PESTO::pesto_ies_callback()</a></code>
-(in-process R callback) or <code><a href="https://max578.github.io/PESTO/reference/apsim_callback.html" class="external-link">PESTO::apsim_callback()</a></code> (apsimx
-adapter).</li>
-<li>Run capture: <code><a href="https://max578.github.io/PESTO/reference/as_manifest.html" class="external-link">PESTO::as_manifest()</a></code> →
-<code>pesto_ensemble_manifest</code>.</li>
-<li>Persistence: <code><a href="https://max578.github.io/PESTO/reference/write_manifest.html" class="external-link">PESTO::write_manifest()</a></code> /
-<code><a href="https://max578.github.io/PESTO/reference/read_manifest.html" class="external-link">PESTO::read_manifest()</a></code> /
-<code><a href="https://max578.github.io/PESTO/reference/verify_manifest.html" class="external-link">PESTO::verify_manifest()</a></code>.</li>
-<li>Distributional verdict: this function.</li>
-<li>(Future) proxymix density-ratio backend plug-in: tracked under §C1
-of the roadmap; will become a fourth propensity-model option once it
-lands.</li>
+<li>Fawkes, J., Hu, R., Evans, R. J., &amp; Sejdinovic, D. (2024).
+Doubly robust kernel statistics for testing distributional treatment
+effects. <em>Transactions on Machine Learning Research</em>.</li>
 </ul>
 </div>
 <div class="section level2">
-<h2 id="reproducibility">Reproducibility<a class="anchor" aria-label="anchor" href="#reproducibility"></a>
+<h2 id="reproduce">Reproduce<a class="anchor" aria-label="anchor" href="#reproduce"></a>
 </h2>
+<p>Seed <code>20260516</code> for the synthetic forward model,
+observations and prior ensemble; <code>seed</code> values
+<code>1</code>, <code>2</code> and <code>3</code> for the three scenario
+tests. The manifests record PESTO 0.10.1. Package versions follow.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
@@ -339,16 +458,17 @@ lands.</li>
 <span><span class="co">#&gt;  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.51         </span></span>
 <span><span class="co">#&gt;  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         </span></span>
 <span><span class="co">#&gt;  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  </span></span>
-<span><span class="co">#&gt; [10] jsonlite_2.0.0      data.table_1.18.6.1 glue_1.8.1         </span></span>
-<span><span class="co">#&gt; [13] htmltools_0.5.9     ragg_1.5.2          sass_0.4.10        </span></span>
-<span><span class="co">#&gt; [16] scales_1.4.0        rmarkdown_2.31      grid_4.6.1         </span></span>
-<span><span class="co">#&gt; [19] evaluate_1.0.5      jquerylib_0.1.4     fastmap_1.2.0      </span></span>
-<span><span class="co">#&gt; [22] yaml_2.3.12         lifecycle_1.0.5     compiler_4.6.1     </span></span>
-<span><span class="co">#&gt; [25] RColorBrewer_1.1-3  fs_2.1.0            Rcpp_1.1.2         </span></span>
-<span><span class="co">#&gt; [28] farver_2.1.2        systemfonts_1.3.2   digest_0.6.39      </span></span>
-<span><span class="co">#&gt; [31] R6_2.6.1            bslib_0.12.0        gtable_0.3.6       </span></span>
-<span><span class="co">#&gt; [34] tools_4.6.1         ggplot2_4.0.3       pkgdown_2.2.1      </span></span>
-<span><span class="co">#&gt; [37] cachem_1.1.0        desc_1.4.3</span></span></code></pre></div>
+<span><span class="co">#&gt; [10] data.table_1.18.6.1 jsonlite_2.0.0      labeling_0.4.3     </span></span>
+<span><span class="co">#&gt; [13] glue_1.8.1          htmltools_0.5.9     ragg_1.5.2         </span></span>
+<span><span class="co">#&gt; [16] sass_0.4.10         scales_1.4.0        rmarkdown_2.32     </span></span>
+<span><span class="co">#&gt; [19] grid_4.6.1          evaluate_1.0.5      jquerylib_0.1.4    </span></span>
+<span><span class="co">#&gt; [22] fastmap_1.2.0       yaml_2.3.12         lifecycle_1.0.5    </span></span>
+<span><span class="co">#&gt; [25] compiler_4.6.1      RColorBrewer_1.1-3  fs_2.1.0           </span></span>
+<span><span class="co">#&gt; [28] Rcpp_1.1.2          farver_2.1.2        systemfonts_1.3.2  </span></span>
+<span><span class="co">#&gt; [31] digest_0.6.39       viridisLite_0.4.3   R6_2.6.1           </span></span>
+<span><span class="co">#&gt; [34] bslib_0.12.0        withr_3.0.3         tools_4.6.1        </span></span>
+<span><span class="co">#&gt; [37] gtable_0.3.6        pkgdown_2.2.1       ggplot2_4.0.3      </span></span>
+<span><span class="co">#&gt; [40] cachem_1.1.0        desc_1.4.3</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

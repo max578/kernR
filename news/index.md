@@ -2,6 +2,30 @@
 
 ## kernR (development version)
 
+- All thirteen vignettes were rewritten to the orchestra vignette
+  quality bar: each opens with the question its reader would ask and
+  answers it explicitly, carries a human-readable title, follows a fixed
+  Why / What / Do / Read / Limits / What to read next / Reproduce shape,
+  computes every number in its prose rather than asserting it, and
+  closes with its seed and
+  [`sessionInfo()`](https://rdrr.io/r/utils/sessionInfo.html). Three
+  claims that the previous text asserted without computing did not
+  survive the rewrite and are now reported as measured: the HSIC
+  sensitivity scan needs a 600-row design, not 200, before the
+  mean-preserving variance parameter clears the adjusted threshold, and
+  the heavy-tail parameter still does not; the linear and Gaussian outer
+  kernels of
+  [`dist_regression()`](https://max578.github.io/kernR/reference/dist_regression.md)
+  recover a bag’s spread equally well, because the inner embedding
+  already carries it; and the four density-ratio backends of
+  [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
+  disagree on a confounded design, because the backend’s weights also
+  determine the permutation clustering.
+  [`kernel_downscale()`](https://max578.github.io/kernR/reference/kernel_downscale.md)
+  is now shown on standardised inputs, which is what the shared
+  median-heuristic bandwidth requires. Figures are `ggplot2`, which
+  joins `Suggests`.
+
 - The manifest integrity hash uses
   [`digest::digest()`](https://eddelbuettel.github.io/digest/man/digest.html)
   instead of
@@ -49,6 +73,28 @@
   format 2 with its fixed 14-byte header dropped before hashing, so the
   digest is reproducible across R versions and recomputable by a
   consumer.
+
+- [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
+  and
+  [`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)
+  now stamp a typed `kernR_abstention` marker on their result when a
+  reliability gate fails (the ESS floor and the proxymix density-ratio
+  fit-quality gate for
+  [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md);
+  the TACI posterior-adequacy guard for
+  [`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)).
+  This is recognised by the orchestra’s `is_orchestra_decline()`
+  predicate via the `_(refusal|abstention)$` class-name convention, and
+  by the new
+  [`is_kernR_abstention()`](https://max578.github.io/kernR/reference/is_kernR_abstention.md)
+  predicate exported here – previously these gates only set a field and
+  emitted a [`warning()`](https://rdrr.io/r/base/warning.html), so a
+  cross-member gate reading only the class had no way to tell a reliable
+  verdict from an unreliable one.
+  [`as_orchestra_manifest()`](https://max578.github.io/kernR/reference/as_orchestra_manifest.md)’s
+  `summary$abstained` is now read off this marker instead of re-deriving
+  it from the same raw flags a second time. Nothing about which results
+  are flagged unreliable has changed.
 
 ### Documentation
 
@@ -1125,7 +1171,8 @@ family of RKHS regression methods.
 - `R CMD check --as-cran` is now **0 errors / 2 WARNINGs / 0 NOTES**;
   the remaining WARNINGs are the toolchain-level non-portable Makevars
   flags (`-Wno-unused-command-line-argument`, `-mcpu=native`), restored
-  at the FLIBS portability release-gate ritual per workspace CLAUDE.md.
+  at the FLIBS portability release-gate ritual, per the workspace’s
+  release-gate procedure.
 
 ### kernR 0.0.0.9003
 

@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Hierarchical and Nested Data • kernR</title>
+<title>When plots sit inside farms • kernR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Hierarchical and Nested Data">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="When plots sit inside farms">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,10 +33,10 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting Started with kernR</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Causal Association Testing with bd-HSIC</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">Distributional Treatment Effect Tests (DR-DATE / DR-DETT)</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">Hierarchical and Nested Data</a></li>
+<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting started with kernR</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Does the treatment cause the outcome, or do they share a cause?</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">A treatment that changes the spread and not the mean</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">When plots sit inside farms</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -58,11 +58,8 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Hierarchical and Nested Data</h1>
-                        <h4 data-toc-skip class="author">Max
-Moldovan</h4>
+      <h1>When plots sit inside farms</h1>
             
-            <h4 data-toc-skip class="date">2026-08-25</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/max578/kernR/blob/main/vignettes/kernR-hierarchical.Rmd" class="external-link"><code>vignettes/kernR-hierarchical.Rmd</code></a></small>
       <div class="d-none name"><code>kernR-hierarchical.Rmd</code></div>
@@ -70,169 +67,272 @@ Moldovan</h4>
 
     
     
+<!-- Render time: ~11 s under rmarkdown::render(); macOS aarch64, R 4.5.2,
+     one core. Five hierarchical DR-DATE tests at 99 within-cluster
+     permutations on 600 observations in 20 clusters; the permutation loop
+     dominates. -->
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
-<h2 id="why-hierarchy-matters">Why Hierarchy Matters<a class="anchor" aria-label="anchor" href="#why-hierarchy-matters"></a>
+<h2 id="why">Why<a class="anchor" aria-label="anchor" href="#why"></a>
 </h2>
-<p>Many real-world datasets have nested structure:</p>
-<ul>
-<li>Patients within hospitals</li>
-<li>Students within schools</li>
-<li>Plots within farms</li>
-<li>Repeated measures within subjects</li>
-</ul>
-<p>Standard kernel tests assume independent observations. When
-observations are clustered, <strong>within-cluster correlation inflates
-type I error</strong>. <code><a href="../reference/hierarchical_test.html">hierarchical_test()</a></code> accounts for
-this by decomposing the test statistic and permuting within
-clusters.</p>
+<p>A trial agronomist has 600 plots, but not 600 independent plots.
+<em>The fertiliser trial ran on twenty farms, thirty plots each. The
+farms differ in ways I did not measure and cannot control for, and every
+test I know assumes my plots are independent, which they plainly are
+not. If I hand the whole file to a two-sample test, am I measuring the
+fertiliser or am I measuring the farms?</em> This vignette answers that
+on a synthetic twenty-farm trial: it shows what the clustered test does
+with the data, how much of the signal is within farms and how much is
+between them, and what the same machinery says when the treatment does
+nothing at all.</p>
 </div>
 <div class="section level2">
-<h2 id="example-agriculture-trial">Example: Agriculture Trial<a class="anchor" aria-label="anchor" href="#example-agriculture-trial"></a>
+<h2 id="what">What<a class="anchor" aria-label="anchor" href="#what"></a>
 </h2>
-<p>Imagine a randomised fertiliser trial across 20 farms, each with 30
-plots.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">n_farms</span> <span class="op">&lt;-</span> <span class="fl">20</span></span>
-<span><span class="va">n_plots</span> <span class="op">&lt;-</span> <span class="fl">30</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="va">n_farms</span> <span class="op">*</span> <span class="va">n_plots</span></span>
-<span><span class="va">farm_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">n_farms</span>, each <span class="op">=</span> <span class="va">n_plots</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Farm-level random effects</span></span>
+<p><code><a href="../reference/hierarchical_test.html">hierarchical_test()</a></code> runs any of the package’s causal
+tests on data with a known grouping, and does two things a flat test
+does not. It <em>decomposes</em> the statistic into a within-cluster
+part – the test run inside each cluster and averaged – and a
+between-cluster part, computed on the cluster-level summaries; and it
+builds the permutation null by shuffling <em>within</em> clusters only,
+so cluster-level variation stays in the null instead of being counted as
+signal.</p>
+<p>The two parts are combined according to <code>weight_method</code>.
+<code>"equal"</code> gives the within and between components the same
+weight; <code>"icc"</code> weights them by the intraclass correlation
+estimated from the data, moving weight to the between component when the
+clusters genuinely differ; <code>"within_only"</code> discards the
+between component, which is the conservative choice when cluster-level
+comparisons are not credible. <code>method</code> selects the test that
+runs inside the decomposition, here <code>"dr-date"</code>, the doubly
+robust distributional treatment-effect test described in <em>A treatment
+that changes the spread and not the mean</em>.</p>
+<p>The result is a <code>kernel_test_result</code> with an extra
+<code>hierarchical</code> element carrying <code>within_stats</code>
+(one statistic per cluster), <code>between_stat</code>,
+<code>n_clusters</code> and the <code>weight_method</code> used.</p>
+</div>
+<div class="section level2">
+<h2 id="do">Do<a class="anchor" aria-label="anchor" href="#do"></a>
+</h2>
+<div class="section level3">
+<h3 id="a-synthetic-twenty-farm-trial">A synthetic twenty-farm trial<a class="anchor" aria-label="anchor" href="#a-synthetic-twenty-farm-trial"></a>
+</h3>
+<p>Twenty farms, thirty plots each. Each farm carries its own random
+effect on yield with standard deviation 2, which is twice the residual
+noise; soil covariates drive treatment assignment, so the design is
+observational rather than randomised; and the treatment has a real
+average effect of 0.8 yield units.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42L</span><span class="op">)</span></span>
+<span><span class="va">n_farms</span> <span class="op">&lt;-</span> <span class="fl">20L</span></span>
+<span><span class="va">n_plots</span> <span class="op">&lt;-</span> <span class="fl">30L</span></span>
+<span><span class="va">n_obs</span> <span class="op">&lt;-</span> <span class="va">n_farms</span> <span class="op">*</span> <span class="va">n_plots</span></span>
+<span><span class="va">farm_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_farms</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n_plots</span><span class="op">)</span></span>
 <span><span class="va">farm_effect</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_farms</span>, sd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">[</span><span class="va">farm_id</span><span class="op">]</span></span>
-<span><span class="va">soil</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span> <span class="op">*</span> <span class="fl">2</span><span class="op">)</span>, <span class="va">n</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Treatment assignment (partially confounded by soil)</span></span>
-<span><span class="va">treatment</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="fl">0.3</span> <span class="op">*</span> <span class="va">soil</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Yield: treatment has a real effect + farm random effect</span></span>
-<span><span class="va">yield</span> <span class="op">&lt;-</span> <span class="fl">0.8</span> <span class="op">*</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">farm_effect</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">soil</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hierarchical_test.html">hierarchical_test</a></span><span class="op">(</span></span>
-<span>  y <span class="op">=</span> <span class="va">yield</span>,</span>
-<span>  treatment <span class="op">=</span> <span class="va">treatment</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="va">soil</span>,</span>
-<span>  cluster_id <span class="op">=</span> <span class="va">farm_id</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"dr-date"</span>,</span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">100</span>,</span>
-<span>  weight_method <span class="op">=</span> <span class="st">"icc"</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="va">soil</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span> <span class="op">*</span> <span class="fl">2L</span><span class="op">)</span>, <span class="va">n_obs</span>, <span class="fl">2L</span><span class="op">)</span></span>
+<span><span class="va">treatment</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n_obs</span>, <span class="fl">1L</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="fl">0.3</span> <span class="op">*</span> <span class="va">soil</span><span class="op">[</span>, <span class="fl">1L</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">yield</span> <span class="op">&lt;-</span> <span class="fl">0.8</span> <span class="op">*</span> <span class="va">treatment</span> <span class="op">+</span> <span class="va">farm_effect</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">soil</span><span class="op">[</span>, <span class="fl">1L</span><span class="op">]</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_icc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hierarchical_test.html">hierarchical_test</a></span><span class="op">(</span></span>
+<span>  y <span class="op">=</span> <span class="va">yield</span>, treatment <span class="op">=</span> <span class="va">treatment</span>, covariates <span class="op">=</span> <span class="va">soil</span>,</span>
+<span>  cluster_id <span class="op">=</span> <span class="va">farm_id</span>, method <span class="op">=</span> <span class="st">"dr-date"</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">99L</span>, weight_method <span class="op">=</span> <span class="st">"icc"</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span></span>
+<span><span class="va">fit_icc</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    Hierarchical-DRDATE Test</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Statistic: 0.00874629 </span></span>
-<span><span class="co">#&gt; P-value:   0.0099 </span></span>
+<span><span class="co">#&gt; P-value:   0.0100 </span></span>
 <span><span class="co">#&gt; N:         600 </span></span>
-<span><span class="co">#&gt; Perms:     100 </span></span>
+<span><span class="co">#&gt; Perms:     99 </span></span>
 <span><span class="co">#&gt; Kernel Y:  rbf (bw = 2.642)</span></span></code></pre></div>
-<p>The test detects the treatment effect while correctly accounting for
-the farm-level clustering.</p>
 </div>
-<div class="section level2">
-<h2 id="decomposition-within-vs-between">Decomposition: Within vs Between<a class="anchor" aria-label="anchor" href="#decomposition-within-vs-between"></a>
-</h2>
-<p>The test provides both components:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Within-cluster average statistic:"</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">hierarchical</span><span class="op">$</span><span class="va">within_stats</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Within-cluster average statistic: 0.09414643</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Between-cluster statistic:"</span>,</span>
-<span>  <span class="va">result</span><span class="op">$</span><span class="va">hierarchical</span><span class="op">$</span><span class="va">between_stat</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Between-cluster statistic: -0.004092593</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Combined statistic:"</span>,</span>
-<span>  <span class="va">result</span><span class="op">$</span><span class="va">statistic</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Combined statistic: 0.008746285</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Weight method:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">hierarchical</span><span class="op">$</span><span class="va">weight_method</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Weight method: icc</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="the-decomposition">The decomposition<a class="anchor" aria-label="anchor" href="#the-decomposition"></a>
+</h3>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">within_mean</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">fit_icc</span><span class="op">$</span><span class="va">hierarchical</span><span class="op">$</span><span class="va">within_stats</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">between</span> <span class="op">&lt;-</span> <span class="va">fit_icc</span><span class="op">$</span><span class="va">hierarchical</span><span class="op">$</span><span class="va">between_stat</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>within_mean <span class="op">=</span> <span class="va">within_mean</span>, between <span class="op">=</span> <span class="va">between</span>,</span>
+<span>        combined <span class="op">=</span> <span class="va">fit_icc</span><span class="op">$</span><span class="va">statistic</span><span class="op">)</span>, <span class="fl">4L</span><span class="op">)</span></span>
+<span><span class="co">#&gt; within_mean     between    combined </span></span>
+<span><span class="co">#&gt;      0.0941     -0.0041      0.0087</span></span>
+<span><span class="va">fit_icc</span><span class="op">$</span><span class="va">hierarchical</span><span class="op">$</span><span class="va">n_clusters</span></span>
+<span><span class="co">#&gt; [1] 20</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="weight-methods">Weight Methods<a class="anchor" aria-label="anchor" href="#weight-methods"></a>
-</h2>
-<table class="table">
-<thead><tr class="header">
-<th>Method</th>
-<th>Behaviour</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code>"equal"</code></td>
-<td>Equal weight to within and between components</td>
-</tr>
-<tr class="even">
-<td><code>"icc"</code></td>
-<td>Weight by ICC (more between-weight when clusters differ)</td>
-</tr>
-<tr class="odd">
-<td><code>"within_only"</code></td>
-<td>Ignore between-cluster variation</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section level2">
-<h2 id="example-no-treatment-effect">Example: No Treatment Effect<a class="anchor" aria-label="anchor" href="#example-no-treatment-effect"></a>
-</h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">yield_null</span> <span class="op">&lt;-</span> <span class="va">farm_effect</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">soil</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="co"># No treatment effect</span></span>
-<span></span>
-<span><span class="va">result_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hierarchical_test.html">hierarchical_test</a></span><span class="op">(</span></span>
-<span>  y <span class="op">=</span> <span class="va">yield_null</span>,</span>
-<span>  treatment <span class="op">=</span> <span class="va">treatment</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="va">soil</span>,</span>
-<span>  cluster_id <span class="op">=</span> <span class="va">farm_id</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"dr-date"</span>,</span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">100</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">1</span></span>
+<div class="section level3">
+<h3 id="the-three-weighting-conventions-on-the-same-data">The three weighting conventions on the same data<a class="anchor" aria-label="anchor" href="#the-three-weighting-conventions-on-the-same-data"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_equal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hierarchical_test.html">hierarchical_test</a></span><span class="op">(</span></span>
+<span>  y <span class="op">=</span> <span class="va">yield</span>, treatment <span class="op">=</span> <span class="va">treatment</span>, covariates <span class="op">=</span> <span class="va">soil</span>,</span>
+<span>  cluster_id <span class="op">=</span> <span class="va">farm_id</span>, method <span class="op">=</span> <span class="st">"dr-date"</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">99L</span>, weight_method <span class="op">=</span> <span class="st">"equal"</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"P-value under null:"</span>, <span class="va">result_null</span><span class="op">$</span><span class="va">p_value</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; P-value under null: 0.3663366</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="when-to-use-hierarchical-tests">When to Use Hierarchical Tests<a class="anchor" aria-label="anchor" href="#when-to-use-hierarchical-tests"></a>
-</h2>
+<span><span class="va">fit_within</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hierarchical_test.html">hierarchical_test</a></span><span class="op">(</span></span>
+<span>  y <span class="op">=</span> <span class="va">yield</span>, treatment <span class="op">=</span> <span class="va">treatment</span>, covariates <span class="op">=</span> <span class="va">soil</span>,</span>
+<span>  cluster_id <span class="op">=</span> <span class="va">farm_id</span>, method <span class="op">=</span> <span class="st">"dr-date"</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">99L</span>, weight_method <span class="op">=</span> <span class="st">"within_only"</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <table class="table">
+<caption>The same trial under the three weighting conventions, each
+against a 99-draw within-cluster permutation null.</caption>
 <colgroup>
-<col width="40%">
+<col width="17%">
 <col width="60%">
+<col width="12%">
+<col width="9%">
 </colgroup>
 <thead><tr class="header">
-<th>Scenario</th>
-<th>Recommendation</th>
+<th align="left">weight_method</th>
+<th align="left">Behaviour</th>
+<th align="right">Statistic</th>
+<th align="right">p-value</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Independent observations</td>
-<td>Use standard <code><a href="../reference/dr_date_test.html">dr_date_test()</a></code> /
-<code><a href="../reference/bd_hsic_test.html">bd_hsic_test()</a></code>
-</td>
+<td align="left">equal</td>
+<td align="left">within and between weighted alike</td>
+<td align="right">0.0450</td>
+<td align="right">0.01</td>
 </tr>
 <tr class="even">
-<td>Clustered data (known groups)</td>
-<td>Use <code><a href="../reference/hierarchical_test.html">hierarchical_test()</a></code> with
-<code>cluster_id</code>
-</td>
+<td align="left">icc</td>
+<td align="left">weighted by the estimated intraclass correlation</td>
+<td align="right">0.0087</td>
+<td align="right">0.01</td>
 </tr>
 <tr class="odd">
-<td>Few large clusters</td>
-<td><code>weight_method = "icc"</code></td>
-</tr>
-<tr class="even">
-<td>Many small clusters</td>
-<td><code>weight_method = "equal"</code></td>
-</tr>
-<tr class="odd">
-<td>Unsure about between-cluster effects</td>
-<td>
-<code>weight_method = "within_only"</code> (conservative)</td>
+<td align="left">within_only</td>
+<td align="left">between component discarded</td>
+<td align="right">0.0941</td>
+<td align="right">0.01</td>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+</div>
+<div class="section level3">
+<h3 id="the-same-trial-with-no-treatment-effect">The same trial with no treatment effect<a class="anchor" aria-label="anchor" href="#the-same-trial-with-no-treatment-effect"></a>
+</h3>
+<p>The identical farms, plots, soil and treatment assignment, with the
+treatment term removed from the yield.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42L</span><span class="op">)</span></span>
+<span><span class="va">yield_null</span> <span class="op">&lt;-</span> <span class="va">farm_effect</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">soil</span><span class="op">[</span>, <span class="fl">1L</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span><span class="op">)</span></span>
+<span><span class="va">fit_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hierarchical_test.html">hierarchical_test</a></span><span class="op">(</span></span>
+<span>  y <span class="op">=</span> <span class="va">yield_null</span>, treatment <span class="op">=</span> <span class="va">treatment</span>, covariates <span class="op">=</span> <span class="va">soil</span>,</span>
+<span>  cluster_id <span class="op">=</span> <span class="va">farm_id</span>, method <span class="op">=</span> <span class="st">"dr-date"</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">99L</span>, weight_method <span class="op">=</span> <span class="st">"icc"</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">fit_null</span><span class="op">$</span><span class="va">p_value</span></span>
+<span><span class="co">#&gt; [1] 0.36</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="the-figure-where-the-signal-sits">The figure: where the signal sits<a class="anchor" aria-label="anchor" href="#the-figure-where-the-signal-sits"></a>
+</h3>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">within_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  farm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">fit_icc</span><span class="op">$</span><span class="va">hierarchical</span><span class="op">$</span><span class="va">within_stats</span><span class="op">)</span>,</span>
+<span>  statistic <span class="op">=</span> <span class="va">fit_icc</span><span class="op">$</span><span class="va">hierarchical</span><span class="op">$</span><span class="va">within_stats</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">within_df</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">farm</span>, y <span class="op">=</span> <span class="va">statistic</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="st">"#440154"</span>, size <span class="op">=</span> <span class="fl">2.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span></span>
+<span>    yintercept <span class="op">=</span> <span class="va">within_mean</span>, colour <span class="op">=</span> <span class="st">"#21918c"</span>, linewidth <span class="op">=</span> <span class="fl">0.9</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span></span>
+<span>    yintercept <span class="op">=</span> <span class="va">between</span>, colour <span class="op">=</span> <span class="st">"#FDE725"</span>, linewidth <span class="op">=</span> <span class="fl">0.9</span>,</span>
+<span>    linetype <span class="op">=</span> <span class="st">"dashed"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/annotate.html" class="external-link">annotate</a></span><span class="op">(</span></span>
+<span>    <span class="st">"text"</span>, x <span class="op">=</span> <span class="fl">1</span>, y <span class="op">=</span> <span class="va">within_mean</span>, label <span class="op">=</span> <span class="st">"within-cluster mean"</span>,</span>
+<span>    hjust <span class="op">=</span> <span class="fl">0</span>, vjust <span class="op">=</span> <span class="op">-</span><span class="fl">0.7</span>, colour <span class="op">=</span> <span class="st">"#21918c"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/annotate.html" class="external-link">annotate</a></span><span class="op">(</span></span>
+<span>    <span class="st">"text"</span>, x <span class="op">=</span> <span class="fl">1</span>, y <span class="op">=</span> <span class="va">between</span>, label <span class="op">=</span> <span class="st">"between-cluster statistic"</span>,</span>
+<span>    hjust <span class="op">=</span> <span class="fl">0</span>, vjust <span class="op">=</span> <span class="op">-</span><span class="fl">0.7</span>, colour <span class="op">=</span> <span class="st">"#B8A400"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="st">"farm"</span>, y <span class="op">=</span> <span class="st">"DR-DATE statistic (unitless)"</span>,</span>
+<span>    title <span class="op">=</span> <span class="st">"Within-farm and between-farm contributions"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<div class="figure">
+<img src="kernR-hierarchical_files/figure-html/fig-decomposition-1.png" class="r-plt" alt="Per-farm within-cluster DR-DATE statistic for the trial with a real treatment effect (points), against the single between-cluster statistic (dashed line) and the mean of the within-cluster statistics (solid line). The spread across farms is what the combined statistic averages over, and what a flat test would silently mix with the between-farm contrast." width="1050"><p class="caption">
+Per-farm within-cluster DR-DATE statistic for the trial with a real
+treatment effect (points), against the single between-cluster statistic
+(dashed line) and the mean of the within-cluster statistics (solid
+line). The spread across farms is what the combined statistic averages
+over, and what a flat test would silently mix with the between-farm
+contrast.
+</p>
+</div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="read">Read<a class="anchor" aria-label="anchor" href="#read"></a>
+</h2>
+<p>On the trial with a real effect, the intraclass-correlation weighting
+returns a combined statistic of 0.00875 with a p-value of 0.01 against a
+99-draw within-cluster null. The decomposition says where that comes
+from: the mean within-farm statistic is 0.0941 and the between-farm
+statistic is -0.00409, across 20 clusters. The figure shows the
+within-farm statistics are not interchangeable – they range from 0.0106
+to 0.327 – so the combined number is an average over farms that differ
+in how strongly the treatment registers, not a single well-determined
+quantity.</p>
+<p>The three weighting conventions give statistics of 0.045 (equal),
+0.00875 (intraclass correlation) and 0.0941 (within only). They are not
+the same number and are not meant to be: each is a different summary of
+the same decomposition, and the choice belongs to the analyst before the
+data are seen, not after the p-values are read.</p>
+<p>With the treatment term removed the same test returns a p-value of
+0.36. The farm effects are still there, still large relative to the
+residual noise, and the within-cluster permutation scheme keeps them out
+of the verdict, which is the reason for using it.</p>
+</div>
+<div class="section level2">
+<h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
+</h2>
+<p>This is a synthetic trial, with balanced clusters of exactly thirty
+plots and a single level of nesting. Real designs are unbalanced and
+often nested more deeply, and <code><a href="../reference/hierarchical_test.html">hierarchical_test()</a></code> takes one
+<code>cluster_id</code> vector, so a plots-in-paddocks-in-farms design
+has to be collapsed to the level the analyst is willing to call
+exchangeable. The decomposition reports the two components on the raw
+statistic scale and does not weight the within-cluster statistics by
+cluster size, so an unbalanced design should be summarised with care. A
+single null run cannot demonstrate a type-I error rate; the null trial
+above shows one draw, not a calibration study, and a claim about
+false-positive control would need a repeated-sampling experiment this
+vignette does not run. The intraclass correlation used by
+<code>weight_method = "icc"</code> is estimated from the same data as
+the statistic, so its weight carries the noise of that estimate.</p>
+</div>
+<div class="section level2">
+<h2 id="what-to-read-next">What to read next<a class="anchor" aria-label="anchor" href="#what-to-read-next"></a>
+</h2>
+<p><em>Multi-site trials and the permutation null</em> runs the
+clustered permutation scheme through <code><a href="../reference/bd_hsic_test.html">bd_hsic_test()</a></code>
+instead, for a continuous treatment, and reports the per-cluster
+breakdown as a diagnostic for site-specific effect modification. <em>A
+treatment that changes the spread and not the mean</em> is the flat
+version of the test that runs inside the decomposition here. <em>Getting
+started with kernR</em> introduces the kernel and permutation machinery
+all of these share.</p>
+</div>
+<div class="section level2">
+<h2 id="reproduce">Reproduce<a class="anchor" aria-label="anchor" href="#reproduce"></a>
+</h2>
+<p>Seed <code>42</code> for the synthetic trial and for the null
+variant; <code>seed = 1L</code> passed to every test so the propensity
+fit and the within-cluster permutation draws are fixed. Package versions
+follow.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -261,16 +361,17 @@ the farm-level clustering.</p>
 <span><span class="co">#&gt;  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.51         </span></span>
 <span><span class="co">#&gt;  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         </span></span>
 <span><span class="co">#&gt;  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  </span></span>
-<span><span class="co">#&gt; [10] jsonlite_2.0.0      data.table_1.18.6.1 glue_1.8.1         </span></span>
-<span><span class="co">#&gt; [13] htmltools_0.5.9     PESTO_0.10.1        ragg_1.5.2         </span></span>
-<span><span class="co">#&gt; [16] sass_0.4.10         scales_1.4.0        rmarkdown_2.31     </span></span>
-<span><span class="co">#&gt; [19] grid_4.6.1          evaluate_1.0.5      jquerylib_0.1.4    </span></span>
-<span><span class="co">#&gt; [22] fastmap_1.2.0       yaml_2.3.12         lifecycle_1.0.5    </span></span>
-<span><span class="co">#&gt; [25] compiler_4.6.1      RColorBrewer_1.1-3  fs_2.1.0           </span></span>
-<span><span class="co">#&gt; [28] Rcpp_1.1.2          farver_2.1.2        systemfonts_1.3.2  </span></span>
-<span><span class="co">#&gt; [31] digest_0.6.39       R6_2.6.1            bslib_0.12.0       </span></span>
-<span><span class="co">#&gt; [34] gtable_0.3.6        tools_4.6.1         ggplot2_4.0.3      </span></span>
-<span><span class="co">#&gt; [37] pkgdown_2.2.1       cachem_1.1.0        desc_1.4.3</span></span></code></pre></div>
+<span><span class="co">#&gt; [10] data.table_1.18.6.1 jsonlite_2.0.0      labeling_0.4.3     </span></span>
+<span><span class="co">#&gt; [13] glue_1.8.1          htmltools_0.5.9     PESTO_0.10.1       </span></span>
+<span><span class="co">#&gt; [16] ragg_1.5.2          sass_0.4.10         scales_1.4.0       </span></span>
+<span><span class="co">#&gt; [19] rmarkdown_2.32      grid_4.6.1          evaluate_1.0.5     </span></span>
+<span><span class="co">#&gt; [22] jquerylib_0.1.4     fastmap_1.2.0       yaml_2.3.12        </span></span>
+<span><span class="co">#&gt; [25] lifecycle_1.0.5     compiler_4.6.1      RColorBrewer_1.1-3 </span></span>
+<span><span class="co">#&gt; [28] fs_2.1.0            Rcpp_1.1.2          farver_2.1.2       </span></span>
+<span><span class="co">#&gt; [31] systemfonts_1.3.2   digest_0.6.39       R6_2.6.1           </span></span>
+<span><span class="co">#&gt; [34] bslib_0.12.0        withr_3.0.3         tools_4.6.1        </span></span>
+<span><span class="co">#&gt; [37] gtable_0.3.6        pkgdown_2.2.1       ggplot2_4.0.3      </span></span>
+<span><span class="co">#&gt; [40] cachem_1.1.0        desc_1.4.3</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Density-Ratio Backends and the proxymix Binding • kernR</title>
+<title>Choosing a density-ratio backend • kernR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Density-Ratio Backends and the proxymix Binding">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Choosing a density-ratio backend">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,10 +33,10 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting Started with kernR</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Causal Association Testing with bd-HSIC</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">Distributional Treatment Effect Tests (DR-DATE / DR-DETT)</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">Hierarchical and Nested Data</a></li>
+<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting started with kernR</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Does the treatment cause the outcome, or do they share a cause?</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">A treatment that changes the spread and not the mean</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">When plots sit inside farms</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -58,11 +58,8 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Density-Ratio Backends and the proxymix Binding</h1>
-                        <h4 data-toc-skip class="author">Max
-Moldovan</h4>
+      <h1>Choosing a density-ratio backend</h1>
             
-            <h4 data-toc-skip class="date">2026-08-25</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/max578/kernR/blob/main/vignettes/kernR-proxymix-binding.Rmd" class="external-link"><code>vignettes/kernR-proxymix-binding.Rmd</code></a></small>
       <div class="d-none name"><code>kernR-proxymix-binding.Rmd</code></div>
@@ -70,150 +67,217 @@ Moldovan</h4>
 
     
     
+<!-- Render time: ~2 s under rmarkdown::render() with ranger, xgboost and
+     proxymix installed; a build missing any of the three renders faster,
+     with fewer rows in the comparison. macOS aarch64, R 4.5.2, one core. -->
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
-<h2 id="the-cross-package-contract">The cross-package contract<a class="anchor" aria-label="anchor" href="#the-cross-package-contract"></a>
+<h2 id="why">Why<a class="anchor" aria-label="anchor" href="#why"></a>
 </h2>
-<p><code><a href="../reference/estimate_density_ratio.html">kernR::estimate_density_ratio()</a></code> is the entry point for
-every kernR estimator that needs to reweight observational samples to an
-interventional distribution — most notably <code><a href="../reference/bd_hsic_test.html">bd_hsic_test()</a></code>
-for the backdoor-HSIC causal test. The function offers four
-density-ratio backends behind a single signature:</p>
-<table class="table">
-<colgroup>
-<col width="14%">
-<col width="32%">
-<col width="52%">
-</colgroup>
-<thead><tr class="header">
-<th>Backend</th>
-<th>Family</th>
-<th>When to use</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code>logistic</code></td>
-<td>Noise-contrastive classifier</td>
-<td>Default; robust on smooth, unimodal densities</td>
-</tr>
-<tr class="even">
-<td><code>ranger</code></td>
-<td>Random-forest classifier</td>
-<td>Flexible non-linear NCE; needs <code>ranger</code>
-</td>
-</tr>
-<tr class="odd">
-<td><code>xgboost</code></td>
-<td>Gradient-boosted classifier</td>
-<td>Strong on tabular interactions; needs <code>xgboost</code>
-</td>
-</tr>
-<tr class="even">
-<td><code>proxymix</code></td>
-<td>Gaussian-mixture density ratio</td>
-<td>Multimodal/skewed densities; parametric alternative</td>
-</tr>
-</tbody>
-</table>
-<p>The <code>proxymix</code> backend is the cross-package wedge between
-kernR (the distributional verdict layer of the UQ ag stack) and proxymix
-(the Gaussian-mixture proxy / KL-density-ratio bridge, Hoek &amp;
-Elliott 2024). It fits one GMM to the joint sample cloud
-<code>(x, z)</code>, a second GMM to the product-of-marginals cloud
-<code>(x_perm, z)</code>, then evaluates the analytic ratio of the two
-mixture densities at each observation. No classifier calibration step —
-the ratio is closed-form in the fitted parameters.</p>
+<p>An analyst has run the backdoor-adjusted test and does not like the
+diagnostics. <em>The causal test reweights my observational sample to
+look like an intervention, and it told me the effective sample size of
+those weights had collapsed. There are four backends behind that step
+and I have no idea which one to pick. What actually differs between
+them, and how would I tell on my own data which one is behaving?</em>
+This vignette puts all four on one confounded design and reads the
+weights they produce, then runs the causal test under each.</p>
 </div>
 <div class="section level2">
-<h2 id="four-backends-one-problem">Four backends, one problem<a class="anchor" aria-label="anchor" href="#four-backends-one-problem"></a>
+<h2 id="what">What<a class="anchor" aria-label="anchor" href="#what"></a>
 </h2>
-<p>A toy confounded design: <code>z</code> is a 2-D Gaussian confounder;
-<code>x</code> is a linear-Gaussian function of <code>z</code>;
-<code>y</code> carries a real causal effect from <code>x</code> plus a
-confounded path through <code>z</code>.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026L</span><span class="op">)</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">200L</span></span>
-<span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span> <span class="op">*</span> <span class="fl">2L</span><span class="op">)</span>, <span class="va">n</span>, <span class="fl">2L</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">z</span><span class="op">[</span>, <span class="fl">1L</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">0.7</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="va">z</span><span class="op">[</span>, <span class="fl">2L</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span></span></code></pre></div>
-<p>Each backend produces a <code>density_ratio_fit</code> object
-exposing ESS and a weight vector. We tabulate them side-by-side.</p>
+<p><code><a href="../reference/estimate_density_ratio.html">estimate_density_ratio()</a></code> is the entry point for every
+kernR estimator that reweights an observational sample towards an
+interventional one, <code><a href="../reference/bd_hsic_test.html">bd_hsic_test()</a></code> chief among them. It
+offers four backends behind one signature, and
+<code><a href="../reference/fit_density_ratio.html">fit_density_ratio()</a></code> plus
+<code><a href="../reference/predict_density_ratio.html">predict_density_ratio()</a></code> split the same work into a fit step
+and a predict step for callers who need to apply the ratio to new
+points.</p>
+<p>Three of the four are noise-contrastive classifiers. A classifier is
+trained to tell the joint sample <code>(x, z)</code> from a
+product-of-marginals sample <code>(x_permuted, z)</code>, and the
+density ratio is recovered from its calibrated class probabilities.
+<code>logistic</code> is the default and fits a linear logit, which is
+robust on smooth unimodal densities and cheap. <code>ranger</code> fits
+a random forest, and <code>xgboost</code> gradient-boosted trees; both
+are flexible non-linear alternatives, and both need their own
+package.</p>
+<p>The fourth, <code>proxymix</code>, is parametric. It fits one
+Gaussian mixture to the joint cloud and a second to the
+product-of-marginals cloud, then evaluates the analytic ratio of the two
+mixture densities at each observation. There is no classifier
+calibration step, the ratio is closed form in the fitted parameters, and
+the fit carries its own convergence diagnostics;
+<code><a href="../reference/bd_hsic_test.html">bd_hsic_test()</a></code> gates its verdict on them. The proxymix
+package is a separate MIT-licensed package, consumed here as a soft
+dependency through <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code>, so the binding is
+one way and kernR installs without it.</p>
+<p><code><a href="../reference/effective_sample_size.html">effective_sample_size()</a></code> is the diagnostic that decides
+whether any of this worked, and <code><a href="../reference/plot_weights.html">plot_weights()</a></code> draws the
+weight distribution behind it.</p>
+</div>
+<div class="section level2">
+<h2 id="do">Do<a class="anchor" aria-label="anchor" href="#do"></a>
+</h2>
+<div class="section level3">
+<h3 id="which-backends-this-build-carries">Which backends this build carries<a class="anchor" aria-label="anchor" href="#which-backends-this-build-carries"></a>
+</h3>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dr_logistic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_density_ratio.html">estimate_density_ratio</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, method <span class="op">=</span> <span class="st">"logistic"</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
-<span><span class="va">dr_ranger</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ranger"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="../reference/estimate_density_ratio.html">estimate_density_ratio</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, method <span class="op">=</span> <span class="st">"ranger"</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
-<span><span class="op">}</span> <span class="kw">else</span> <span class="cn">NULL</span></span>
-<span><span class="va">dr_xgb</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"xgboost"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="../reference/estimate_density_ratio.html">estimate_density_ratio</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, method <span class="op">=</span> <span class="st">"xgboost"</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
-<span><span class="op">}</span> <span class="kw">else</span> <span class="cn">NULL</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">has_ranger</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ranger"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">has_xgboost</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"xgboost"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">has_proxymix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"proxymix"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>ranger <span class="op">=</span> <span class="va">has_ranger</span>, xgboost <span class="op">=</span> <span class="va">has_xgboost</span>, proxymix <span class="op">=</span> <span class="va">has_proxymix</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   ranger  xgboost proxymix </span></span>
+<span><span class="co">#&gt;     TRUE     TRUE     TRUE</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="a-confounded-design">A confounded design<a class="anchor" aria-label="anchor" href="#a-confounded-design"></a>
+</h3>
+<p>A synthetic design of 200 observations: a two-column Gaussian
+confounder, a treatment that is a linear-Gaussian function of its first
+column, and an outcome carrying a genuine causal effect of 0.7 per unit
+of treatment plus a confounded path through the second column.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dr_proxymix</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_density_ratio.html">estimate_density_ratio</a></span><span class="op">(</span></span>
-<span>  <span class="va">x</span>, <span class="va">z</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"proxymix"</span>,</span>
-<span>  proxymix_components <span class="op">=</span> <span class="fl">2L</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">1L</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026L</span><span class="op">)</span></span>
+<span><span class="va">n_obs</span> <span class="op">&lt;-</span> <span class="fl">200L</span></span>
+<span><span class="va">z_conf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span> <span class="op">*</span> <span class="fl">2L</span><span class="op">)</span>, <span class="va">n_obs</span>, <span class="fl">2L</span><span class="op">)</span></span>
+<span><span class="va">x_treat</span> <span class="op">&lt;-</span> <span class="va">z_conf</span><span class="op">[</span>, <span class="fl">1L</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">y_out</span> <span class="op">&lt;-</span> <span class="fl">0.7</span> <span class="op">*</span> <span class="va">x_treat</span> <span class="op">+</span> <span class="va">z_conf</span><span class="op">[</span>, <span class="fl">2L</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span>, sd <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="the-four-ratios">The four ratios<a class="anchor" aria-label="anchor" href="#the-four-ratios"></a>
+</h3>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dr_fits</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  logistic <span class="op">=</span> <span class="fu"><a href="../reference/estimate_density_ratio.html">estimate_density_ratio</a></span><span class="op">(</span><span class="va">x_treat</span>, <span class="va">z_conf</span>,</span>
+<span>                                    method <span class="op">=</span> <span class="st">"logistic"</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="va">has_ranger</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">dr_fits</span><span class="op">$</span><span class="va">ranger</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_density_ratio.html">estimate_density_ratio</a></span><span class="op">(</span><span class="va">x_treat</span>, <span class="va">z_conf</span>,</span>
+<span>                                           method <span class="op">=</span> <span class="st">"ranger"</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="va">has_xgboost</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">dr_fits</span><span class="op">$</span><span class="va">xgboost</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_density_ratio.html">estimate_density_ratio</a></span><span class="op">(</span><span class="va">x_treat</span>, <span class="va">z_conf</span>,</span>
+<span>                                            method <span class="op">=</span> <span class="st">"xgboost"</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="va">has_proxymix</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">dr_fits</span><span class="op">$</span><span class="va">proxymix</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_density_ratio.html">estimate_density_ratio</a></span><span class="op">(</span></span>
+<span>    <span class="va">x_treat</span>, <span class="va">z_conf</span>, method <span class="op">=</span> <span class="st">"proxymix"</span>, proxymix_components <span class="op">=</span> <span class="fl">2L</span>,</span>
+<span>    seed <span class="op">=</span> <span class="fl">1L</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dr_fits</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "logistic" "ranger"   "xgboost"  "proxymix"</span></span></code></pre></div>
 <table class="table">
-<caption>Density-ratio diagnostics across backends.</caption>
+<caption>Density-ratio weights on the same 200-observation confounded
+design, one row per available backend.</caption>
 <thead><tr class="header">
-<th align="left">backend</th>
-<th align="right">ess</th>
-<th align="right">min_weight</th>
-<th align="right">max_weight</th>
+<th align="left">Backend</th>
+<th align="right">ESS</th>
+<th align="right">ESS / n</th>
+<th align="right">Smallest weight</th>
+<th align="right">Largest weight</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="left">logistic</td>
 <td align="right">199.4</td>
-<td align="right">0.8860</td>
-<td align="right">1.20</td>
+<td align="right">0.997</td>
+<td align="right">0.886</td>
+<td align="right">1.202</td>
 </tr>
 <tr class="even">
 <td align="left">ranger</td>
 <td align="right">156.0</td>
-<td align="right">0.2380</td>
-<td align="right">3.21</td>
+<td align="right">0.780</td>
+<td align="right">0.238</td>
+<td align="right">3.213</td>
 </tr>
 <tr class="odd">
 <td align="left">xgboost</td>
 <td align="right">81.3</td>
-<td align="right">0.0918</td>
-<td align="right">7.08</td>
+<td align="right">0.407</td>
+<td align="right">0.092</td>
+<td align="right">7.079</td>
 </tr>
 <tr class="even">
 <td align="left">proxymix</td>
 <td align="right">14.3</td>
-<td align="right">0.0171</td>
-<td align="right">47.00</td>
+<td align="right">0.071</td>
+<td align="right">0.017</td>
+<td align="right">46.966</td>
 </tr>
 </tbody>
 </table>
 </div>
-<div class="section level2">
-<h2 id="bd-hsic-under-each-backend">bd-HSIC under each backend<a class="anchor" aria-label="anchor" href="#bd-hsic-under-each-backend"></a>
-</h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res_logistic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span></span>
-<span>  <span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, density_ratio <span class="op">=</span> <span class="st">"logistic"</span>,</span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">199L</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="the-figure-the-weights-behind-the-diagnostic">The figure: the weights behind the diagnostic<a class="anchor" aria-label="anchor" href="#the-figure-the-weights-behind-the-diagnostic"></a>
+</h3>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res_proxymix</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span></span>
-<span>  <span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, density_ratio <span class="op">=</span> <span class="st">"proxymix"</span>,</span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">199L</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: bd_hsic_test(): ESS (3.4) is below 10% of n_test (100). The weighted</span></span>
-<span><span class="co">#&gt; test statistic is dominated by a small number of high-weight observations; the</span></span>
-<span><span class="co">#&gt; resulting p-value is not a reliable verdict. Increase n, switch density_ratio</span></span>
-<span><span class="co">#&gt; backend, or tighten the design.</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">weights_long</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dr_fits</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">nm</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>backend <span class="op">=</span> <span class="va">nm</span>, weight <span class="op">=</span> <span class="va">dr_fits</span><span class="op">[[</span><span class="va">nm</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">weights</span>,</span>
+<span>             stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
+<span>  <span class="va">weights_long</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">weight</span>, y <span class="op">=</span> <span class="va">backend</span>, colour <span class="op">=</span> <span class="va">backend</span><span class="op">)</span></span>
+<span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fl">1</span>, colour <span class="op">=</span> <span class="st">"grey50"</span>,</span>
+<span>                      linetype <span class="op">=</span> <span class="st">"dashed"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html" class="external-link">geom_jitter</a></span><span class="op">(</span>height <span class="op">=</span> <span class="fl">0.18</span>, alpha <span class="op">=</span> <span class="fl">0.5</span>, size <span class="op">=</span> <span class="fl">1.3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_log10</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_colour_viridis_d</a></span><span class="op">(</span>name <span class="op">=</span> <span class="cn">NULL</span>, end <span class="op">=</span> <span class="fl">0.85</span>,</span>
+<span>                                  guide <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="st">"importance weight (log scale, unit weight dashed)"</span>,</span>
+<span>    y <span class="op">=</span> <span class="cn">NULL</span>, title <span class="op">=</span> <span class="st">"How wide the weights are, backend by backend"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<div class="figure">
+<img src="kernR-proxymix-binding_files/figure-html/fig-weights-1.png" class="r-plt" alt="Distribution of the density-ratio weights produced by each available backend on the same design, on a logarithmic scale, with the unit weight that a perfectly balanced sample would carry marked. The effective sample size in the table above is a summary of exactly this spread: the wider the distribution, the fewer observations are really contributing." width="1050"><p class="caption">
+Distribution of the density-ratio weights produced by each available
+backend on the same design, on a logarithmic scale, with the unit weight
+that a perfectly balanced sample would carry marked. The effective
+sample size in the table above is a summary of exactly this spread: the
+wider the distribution, the fewer observations are really contributing.
+</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="the-causal-test-under-each-backend">The causal test under each backend<a class="anchor" aria-label="anchor" href="#the-causal-test-under-each-backend"></a>
+</h3>
+<p>Any backend whose weights collapse makes <code><a href="../reference/bd_hsic_test.html">bd_hsic_test()</a></code>
+raise its effective-sample-size warning. The runner below captures those
+messages instead of letting them print as conditions, so that they can
+be quoted where the prose reads them and the vignette still renders
+without warnings.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">gate_messages</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
+<span><span class="va">run_bd</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">method</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">withCallingHandlers</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span></span>
+<span>      <span class="va">x_treat</span>, <span class="va">y_out</span>, <span class="va">z_conf</span>, density_ratio <span class="op">=</span> <span class="va">method</span>,</span>
+<span>      n_permutations <span class="op">=</span> <span class="fl">199L</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    warning <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">w</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="va">gate_messages</span><span class="op">[[</span><span class="va">method</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">conditionMessage</a></span><span class="op">(</span><span class="va">w</span><span class="op">)</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">invokeRestart</a></span><span class="op">(</span><span class="st">"muffleWarning"</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">bd_fits</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span>nm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dr_fits</span><span class="op">)</span><span class="op">)</span>, <span class="va">run_bd</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">gate_messages</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "proxymix"</span></span></code></pre></div>
 <table class="table">
-<caption>bd-HSIC test under each density-ratio backend.</caption>
+<caption>bd-HSIC on the same design under each available backend, 199
+cluster permutations.</caption>
 <thead><tr class="header">
-<th align="left">backend</th>
-<th align="right">statistic</th>
-<th align="right">p_value</th>
-<th align="right">ess</th>
+<th align="left">Backend</th>
+<th align="right">Statistic</th>
+<th align="right">p-value</th>
+<th align="right">ESS on the test split</th>
+<th align="left">Declined</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -221,57 +285,149 @@ exposing ESS and a weight vector. We tabulate them side-by-side.</p>
 <td align="right">0.0211</td>
 <td align="right">0.155</td>
 <td align="right">99.9</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">ranger</td>
+<td align="right">0.0227</td>
+<td align="right">0.005</td>
+<td align="right">77.7</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">xgboost</td>
+<td align="right">0.0165</td>
+<td align="right">0.005</td>
+<td align="right">40.7</td>
+<td align="left">FALSE</td>
 </tr>
 <tr class="even">
 <td align="left">proxymix</td>
 <td align="right">0.0062</td>
 <td align="right">0.320</td>
 <td align="right">3.4</td>
+<td align="left">TRUE</td>
 </tr>
 </tbody>
 </table>
 </div>
+</div>
 <div class="section level2">
-<h2 id="when-to-reach-for-proxymix">When to reach for proxymix<a class="anchor" aria-label="anchor" href="#when-to-reach-for-proxymix"></a>
+<h2 id="read">Read<a class="anchor" aria-label="anchor" href="#read"></a>
 </h2>
-<p>The classifier-based backends (<code>logistic</code>,
-<code>ranger</code>, <code>xgboost</code>) are the default for a reason:
-they tolerate misspecified densities, scale to high-dimensional
-<code>z</code>, and have well-understood calibration. Reach for
-<code>method = "proxymix"</code> when:</p>
-<ul>
-<li>the joint density is plausibly <strong>multimodal</strong>
-(multi-regime climate, paddock × variety designs with distinct
-production zones, animal cohorts with separable subpopulations) — a
-2-component GMM represents this cleanly where a classifier would smear
-across the modes;</li>
-<li>you need a <strong>parametric</strong> density-ratio whose
-components you can inspect, hand off to a downstream Bayesian step (via
-<code><a href="https://max578.github.io/proxymix/reference/gmm_target_from_posterior.html" class="external-link">proxymix::gmm_target_from_posterior()</a></code>), or use as the seed
-of a KLD-EM refinement on a target you can evaluate but not sample
-from;</li>
-<li>classifier calibration is unreliable on the cohort at hand (small
-<code>n</code>, sharp class imbalance after the joint-vs-marginal split,
-pathological feature scaling).</li>
-</ul>
-<p>The <code>proxymix</code> package is GRDC-firewalled (MIT, no GRDC IP
-flows in) and ships its full Gaussian-mixture proxy API independently of
-kernR. kernR consumes it as a soft dependency via
-<code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace()</a></code> — the binding is one-way and rebuildable
-from the local <code>proxymix_*.tar.gz</code> source.</p>
+<p>The backend choice changes the answer on this design, which is the
+most useful thing this comparison has to report. The weights come out
+very differently: the effective sample size runs from 14.3 to 199.4 out
+of 200 observations, 7 to 100 per cent, and the largest single weight
+from 1.2 to 46.97. The figure shows the same fact as a picture: logistic
+produces a tight cloud around the unit weight, and proxymix a cloud
+spanning orders of magnitude.</p>
+<p>Those weights carry through to the verdict. The 4 backends return
+p-values of logistic 0.155, ranger 0.005, xgboost 0.005, proxymix 0.32,
+so on a design with a causal effect of 0.7 per unit built into it, 2 of
+4 detect it. The mechanism is not only that the statistic changes – the
+four statistics all sit between 0.0062 and 0.0227, within a factor of
+3.7 of each other – but that the <em>null</em> changes with it. Without
+an explicit <code>cluster_id</code>, <code><a href="../reference/bd_hsic_test.html">bd_hsic_test()</a></code> builds
+its permutation clusters from the density-ratio weights themselves, so a
+backend that produces different weights is scored against a different
+null distribution. Two backends can therefore agree on what they
+measured and disagree on what it means.</p>
+<p>The <code>proxymix</code> row is the one to read closely. Its
+effective sample size on the test split falls to 3.4, the gate fires,
+and the result is stamped as an abstention: TRUE in the
+<code>Declined</code> column. A two-component mixture is the wrong model
+for a joint density with one mode, the fitted ratio is extreme where the
+two mixtures disagree in the tails, and the package refuses to stand
+behind the p-value that follows rather than reporting 0.32 as a verdict.
+The gate says so in its own words:</p>
+<blockquote>
+<p>bd_hsic_test(): ESS (3.4) is below 10% of n_test (100). The weighted
+test statistic is dominated by a small number of high-weight
+observations; the resulting p-value is not a reliable verdict. Increase
+n, switch density_ratio backend, or tighten the design.</p>
+</blockquote>
+<p>That is the behaviour to want from a backend that has been handed a
+density it cannot represent. <em>Does the treatment cause the outcome,
+or do they share a cause?</em> shows the same gate firing for the
+opposite reason, on a design with too many covariates rather than the
+wrong mixture.</p>
+</div>
+<div class="section level2">
+<h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
+</h2>
+<p>This is one synthetic design with a smooth, unimodal, two-dimensional
+joint density and 200 observations. It cannot rank the four backends in
+general, and the disagreement above should be read as a demonstration
+that backend choice is consequential, not as a ranking to carry to
+another data shape: a design with a multimodal joint density would be
+expected to reverse part of it. The classifier backends have a tuning
+surface this vignette does not touch – forest size, boosting depth and
+rounds, the noise-sample count – and only the defaults are compared. The
+proxymix backend is run with two mixture components against a design
+with one mode per cloud, which is deliberately the wrong specification
+and is why its weights are extreme; a fair comparison on a multimodal
+design would need its own vignette. Nothing here establishes which
+p-value is correct: the design has a real causal effect, so a backend
+that fails to detect it has lost power, but this single run cannot
+separate lost power from an unlucky permutation draw. Above all, no
+backend can establish that the adjustment set is complete, and an
+incomplete one produces a confident wrong answer under every backend at
+once.</p>
+</div>
+<div class="section level2">
+<h2 id="when-to-reach-for-which">When to reach for which<a class="anchor" aria-label="anchor" href="#when-to-reach-for-which"></a>
+</h2>
+<p>The classifier backends are the default for good reasons: they
+tolerate a misspecified density, scale to a high-dimensional adjustment
+set, and their calibration is well understood. <code>logistic</code> is
+the right first choice, with <code>ranger</code> or <code>xgboost</code>
+when the conditional density is plainly non-linear in the
+confounders.</p>
+<p>Reach for <code>proxymix</code> when the joint density is plausibly
+<strong>multimodal</strong>, as it is under a multi-regime climate, a
+paddock by variety design with distinct production zones, or a cohort
+with separable subpopulations, where a two-component mixture represents
+the structure cleanly and a classifier smears across the modes; when a
+<strong>parametric</strong> ratio is wanted whose components can be
+inspected or handed to a downstream Bayesian step through
+<code><a href="https://max578.github.io/proxymix/reference/gmm_target_from_posterior.html" class="external-link">proxymix::gmm_target_from_posterior()</a></code>; or when classifier
+calibration is unreliable on the sample at hand, because it is small,
+because the joint against marginal split is sharply imbalanced, or
+because the features are pathologically scaled.</p>
+</div>
+<div class="section level2">
+<h2 id="what-to-read-next">What to read next<a class="anchor" aria-label="anchor" href="#what-to-read-next"></a>
+</h2>
+<p><em>Does the treatment cause the outcome, or do they share a
+cause?</em> is the test this backend choice feeds, and shows the
+effective-sample-size floor declining a verdict outright. <em>A
+treatment that changes the spread and not the mean</em> uses the related
+propensity-model choice for a binary treatment. <em>From a coarse grid
+to a paddock</em> uses proxymix from the other direction, as the fitter
+for the Gaussian-mixture prior that <code><a href="../reference/aggregate_downscale.html">aggregate_downscale()</a></code>
+inverts.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <ul>
-<li>Hoek, J. van der &amp; Elliott, R. J. (2024). <em>Mixtures of
-multivariate Gaussians.</em> Stochastic Analysis and Applications. DOI:
-10.1080/07362994.2024.2372605.</li>
-<li>Hu, R., Sejdinovic, D. &amp; Evans, R. J. (2024). A kernel test for
+<li>Hoek, J. van der, &amp; Elliott, R. J. (2024). Mixtures of
+multivariate Gaussians. <em>Stochastic Analysis and Applications</em>.
+DOI: 10.1080/07362994.2024.2372605.</li>
+<li>Hu, R., Sejdinovic, D., &amp; Evans, R. J. (2024). A kernel test for
 causal association via noise contrastive backdoor adjustment.
-<em>Journal of Machine Learning Research</em>, 25(160), 1–56.</li>
+<em>Journal of Machine Learning Research</em>, 25(160), 1-56.</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+</div>
+<div class="section level2">
+<h2 id="reproduce">Reproduce<a class="anchor" aria-label="anchor" href="#reproduce"></a>
+</h2>
+<p>Seed <code>2026</code> for the confounded design;
+<code>seed = 1L</code> passed to every density-ratio fit and every test,
+so the classifier fits, the mixture fits and the permutation draws are
+all fixed. Package versions follow.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -306,13 +462,13 @@ causal association via noise contrastive backdoor adjustment.
 <span><span class="co">#&gt; [19] knitr_1.51          desc_1.4.3          bslib_0.12.0       </span></span>
 <span><span class="co">#&gt; [22] RColorBrewer_1.1-3  rlang_1.3.0         cachem_1.1.0       </span></span>
 <span><span class="co">#&gt; [25] xfun_0.60           fs_2.1.0            sass_0.4.10        </span></span>
-<span><span class="co">#&gt; [28] S7_0.2.2            otel_0.2.0          cli_3.6.6          </span></span>
-<span><span class="co">#&gt; [31] pkgdown_2.2.1       withr_3.0.3         PESTO_0.10.1       </span></span>
-<span><span class="co">#&gt; [34] digest_0.6.39       grid_4.6.1          xgboost_3.2.1.1    </span></span>
-<span><span class="co">#&gt; [37] lifecycle_1.0.5     vctrs_0.7.3         evaluate_1.0.5     </span></span>
-<span><span class="co">#&gt; [40] glue_1.8.1          data.table_1.18.6.1 farver_2.1.2       </span></span>
-<span><span class="co">#&gt; [43] ragg_1.5.2          rmarkdown_2.31      tools_4.6.1        </span></span>
-<span><span class="co">#&gt; [46] htmltools_0.5.9</span></span></code></pre></div>
+<span><span class="co">#&gt; [28] S7_0.2.2            otel_0.2.0          viridisLite_0.4.3  </span></span>
+<span><span class="co">#&gt; [31] cli_3.6.6           withr_3.0.3         pkgdown_2.2.1      </span></span>
+<span><span class="co">#&gt; [34] PESTO_0.10.1        digest_0.6.39       grid_4.6.1         </span></span>
+<span><span class="co">#&gt; [37] xgboost_3.2.1.1     lifecycle_1.0.5     vctrs_0.7.3        </span></span>
+<span><span class="co">#&gt; [40] evaluate_1.0.5      glue_1.8.1          data.table_1.18.6.1</span></span>
+<span><span class="co">#&gt; [43] farver_2.1.2        ragg_1.5.2          rmarkdown_2.32     </span></span>
+<span><span class="co">#&gt; [46] tools_4.6.1         htmltools_0.5.9</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

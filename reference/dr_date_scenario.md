@@ -217,15 +217,25 @@ m_base <- as_manifest(fit0, run_id = "baseline")
 m_intv <- as_manifest(fit1, run_id = "intervention")
 res <- dr_date_scenario(m_base, m_intv,
                          n_permutations = 200L, seed = 1L)
+#> Warning: glm.fit: algorithm did not converge
+#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+#> Warning: glm.fit: algorithm did not converge
+#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+#> Warning: glm.fit: algorithm did not converge
+#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+#> Warning: glm.fit: algorithm did not converge
+#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+#> Warning: glm.fit: algorithm did not converge
+#> Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 print(res)
 #> 
 #>    DR-DATE (scenario) Test
 #> 
-#> Statistic: 0.203779 
+#> Statistic: 0.249209 
 #> P-value:   1.0000 
 #> N:         120 
 #> Perms:     200 
-#> Kernel Y:  rbf (bw = 0.8709)
+#> Kernel Y:  rbf (bw = 0.7662)
 #> ESS:       60.0 
 #> 
 #> Scenario contrast

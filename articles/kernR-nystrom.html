@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Scaling HSIC with Nystrom and Random Fourier Features • kernR</title>
+<title>Scaling HSIC to large ensembles • kernR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Scaling HSIC with Nystrom and Random Fourier Features">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Scaling HSIC to large ensembles">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,10 +33,10 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting Started with kernR</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Causal Association Testing with bd-HSIC</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">Distributional Treatment Effect Tests (DR-DATE / DR-DETT)</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">Hierarchical and Nested Data</a></li>
+<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting started with kernR</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Does the treatment cause the outcome, or do they share a cause?</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">A treatment that changes the spread and not the mean</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">When plots sit inside farms</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -58,11 +58,8 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Scaling HSIC with Nystrom and Random Fourier Features</h1>
-                        <h4 data-toc-skip class="author">Max
-Moldovan</h4>
+      <h1>Scaling HSIC to large ensembles</h1>
             
-            <h4 data-toc-skip class="date">2026-08-25</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/max578/kernR/blob/main/vignettes/kernR-nystrom.Rmd" class="external-link"><code>vignettes/kernR-nystrom.Rmd</code></a></small>
       <div class="d-none name"><code>kernR-nystrom.Rmd</code></div>
@@ -70,200 +67,444 @@ Moldovan</h4>
 
     
     
-<div class="section level2">
-<h2 id="the-scaling-wall">The scaling wall<a class="anchor" aria-label="anchor" href="#the-scaling-wall"></a>
-</h2>
-<p>Exact kernel methods carry an <code>O(n^2)</code> storage cost (the
-Gram matrix) and <code>O(n^2)</code> or <code>O(n^3)</code> compute per
-operation. For ag-systems ensembles in the low thousands of members,
-that wall hits around <code>n = 5000</code>: a 5000 x 5000
-double-precision Gram matrix is 200 MB, and permutation HSIC iterates
-over it <code>B</code> times.</p>
-<p>Two well-known low-rank approximations of a kernel matrix
-<code>K</code> (<code>n x n</code>) drop both costs to
-<code>O(n m)</code> for some rank <code>m &lt;&lt; n</code>:</p>
-<ul>
-<li>
-<strong>Nystrom</strong> (Williams &amp; Seeger, 2001) – sample
-<code>m</code> landmark observations, compute their Gram <code>W</code>
-(<code>m x m</code>) and cross-Gram <code>C</code> (<code>n x m</code>),
-then <code>K \approx C W^{-1} C^\top = F F^\top</code> with
-<code>F = C \cdot \mathrm{chol}(W)^{-1}</code>. Works for any
-kernel.</li>
-<li>
-<strong>Random Fourier Features</strong> (Rahimi &amp; Recht, 2007)
-– for shift-invariant kernels (currently RBF in kernR), draw
-<code>\omega_k \sim N(0, \sigma^{-2} I)</code> and
-<code>b_k \sim U[0, 2\pi]</code>; the feature map
-<code>\phi(x) = \sqrt{2/D} \cos(\omega^\top x + b)</code> gives
-<code>K \approx \Phi \Phi^\top</code> for <code>D</code> features.
-Data-independent (the same random projection applies to any point cloud
-with the same bandwidth).</li>
-</ul>
-<p><code><a href="../reference/hsic_test_nystrom.html">hsic_test_nystrom()</a></code> wires both into a drop-in
-accelerated HSIC test.</p>
-</div>
-<div class="section level2">
-<h2 id="a-tiny-correctness-check">A tiny correctness check<a class="anchor" aria-label="anchor" href="#a-tiny-correctness-check"></a>
-</h2>
-<p>Both approximations recover the exact kernel as the rank approaches
-<code>n</code> (Nystrom) or as <code>D</code> grows (RFF).</p>
+<!-- Render time: ~10 s under rmarkdown::render(); macOS aarch64, R 4.5.2,
+     one core. One reconstruction check at n = 80 and a four-point timing
+     grid from n = 250 to n = 2000; the exact test at n = 2000 dominates,
+     which is the vignette's point. -->
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">80L</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span> <span class="op">*</span> <span class="fl">2L</span><span class="op">)</span>, <span class="va">n</span>, <span class="fl">2L</span><span class="op">)</span></span>
-<span><span class="va">k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_spec.html">kernel_spec</a></span><span class="op">(</span><span class="st">"rbf"</span>, bandwidth <span class="op">=</span> <span class="fl">1.0</span><span class="op">)</span></span>
-<span><span class="va">K_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_matrix.html">kernel_matrix</a></span><span class="op">(</span><span class="va">x</span>, kernel <span class="op">=</span> <span class="va">k</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Nystrom at near-full rank</span></span>
-<span><span class="va">ny</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nystrom_factor.html">nystrom_factor</a></span><span class="op">(</span><span class="va">x</span>, kernel <span class="op">=</span> <span class="va">k</span>, m <span class="op">=</span> <span class="va">n</span> <span class="op">-</span> <span class="fl">1L</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
-<span><span class="va">K_ny</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/crossprod.html" class="external-link">tcrossprod</a></span><span class="op">(</span><span class="va">ny</span><span class="op">$</span><span class="cn">F</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># RFF at a moderate D</span></span>
-<span><span class="va">rf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rff_features.html">rff_features</a></span><span class="op">(</span><span class="va">x</span>, kernel <span class="op">=</span> <span class="va">k</span>, D <span class="op">=</span> <span class="fl">1500L</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
-<span><span class="va">K_rf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/crossprod.html" class="external-link">tcrossprod</a></span><span class="op">(</span><span class="va">rf</span><span class="op">$</span><span class="cn">F</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">rel_err</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">K_hat</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="op">(</span><span class="va">K_full</span> <span class="op">-</span> <span class="va">K_hat</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">K_full</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nystrom"</span>, <span class="st">"rff"</span><span class="op">)</span>,</span>
-<span>  rank   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">ny</span><span class="op">$</span><span class="cn">F</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">rf</span><span class="op">$</span><span class="cn">F</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  rel_err <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">rel_err</span><span class="op">(</span><span class="va">K_ny</span><span class="op">)</span>, <span class="fu">rel_err</span><span class="op">(</span><span class="va">K_rf</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt;    method rank      rel_err</span></span>
-<span><span class="co">#&gt; 1 nystrom   79 1.849946e-07</span></span>
-<span><span class="co">#&gt; 2     rff 1500 4.728235e-02</span></span></code></pre></div>
-<p>Both should produce small relative Frobenius error on this size.</p>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span></code></pre></div>
+<div class="section level2">
+<h2 id="why">Why<a class="anchor" aria-label="anchor" href="#why"></a>
+</h2>
+<p>An analyst has outgrown the exact test. <em>My ensemble used to have
+three hundred members and the independence test was instant. It now has
+several thousand, the Gram matrix alone is hundreds of megabytes, and
+every permutation iterates over it. I do not want a different test with
+different assumptions; I want the same test to finish. What does the
+approximation cost me, and does it change the verdict?</em> This
+vignette answers with the two low-rank approximations kernR ships, a
+reconstruction check against the exact kernel, and a timing grid from
+250 to 2000 observations.</p>
 </div>
 <div class="section level2">
-<h2 id="scaling-demonstration">Scaling demonstration<a class="anchor" aria-label="anchor" href="#scaling-demonstration"></a>
+<h2 id="what">What<a class="anchor" aria-label="anchor" href="#what"></a>
 </h2>
+<p>An exact kernel method stores an <code>n</code> by <code>n</code>
+Gram matrix and iterates over it once per permutation, so both memory
+and time grow with the square of the sample size. Two standard low-rank
+factorisations replace that matrix with a thin factor <code>F</code>
+such that <code>K</code> is approximately <code>F F'</code>, dropping
+the cost to order <code>n m</code> for a rank <code>m</code> much
+smaller than <code>n</code>.</p>
+<p><code><a href="../reference/nystrom_factor.html">nystrom_factor()</a></code> implements the Nystrom method of
+Williams and Seeger (2001): sample
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>
+landmark observations, compute their Gram matrix
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>
+by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>)
+and the cross-Gram
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>),
+and approximate</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>≈</mo><mi>C</mi><msup><mi>W</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><msup><mi>C</mi><mi>⊤</mi></msup><mo>=</mo><mi>F</mi><msup><mi>F</mi><mi>⊤</mi></msup><mo>,</mo><mspace width="2.0em"></mspace><mi>F</mi><mo>=</mo><mi>C</mi><mspace width="0.167em"></mspace><mrow><mi mathvariant="normal">c</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>W</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex"> K \approx C W^{-1} C^{\top} = F F^{\top}, \qquad
+   F = C \, \mathrm{chol}(W)^{-1}. </annotation></semantics></math></p>
+<p>It works for any kernel and is data-dependent, because the landmarks
+are drawn from the data.</p>
+<p><code><a href="../reference/rff_features.html">rff_features()</a></code> implements Random Fourier Features
+(Rahimi and Recht, 2007), available for shift-invariant kernels, which
+in kernR means the RBF kernel. Draw frequencies
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ω</mi><annotation encoding="application/x-tex">\omega</annotation></semantics></math>
+from a normal with covariance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>σ</mi><mrow><mi>−</mi><mn>2</mn></mrow></msup><mi>I</mi></mrow><annotation encoding="application/x-tex">\sigma^{-2} I</annotation></semantics></math>
+and offsets
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>
+uniform on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>2</mn><mi>π</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[0, 2\pi]</annotation></semantics></math>;
+the feature map</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msqrt><mrow><mn>2</mn><mi>/</mi><mi>D</mi></mrow></msqrt><mspace width="0.167em"></mspace><mrow><mi mathvariant="normal">cos</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msup><mi>ω</mi><mi>⊤</mi></msup><mi>x</mi><mo>+</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex"> \phi(x) = \sqrt{2 / D} \, \cos(\omega^{\top} x + b) </annotation></semantics></math></p>
+<p>gives
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>≈</mo><mi mathvariant="normal">Φ</mi><msup><mi mathvariant="normal">Φ</mi><mi>⊤</mi></msup></mrow><annotation encoding="application/x-tex">K \approx \Phi \Phi^{\top}</annotation></semantics></math>
+for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
+features. The projection is data-independent, so the same random
+features apply to any point cloud at that bandwidth.</p>
+<p><code><a href="../reference/hsic_test_nystrom.html">hsic_test_nystrom()</a></code> wires both into a drop-in
+accelerated independence test: <code>method</code> selects the
+factorisation and <code>m</code> sets the rank or the feature count. It
+returns the same <code>kernel_test_result</code> as
+<code><a href="../reference/hsic_test.html">hsic_test()</a></code>.</p>
+</div>
+<div class="section level2">
+<h2 id="do">Do<a class="anchor" aria-label="anchor" href="#do"></a>
+</h2>
+<div class="section level3">
+<h3 id="does-the-factorisation-reproduce-the-kernel">Does the factorisation reproduce the kernel?<a class="anchor" aria-label="anchor" href="#does-the-factorisation-reproduce-the-kernel"></a>
+</h3>
+<p>A synthetic cloud of 80 points in two dimensions, small enough that
+the exact Gram matrix can be compared against both approximations
+directly.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">benchmark_hsic</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span>, <span class="va">m</span>, <span class="va">B</span> <span class="op">=</span> <span class="fl">49L</span>, <span class="va">seed</span> <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="va">seed</span><span class="op">)</span></span>
-<span>  <span class="va">xx</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span>  <span class="va">y</span>  <span class="op">&lt;-</span> <span class="va">xx</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="va">n_check</span> <span class="op">&lt;-</span> <span class="fl">80L</span></span>
+<span><span class="va">x_check</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_check</span> <span class="op">*</span> <span class="fl">2L</span><span class="op">)</span>, <span class="va">n_check</span>, <span class="fl">2L</span><span class="op">)</span></span>
+<span><span class="va">kern</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_spec.html">kernel_spec</a></span><span class="op">(</span><span class="st">"rbf"</span>, bandwidth <span class="op">=</span> <span class="fl">1.0</span><span class="op">)</span></span>
+<span><span class="va">k_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_matrix.html">kernel_matrix</a></span><span class="op">(</span><span class="va">x_check</span>, kernel <span class="op">=</span> <span class="va">kern</span><span class="op">)</span></span>
 <span></span>
-<span>  <span class="va">t_exact</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span></span>
-<span>    <span class="va">res_exact</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_test.html">hsic_test</a></span><span class="op">(</span><span class="va">xx</span>, <span class="va">y</span>, n_permutations <span class="op">=</span> <span class="va">B</span>, seed <span class="op">=</span> <span class="va">seed</span><span class="op">)</span></span>
-<span>  <span class="op">)</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span></span>
-<span>  <span class="va">t_nystrom</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span></span>
-<span>    <span class="va">res_nystrom</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_test_nystrom.html">hsic_test_nystrom</a></span><span class="op">(</span><span class="va">xx</span>, <span class="va">y</span>, m <span class="op">=</span> <span class="va">m</span>,</span>
-<span>                                     n_permutations <span class="op">=</span> <span class="va">B</span>, seed <span class="op">=</span> <span class="va">seed</span><span class="op">)</span></span>
-<span>  <span class="op">)</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span></span>
-<span>  <span class="va">t_rff</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span></span>
-<span>    <span class="va">res_rff</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_test_nystrom.html">hsic_test_nystrom</a></span><span class="op">(</span><span class="va">xx</span>, <span class="va">y</span>, method <span class="op">=</span> <span class="st">"rff"</span>, m <span class="op">=</span> <span class="va">m</span>,</span>
-<span>                                 n_permutations <span class="op">=</span> <span class="va">B</span>, seed <span class="op">=</span> <span class="va">seed</span><span class="op">)</span></span>
-<span>  <span class="op">)</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>    n         <span class="op">=</span> <span class="va">n</span>,</span>
-<span>    m         <span class="op">=</span> <span class="va">m</span>,</span>
-<span>    method    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hsic_test (exact)"</span>, <span class="st">"nystrom"</span>, <span class="st">"rff"</span><span class="op">)</span>,</span>
-<span>    elapsed_s <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">t_exact</span>, <span class="va">t_nystrom</span>, <span class="va">t_rff</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>,</span>
-<span>    p_value   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">res_exact</span><span class="op">$</span><span class="va">p_value</span>, <span class="va">res_nystrom</span><span class="op">$</span><span class="va">p_value</span>,</span>
-<span>                        <span class="va">res_rff</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
+<span><span class="va">fac_ny</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nystrom_factor.html">nystrom_factor</a></span><span class="op">(</span><span class="va">x_check</span>, kernel <span class="op">=</span> <span class="va">kern</span>, m <span class="op">=</span> <span class="va">n_check</span> <span class="op">-</span> <span class="fl">1L</span>,</span>
+<span>                         seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="va">k_ny</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/crossprod.html" class="external-link">tcrossprod</a></span><span class="op">(</span><span class="va">fac_ny</span><span class="op">$</span><span class="cn">F</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">fac_rf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rff_features.html">rff_features</a></span><span class="op">(</span><span class="va">x_check</span>, kernel <span class="op">=</span> <span class="va">kern</span>, D <span class="op">=</span> <span class="fl">1500L</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="va">k_rf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/crossprod.html" class="external-link">tcrossprod</a></span><span class="op">(</span><span class="va">fac_rf</span><span class="op">$</span><span class="cn">F</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">rel_err</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">k_hat</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="op">(</span><span class="va">k_full</span> <span class="op">-</span> <span class="va">k_hat</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">k_full</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span></span>
-<span><span class="fu">benchmark_hsic</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500L</span>,  m <span class="op">=</span> <span class="fl">60L</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     n  m            method elapsed_s p_value</span></span>
-<span><span class="co">#&gt; 1 500 60 hsic_test (exact)     0.093    0.02</span></span>
-<span><span class="co">#&gt; 2 500 60           nystrom     0.016    0.02</span></span>
-<span><span class="co">#&gt; 3 500 60               rff     0.015    0.02</span></span></code></pre></div>
-<p>For larger <code>n</code>, the gap widens:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">benchmark_hsic</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">1500L</span>, m <span class="op">=</span> <span class="fl">100L</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      n   m            method elapsed_s p_value</span></span>
-<span><span class="co">#&gt; 1 1500 100 hsic_test (exact)     0.783    0.02</span></span>
-<span><span class="co">#&gt; 2 1500 100           nystrom     0.117    0.02</span></span>
-<span><span class="co">#&gt; 3 1500 100               rff     0.117    0.02</span></span></code></pre></div>
-<p>The verdict (reject vs accept) agrees across exact and approximate
-tests at moderate <code>m</code>; the approximation is for speed, not
-for detecting a different signal.</p>
-</div>
-<div class="section level2">
-<h2 id="when-to-use-which">When to use which<a class="anchor" aria-label="anchor" href="#when-to-use-which"></a>
-</h2>
+<span><span class="va">recon</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nystrom"</span>, <span class="st">"rff"</span><span class="op">)</span>,</span>
+<span>  rank <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">fac_ny</span><span class="op">$</span><span class="cn">F</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">fac_rf</span><span class="op">$</span><span class="cn">F</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  rel_err <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">rel_err</span><span class="op">(</span><span class="va">k_ny</span><span class="op">)</span>, <span class="fu">rel_err</span><span class="op">(</span><span class="va">k_rf</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
+<caption>Reconstruction of the exact 80 by 80 Gram matrix by each
+factorisation.</caption>
 <thead><tr class="header">
-<th>Scenario</th>
-<th>Pick</th>
+<th align="left">Method</th>
+<th align="right">Rank or features</th>
+<th align="right">Relative Frobenius error</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Small <code>n</code> (&lt; 500)</td>
-<td>
-<code><a href="../reference/hsic_test.html">hsic_test()</a></code> – exact, fast enough.</td>
+<td align="left">nystrom</td>
+<td align="right">79</td>
+<td align="right">0.000000</td>
 </tr>
 <tr class="even">
-<td>Medium <code>n</code> (500-5000), any kernel</td>
-<td>
-<code>hsic_test_nystrom(method = "nystrom")</code>. Choose
-<code>m</code> in <code>[50, 200]</code>.</td>
-</tr>
-<tr class="odd">
-<td>Large <code>n</code> (&gt; 5000), RBF kernel</td>
-<td>
-<code>hsic_test_nystrom(method = "rff")</code> with <code>D</code>
-in <code>[200, 1000]</code>. Data-independent projection; cheapest at
-large n.</td>
-</tr>
-<tr class="even">
-<td>Repeated tests on different <code>y</code> with same
-<code>x</code>
-</td>
-<td>Cache <code>nystrom_factor(x)</code> or <code>rff_features(x)</code>
-once; pass the factor in (future API).</td>
+<td align="left">rff</td>
+<td align="right">1500</td>
+<td align="right">0.047282</td>
 </tr>
 </tbody>
 </table>
 </div>
+<div class="section level3">
+<h3 id="what-it-costs-and-what-it-saves">What it costs and what it saves<a class="anchor" aria-label="anchor" href="#what-it-costs-and-what-it-saves"></a>
+</h3>
+<p>The same independence test at four sample sizes, run exactly and
+through both approximations. The data are a synthetic pair with a
+genuine linear dependence, so all three tests should reject.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">benchmark_hsic</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span>, <span class="va">m</span>, <span class="va">n_perm</span> <span class="op">=</span> <span class="fl">49L</span>, <span class="va">seed</span> <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="va">seed</span><span class="op">)</span></span>
+<span>  <span class="va">x_bench</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span>  <span class="va">y_bench</span> <span class="op">&lt;-</span> <span class="va">x_bench</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span>  <span class="va">t_exact</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span></span>
+<span>    <span class="va">res_exact</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_test.html">hsic_test</a></span><span class="op">(</span><span class="va">x_bench</span>, <span class="va">y_bench</span>, n_permutations <span class="op">=</span> <span class="va">n_perm</span>,</span>
+<span>                           seed <span class="op">=</span> <span class="va">seed</span><span class="op">)</span></span>
+<span>  <span class="op">)</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="va">t_nystrom</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span></span>
+<span>    <span class="va">res_nystrom</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_test_nystrom.html">hsic_test_nystrom</a></span><span class="op">(</span><span class="va">x_bench</span>, <span class="va">y_bench</span>, m <span class="op">=</span> <span class="va">m</span>,</span>
+<span>                                     n_permutations <span class="op">=</span> <span class="va">n_perm</span>, seed <span class="op">=</span> <span class="va">seed</span><span class="op">)</span></span>
+<span>  <span class="op">)</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="va">t_rff</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span></span>
+<span>    <span class="va">res_rff</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_test_nystrom.html">hsic_test_nystrom</a></span><span class="op">(</span><span class="va">x_bench</span>, <span class="va">y_bench</span>, method <span class="op">=</span> <span class="st">"rff"</span>, m <span class="op">=</span> <span class="va">m</span>,</span>
+<span>                                 n_permutations <span class="op">=</span> <span class="va">n_perm</span>, seed <span class="op">=</span> <span class="va">seed</span><span class="op">)</span></span>
+<span>  <span class="op">)</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    n <span class="op">=</span> <span class="va">n</span>, m <span class="op">=</span> <span class="va">m</span>,</span>
+<span>    method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"exact"</span>, <span class="st">"nystrom"</span>, <span class="st">"rff"</span><span class="op">)</span>,</span>
+<span>    elapsed_s <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">t_exact</span>, <span class="va">t_nystrom</span>, <span class="va">t_rff</span><span class="op">)</span>,</span>
+<span>    p_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">res_exact</span><span class="op">$</span><span class="va">p_value</span>, <span class="va">res_nystrom</span><span class="op">$</span><span class="va">p_value</span>, <span class="va">res_rff</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span>,</span>
+<span>    stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">bench</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>  <span class="fu">benchmark_hsic</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">250L</span>, m <span class="op">=</span> <span class="fl">40L</span><span class="op">)</span>,</span>
+<span>  <span class="fu">benchmark_hsic</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500L</span>, m <span class="op">=</span> <span class="fl">60L</span><span class="op">)</span>,</span>
+<span>  <span class="fu">benchmark_hsic</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">1000L</span>, m <span class="op">=</span> <span class="fl">80L</span><span class="op">)</span>,</span>
+<span>  <span class="fu">benchmark_hsic</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">2000L</span>, m <span class="op">=</span> <span class="fl">100L</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Elapsed time and verdict for the exact test and the two
+approximations, at 4 sample sizes, 49 permutations each.</caption>
+<thead><tr class="header">
+<th align="right">n</th>
+<th align="right">Rank m</th>
+<th align="left">Method</th>
+<th align="right">Elapsed (s)</th>
+<th align="right">p-value</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">250</td>
+<td align="right">40</td>
+<td align="left">exact</td>
+<td align="right">0.024</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="right">250</td>
+<td align="right">40</td>
+<td align="left">nystrom</td>
+<td align="right">0.008</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="odd">
+<td align="right">250</td>
+<td align="right">40</td>
+<td align="left">rff</td>
+<td align="right">0.006</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="right">500</td>
+<td align="right">60</td>
+<td align="left">exact</td>
+<td align="right">0.095</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="odd">
+<td align="right">500</td>
+<td align="right">60</td>
+<td align="left">nystrom</td>
+<td align="right">0.020</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="right">500</td>
+<td align="right">60</td>
+<td align="left">rff</td>
+<td align="right">0.016</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="odd">
+<td align="right">1000</td>
+<td align="right">80</td>
+<td align="left">exact</td>
+<td align="right">0.501</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="right">1000</td>
+<td align="right">80</td>
+<td align="left">nystrom</td>
+<td align="right">0.083</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="odd">
+<td align="right">1000</td>
+<td align="right">80</td>
+<td align="left">rff</td>
+<td align="right">0.079</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="right">2000</td>
+<td align="right">100</td>
+<td align="left">exact</td>
+<td align="right">2.230</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="odd">
+<td align="right">2000</td>
+<td align="right">100</td>
+<td align="left">nystrom</td>
+<td align="right">0.208</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="right">2000</td>
+<td align="right">100</td>
+<td align="left">rff</td>
+<td align="right">0.196</td>
+<td align="right">0.02</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3">
+<h3 id="the-figure-where-the-two-curves-separate">The figure: where the two curves separate<a class="anchor" aria-label="anchor" href="#the-figure-where-the-two-curves-separate"></a>
+</h3>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
+<span>  <span class="va">bench</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">n</span>, y <span class="op">=</span> <span class="va">elapsed_s</span>, colour <span class="op">=</span> <span class="va">method</span><span class="op">)</span></span>
+<span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">2.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_log10</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_log10</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_colour_viridis_d</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"method"</span>, end <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="st">"observations n (log scale)"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"elapsed time in seconds (log scale)"</span>,</span>
+<span>    title <span class="op">=</span> <span class="st">"Cost of one HSIC test as the sample grows"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<div class="figure">
+<img src="kernR-nystrom_files/figure-html/fig-scaling-1.png" class="r-plt" alt="Elapsed seconds against sample size for the exact HSIC test and the two low-rank approximations, on logarithmic axes. The exact curve rises with the square of the sample size; the approximate curves rise close to linearly, so the gap widens with every doubling." width="1050"><p class="caption">
+Elapsed seconds against sample size for the exact HSIC test and the two
+low-rank approximations, on logarithmic axes. The exact curve rises with
+the square of the sample size; the approximate curves rise close to
+linearly, so the gap widens with every doubling.
+</p>
+</div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="read">Read<a class="anchor" aria-label="anchor" href="#read"></a>
+</h2>
+<p>Both factorisations reconstruct the exact Gram matrix closely.
+Nystrom at rank 79, one below the sample size, has a relative Frobenius
+error of 1.85e-07; Random Fourier Features at 1500 features has 0.0473.
+The two get there differently: Nystrom converges as its rank approaches
+the sample size, Random Fourier Features as the feature count grows, and
+neither is exact.</p>
+<p>The timing grid is the argument. At 250 observations the exact test
+takes 0.024 seconds and the difference hardly matters. At 2000
+observations it takes 2.23 seconds against 0.21 for Nystrom and 0.2 for
+Random Fourier Features, a speed-up of about 11 times. The figure shows
+the mechanism rather than the numbers. Fitting a straight line to each
+curve on logarithmic axes gives a slope of 2.2 for the exact test
+against 1.62 for Nystrom and 1.74 for Random Fourier Features: the exact
+test tracks the square law its Gram matrix implies, and the two
+approximations grow substantially more slowly, so the gap is not a
+constant factor but one that widens with every doubling.</p>
+<p>The verdicts agree. 4 sample sizes, three methods each, and every
+p-value is 0.02, which is the smallest value 49 permutations can
+express. That the three methods agree at the permutation floor shows the
+approximation did not lose the signal; it is not a demonstration that
+they would agree on a borderline case, which would need a design near
+the threshold and many more permutations.</p>
+</div>
+<div class="section level2">
+<h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
+</h2>
+<p>The reconstruction check is run at 80 observations with Nystrom at
+near-full rank, which is the easiest case there is; at the ranks the
+timing grid uses, 40 to 100 against samples of 250 to 2000, the
+reconstruction error is larger and is not measured here. The timing grid
+is a single run per cell on one machine and one core, so the numbers are
+indicative and not a benchmark: the ratios are the durable part, the
+absolute seconds are not. The two approximations also change the
+estimator. The exact <code><a href="../reference/hsic_test.html">hsic_test()</a></code> uses the unbiased HSIC
+estimator of Gretton and colleagues (2008); the low-rank path uses the
+biased form
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>n</mi><mrow><mi>−</mi><mn>2</mn></mrow></msup><mspace width="0.167em"></mspace><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>H</mi><msub><mi>K</mi><mi>x</mi></msub><mi>H</mi><msub><mi>K</mi><mi>y</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">n^{-2} \, \mathrm{tr}(H K_x H K_y)</annotation></semantics></math>,
+because that is what factors cleanly through a low-rank approximation.
+The bias is of order <code>1 / n</code>, which is negligible in exactly
+the large-sample regime where these approximations are worth using, and
+is not negligible at the small sample sizes where the exact test is
+affordable anyway. Finally, <code><a href="../reference/hsic_test_nystrom.html">hsic_test_nystrom()</a></code> recomputes
+its factorisation on every call, so repeated tests against the same
+covariate cannot yet share one cached factor even though
+<code><a href="../reference/nystrom_factor.html">nystrom_factor()</a></code> and <code><a href="../reference/rff_features.html">rff_features()</a></code> expose
+it.</p>
+</div>
 <div class="section level2">
 <h2 id="notes-on-practice">Notes on practice<a class="anchor" aria-label="anchor" href="#notes-on-practice"></a>
 </h2>
-<ul>
-<li>
-<strong>Bias vs unbiased estimator.</strong> The exact
-<code><a href="../reference/hsic_test.html">hsic_test()</a></code> uses the Gretton-2008 <em>unbiased</em> HSIC.
-The Nystrom/RFF version uses the <em>biased</em> estimator
-<code>(1/n^2) tr(H K_x H K_y)</code>, because that form factors cleanly
-through low-rank approximations. The bias is <code>O(1/n)</code> –
-negligible in the large-<code>n</code> regime where these approximations
-are useful.</li>
-<li>
-<strong>Choosing <code>m</code> for Nystrom.</strong> Rule of thumb:
-<code>m = ceiling(2 sqrt(n))</code> is a defensible starting point.
-Diagnose via the Frobenius reconstruction error on a small subsample if
-precision matters.</li>
-<li>
-<strong>Choosing <code>D</code> for RFF.</strong> RFF variance
-scales as <code>O(1/D)</code>; the bias is zero in expectation. Larger
-<code>D</code> is always better in accuracy but costs memory;
-<code>D = 200-500</code> is usually adequate for verdict-style
-tests.</li>
-<li>
-<strong>Reproducibility.</strong> Both factorisations are
-randomised; pass <code>seed</code> for deterministic output.</li>
-</ul>
+<p><strong>Choosing the method.</strong> Below about 500 observations
+the exact test is fast enough and there is no reason to approximate.
+Between 500 and 5000, Nystrom works for any kernel; a rank in the range
+50 to 200 is the usual choice. Above 5000 with an RBF kernel, Random
+Fourier Features is the cheapest option because its projection is
+data-independent; 200 to 1000 features is usually adequate for a
+verdict.</p>
+<p><strong>Choosing the rank.</strong> A rank of about twice the square
+root of the sample size is a defensible starting point for Nystrom. When
+precision matters, measure the reconstruction error on a small subsample
+as the first section of this vignette does.</p>
+<p><strong>Choosing the feature count.</strong> The variance of a Random
+Fourier Feature approximation falls as one over the feature count and
+its bias is zero in expectation, so more features are always more
+accurate and cost more memory.</p>
+<p><strong>Reproducibility.</strong> Both factorisations are randomised.
+Pass <code>seed</code> for deterministic output; without it, two runs of
+the same test give different numbers.</p>
+</div>
+<div class="section level2">
+<h2 id="what-to-read-next">What to read next<a class="anchor" aria-label="anchor" href="#what-to-read-next"></a>
+</h2>
+<p><em>Getting started with kernR</em> introduces the exact HSIC test
+these approximations stand in for. <em>Which parameters change the shape
+of the output distribution?</em> explains why the total-order
+sensitivity indices do not yet use these factorisations. <em>Are these
+draws calibrated, and do the engines agree?</em> covers
+<code><a href="../reference/ksd_test_nystrom.html">ksd_test_nystrom()</a></code> and
+<code><a href="../reference/concordance_test_nystrom.html">concordance_test_nystrom()</a></code>, the same idea applied to the
+goodness-of-fit and concordance tests.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <ul>
-<li>Williams, C. K. I., &amp; Seeger, M. (2001). Using the Nystrom
-method to speed up kernel machines. <em>NeurIPS</em>, 13.</li>
-<li>Rahimi, A., &amp; Recht, B. (2007). Random features for large-scale
-kernel machines. <em>NeurIPS</em>, 20.</li>
-<li>Gretton, A., Bousquet, O., Smola, A., &amp; Schölkopf, B. (2005).
+<li>Gretton, A., Fukumizu, K., Teo, C. H., Song, L., Scholkopf, B.,
+&amp; Smola, A. J. (2008). A kernel statistical test of independence.
+<em>Advances in Neural Information Processing Systems</em>, 20.</li>
+<li>Gretton, A., Bousquet, O., Smola, A., &amp; Scholkopf, B. (2005).
 Measuring statistical dependence with Hilbert-Schmidt norms.
-<em>ALT</em>, 63-77.</li>
+<em>Algorithmic Learning Theory</em>, 63-77.</li>
+<li>Rahimi, A., &amp; Recht, B. (2007). Random features for large-scale
+kernel machines. <em>Advances in Neural Information Processing
+Systems</em>, 20.</li>
+<li>Williams, C. K. I., &amp; Seeger, M. (2001). Using the Nystrom
+method to speed up kernel machines. <em>Advances in Neural Information
+Processing Systems</em>, 13.</li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="reproduce">Reproduce<a class="anchor" aria-label="anchor" href="#reproduce"></a>
+</h2>
+<p>Seed <code>1</code> for the reconstruction check and for every cell
+of the timing grid, passed to the factorisations and to the permutation
+null alike. Timings measured on macOS aarch64, R 4.5.2, one core.
+Package versions follow.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">#&gt;  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">#&gt; [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: UTC</span></span>
+<span><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt; [1] kernR_0.8.2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.51         </span></span>
+<span><span class="co">#&gt;  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         </span></span>
+<span><span class="co">#&gt;  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  </span></span>
+<span><span class="co">#&gt; [10] data.table_1.18.6.1 jsonlite_2.0.0      glue_1.8.1         </span></span>
+<span><span class="co">#&gt; [13] htmltools_0.5.9     PESTO_0.10.1        ragg_1.5.2         </span></span>
+<span><span class="co">#&gt; [16] sass_0.4.10         scales_1.4.0        rmarkdown_2.32     </span></span>
+<span><span class="co">#&gt; [19] grid_4.6.1          evaluate_1.0.5      jquerylib_0.1.4    </span></span>
+<span><span class="co">#&gt; [22] fastmap_1.2.0       yaml_2.3.12         lifecycle_1.0.5    </span></span>
+<span><span class="co">#&gt; [25] compiler_4.6.1      RColorBrewer_1.1-3  fs_2.1.0           </span></span>
+<span><span class="co">#&gt; [28] Rcpp_1.1.2          farver_2.1.2        systemfonts_1.3.2  </span></span>
+<span><span class="co">#&gt; [31] digest_0.6.39       viridisLite_0.4.3   R6_2.6.1           </span></span>
+<span><span class="co">#&gt; [34] bslib_0.12.0        withr_3.0.3         tools_4.6.1        </span></span>
+<span><span class="co">#&gt; [37] gtable_0.3.6        pkgdown_2.2.1       ggplot2_4.0.3      </span></span>
+<span><span class="co">#&gt; [40] cachem_1.1.0        desc_1.4.3</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>HSIC-Based Distributional Sensitivity • kernR</title>
+<title>Which parameters change the shape of the output distribution? • kernR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="HSIC-Based Distributional Sensitivity">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Which parameters change the shape of the output distribution?">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,10 +33,10 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting Started with kernR</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Causal Association Testing with bd-HSIC</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">Distributional Treatment Effect Tests (DR-DATE / DR-DETT)</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">Hierarchical and Nested Data</a></li>
+<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting started with kernR</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Does the treatment cause the outcome, or do they share a cause?</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">A treatment that changes the spread and not the mean</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">When plots sit inside farms</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -58,11 +58,8 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>HSIC-Based Distributional Sensitivity</h1>
-                        <h4 data-toc-skip class="author">Max
-Moldovan</h4>
+      <h1>Which parameters change the shape of the output distribution?</h1>
             
-            <h4 data-toc-skip class="date">2026-08-25</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/max578/kernR/blob/main/vignettes/kernR-sensitivity.Rmd" class="external-link"><code>vignettes/kernR-sensitivity.Rmd</code></a></small>
       <div class="d-none name"><code>kernR-sensitivity.Rmd</code></div>
@@ -70,66 +67,105 @@ Moldovan</h4>
 
     
     
+<!-- Render time: ~21 s under rmarkdown::render(); macOS aarch64, R 4.5.2,
+     one core. Five sensitivity scans on designs of 400 to 600 rows, two of
+     them with total-order indices and one with a 100-draw pair bootstrap;
+     the 600-row first-order scan and the conditional-permutation null
+     dominate. -->
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
-<h2 id="what-hsic-sensitivity-catches-that-sobol-misses">What HSIC-Sensitivity catches that Sobol misses<a class="anchor" aria-label="anchor" href="#what-hsic-sensitivity-catches-that-sobol-misses"></a>
+<h2 id="why">Why<a class="anchor" aria-label="anchor" href="#why"></a>
 </h2>
-<p>Variance-based Sobol indices are the workhorse of global sensitivity
-analysis: they decompose the output variance into contributions from
-each input. They have one structural blind spot –
-<em>distributional</em> effects that leave variance unchanged. A
-parameter that flips the output skewness, fattens its tails, or shifts a
-quantile without moving the variance is invisible to Sobol.</p>
-<p>The HSIC-Sensitivity Index (Da Veiga, 2015) replaces the variance
-with a kernel-based dependence measure (the Hilbert-Schmidt Independence
-Criterion). The normalised first-order index is</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>S</mi><mi>j</mi><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow></msubsup><mo>=</mo><mfrac><mrow><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>X</mi><mi>j</mi></msub><mo>,</mo><mi>Y</mi><mo stretchy="false" form="postfix">)</mo></mrow><msqrt><mrow><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>X</mi><mi>j</mi></msub><mo>,</mo><msub><mi>X</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>Y</mi><mo stretchy="false" form="postfix">)</mo></mrow></msqrt></mfrac><mo>∈</mo><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+<p>A risk modeller is ranking the parameters of a crop model and does
+not trust the ranking. <em>The variance budget says one parameter
+dominates and the rest are negligible. But two of those negligible
+parameters are the ones that decide whether a bad season is merely poor
+or a write-off: one fattens the lower tail and one skews the whole
+distribution, neither of them changes the variance much. Is there a
+sensitivity index that ranks a parameter by what it does to the
+distribution rather than by how much variance it explains?</em> This
+vignette answers with the HSIC-based sensitivity index, on a synthetic
+simulator whose parameters were built to separate the two questions, and
+then adds total-order indices for the parameters that act only in
+combination.</p>
+</div>
+<div class="section level2">
+<h2 id="what">What<a class="anchor" aria-label="anchor" href="#what"></a>
+</h2>
+<p>A variance-based Sobol index decomposes the output variance into
+contributions from each input, which makes it blind by construction to
+any effect that leaves the variance where it was. The HSIC-Sensitivity
+Index of Da Veiga (2015) replaces the variance with a kernel dependence
+measure. The normalised first-order index is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>S</mi><mi>j</mi><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow></msubsup><mo>=</mo><mfrac><mrow><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>X</mi><mi>j</mi></msub><mo>,</mo><mi>Y</mi><mo stretchy="false" form="postfix">)</mo></mrow><msqrt><mrow><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>X</mi><mi>j</mi></msub><mo>,</mo><msub><mi>X</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>Y</mi><mo stretchy="false" form="postfix">)</mo></mrow></msqrt></mfrac><mo>∈</mo><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
 S_j^{\mathrm{HSIC}}
   = \frac{\mathrm{HSIC}(X_j, Y)}
          {\sqrt{\mathrm{HSIC}(X_j, X_j) \cdot \mathrm{HSIC}(Y, Y)}}
-  \in [0, 1].
+  \in [0, 1],
 </annotation></semantics></math></p>
-<p>It is bounded like a Sobol index, comparable in magnitude across
-parameters, and detects mean-preserving distributional effects.</p>
+<p>bounded like a Sobol index, comparable across parameters, and
+sensitive to any change in the conditional distribution of the output,
+including the mean-preserving ones.</p>
+<p><code><a href="../reference/hsic_sensitivity.html">hsic_sensitivity()</a></code> computes it for every parameter
+against every output, with a permutation p-value per pair and a
+Benjamini-Hochberg adjustment across the grid.
+<code>total_order = TRUE</code> adds the total-order index in Da Veiga’s
+complement form,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>T</mi><mi>j</mi><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow></msubsup><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mrow><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>X</mi><mrow><mo>∼</mo><mi>j</mi></mrow></msub><mo>,</mo><mi>Y</mi><mo stretchy="false" form="postfix">)</mo></mrow><msqrt><mrow><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>X</mi><mrow><mo>∼</mo><mi>j</mi></mrow></msub><mo>,</mo><msub><mi>X</mi><mrow><mo>∼</mo><mi>j</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>Y</mi><mo stretchy="false" form="postfix">)</mo></mrow></msqrt></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+T_j^{\mathrm{HSIC}}
+  = 1 - \frac{\mathrm{HSIC}(X_{\sim j}, Y)}
+              {\sqrt{\mathrm{HSIC}(X_{\sim j}, X_{\sim j}) \cdot
+                     \mathrm{HSIC}(Y, Y)}},
+</annotation></semantics></math></p>
+<p>which measures the contribution of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>j</mi></msub><annotation encoding="application/x-tex">X_j</annotation></semantics></math>
+directly plus through every interaction it takes part in.
+<code>total_order_ci = TRUE</code> attaches a pair-bootstrap percentile
+interval to each total-order index, and
+<code>total_order_test = "cond_perm"</code> attaches a
+conditional-permutation significance test to it.
+<code><a href="../reference/lhs_design.html">lhs_design()</a></code> builds the design; <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and
+<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> render the result.</p>
 </div>
 <div class="section level2">
-<h2 id="a-sensitivity-scan-on-a-stubbed-apsim-like-simulator">A sensitivity scan on a stubbed APSIM-like simulator<a class="anchor" aria-label="anchor" href="#a-sensitivity-scan-on-a-stubbed-apsim-like-simulator"></a>
+<h2 id="do">Do<a class="anchor" aria-label="anchor" href="#do"></a>
 </h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">stub_apsim</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="co"># theta: n x 4 matrix</span></span>
-<span>  <span class="co"># `mean_effect` shifts the mean (Sobol catches this)</span></span>
-<span>  <span class="co"># `var_effect`  shifts the variance only -- mean-preserving</span></span>
-<span>  <span class="co"># `tail_effect` injects a heavy-tailed component (visible to HSIC)</span></span>
-<span>  <span class="co"># `inert`       has no effect</span></span>
-<span>  <span class="va">n</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span></span>
+<div class="section level3">
+<h3 id="a-simulator-built-to-separate-the-two-questions">A simulator built to separate the two questions<a class="anchor" aria-label="anchor" href="#a-simulator-built-to-separate-the-two-questions"></a>
+</h3>
+<p>A synthetic stub with four parameters, each carrying one kind of
+effect. <code>mean_effect</code> shifts the mean, which a variance
+budget also sees. <code>var_effect</code> changes the spread and nothing
+else. <code>tail_effect</code> injects a heavy-tailed component,
+changing the shape without moving the centre. <code>inert</code> does
+nothing.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">stub_apsim</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">theta</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">n_row</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span></span>
 <span>  <span class="va">yield</span> <span class="op">&lt;-</span> <span class="fl">1.5</span> <span class="op">*</span> <span class="va">theta</span><span class="op">[</span>, <span class="st">"mean_effect"</span><span class="op">]</span> <span class="op">+</span></span>
-<span>           <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">theta</span><span class="op">[</span>, <span class="st">"var_effect"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>           <span class="va">theta</span><span class="op">[</span>, <span class="st">"tail_effect"</span><span class="op">]</span> <span class="op">*</span></span>
-<span>             <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">rt</a></span><span class="op">(</span><span class="va">n</span>, df <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">*</span> <span class="fl">0.4</span> <span class="op">+</span></span>
-<span>           <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_row</span>, sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">theta</span><span class="op">[</span>, <span class="st">"var_effect"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="va">theta</span><span class="op">[</span>, <span class="st">"tail_effect"</span><span class="op">]</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">rt</a></span><span class="op">(</span><span class="va">n_row</span>, df <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">*</span> <span class="fl">0.4</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_row</span>, sd <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">yield</span>, ncol <span class="op">=</span> <span class="fl">1L</span>, dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="st">"yield"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1L</span><span class="op">)</span></span>
 <span><span class="va">bounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
 <span>  mean_effect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">1.0</span><span class="op">)</span>,</span>
 <span>  var_effect  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
 <span>  tail_effect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">1.0</span><span class="op">)</span>,</span>
 <span>  inert       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.0</span>, <span class="fl">1.0</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">design</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lhs_design.html">lhs_design</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">200L</span>, bounds <span class="op">=</span> <span class="va">bounds</span>, seed <span class="op">=</span> <span class="fl">11L</span><span class="op">)</span></span>
-<span><span class="va">y</span>      <span class="op">&lt;-</span> <span class="fu">stub_apsim</span><span class="op">(</span><span class="va">design</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">design</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lhs_design.html">lhs_design</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">600L</span>, bounds <span class="op">=</span> <span class="va">bounds</span>, seed <span class="op">=</span> <span class="fl">11L</span><span class="op">)</span></span>
+<span><span class="va">yield</span> <span class="op">&lt;-</span> <span class="fu">stub_apsim</span><span class="op">(</span><span class="va">design</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="the-scan">The scan<a class="anchor" aria-label="anchor" href="#the-scan"></a>
-</h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="section level3">
+<h3 id="the-first-order-scan">The first-order scan<a class="anchor" aria-label="anchor" href="#the-first-order-scan"></a>
+</h3>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_sensitivity.html">hsic_sensitivity</a></span><span class="op">(</span></span>
-<span>  theta          <span class="op">=</span> <span class="va">design</span>,</span>
-<span>  y              <span class="op">=</span> <span class="va">y</span>,</span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">199L</span>,</span>
-<span>  seed           <span class="op">=</span> <span class="fl">11L</span></span>
+<span>  theta <span class="op">=</span> <span class="va">design</span>, y <span class="op">=</span> <span class="va">yield</span>, n_permutations <span class="op">=</span> <span class="fl">199L</span>, seed <span class="op">=</span> <span class="fl">11L</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">fit</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -137,7 +173,7 @@ parameters, and detects mean-preserving distributional effects.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Parameters:   4 </span></span>
 <span><span class="co">#&gt; Outputs:      1 </span></span>
-<span><span class="co">#&gt; N:            200 </span></span>
+<span><span class="co">#&gt; N:            600 </span></span>
 <span><span class="co">#&gt; Permutations: 199 </span></span>
 <span><span class="co">#&gt; P-adjust:     BH </span></span>
 <span><span class="co">#&gt; Total-order: no</span></span>
@@ -146,128 +182,150 @@ parameters, and detects mean-preserving distributional effects.</p>
 <span><span class="co">#&gt;   S = first-order index</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    parameter S_first_max min_p_first</span></span>
-<span><span class="co">#&gt;  mean_effect       0.156      0.0200</span></span>
-<span><span class="co">#&gt;   var_effect       0.020      0.1400</span></span>
-<span><span class="co">#&gt;        inert       0.013      0.4000</span></span>
-<span><span class="co">#&gt;  tail_effect       0.009      0.5250</span></span></code></pre></div>
-<p>The print method ranks parameters by their first-order
-HSIC-Sensitivity Index. Expectations on this design:</p>
-<ul>
-<li>
-<code>mean_effect</code> – large index, small p-value (Sobol would
-also catch this).</li>
-<li>
-<code>var_effect</code> – non-negligible index despite preserving
-the conditional mean (Sobol misses this).</li>
-<li>
-<code>tail_effect</code> – detectable distributional
-contribution.</li>
-<li>
-<code>inert</code> – index near zero, p-value not significant.</li>
-</ul>
-</div>
-<div class="section level2">
-<h2 id="visual">Visual<a class="anchor" aria-label="anchor" href="#visual"></a>
-</h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<span><span class="co">#&gt;  mean_effect       0.101      0.0100</span></span>
+<span><span class="co">#&gt;   var_effect       0.067      0.0100</span></span>
+<span><span class="co">#&gt;  tail_effect       0.009      0.0600</span></span>
+<span><span class="co">#&gt;        inert       0.001      0.9450</span></span></code></pre></div>
+<table class="table">
+<caption>First-order HSIC-Sensitivity Indices on the 600-row design,
+ranked, with p-values adjusted by BH.</caption>
+<colgroup>
+<col width="18%">
+<col width="10%">
+<col width="10%">
+<col width="22%">
+<col width="12%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Output</th>
+<th align="right">Index</th>
+<th align="right">HSIC statistic</th>
+<th align="right">p-value</th>
+<th align="right">Adjusted p-value</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">mean_effect</td>
+<td align="left">yield</td>
+<td align="right">0.1009</td>
+<td align="right">0.00840</td>
+<td align="right">0.005</td>
+<td align="right">0.010</td>
+</tr>
+<tr class="even">
+<td align="left">var_effect</td>
+<td align="left">yield</td>
+<td align="right">0.0671</td>
+<td align="right">0.00559</td>
+<td align="right">0.005</td>
+<td align="right">0.010</td>
+</tr>
+<tr class="odd">
+<td align="left">tail_effect</td>
+<td align="left">yield</td>
+<td align="right">0.0090</td>
+<td align="right">0.00075</td>
+<td align="right">0.045</td>
+<td align="right">0.060</td>
+</tr>
+<tr class="even">
+<td align="left">inert</td>
+<td align="left">yield</td>
+<td align="right">0.0013</td>
+<td align="right">0.00011</td>
+<td align="right">0.945</td>
+<td align="right">0.945</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
-<img src="kernR-sensitivity_files/figure-html/plot-1.png" class="r-plt" alt="First-order HSIC-Sensitivity Index per parameter, bars coloured by significance after Benjamini-Hochberg adjustment at alpha = 0.05." width="900"><p class="caption">
-First-order HSIC-Sensitivity Index per parameter, bars coloured by
-significance after Benjamini-Hochberg adjustment at alpha = 0.05.
+<img src="kernR-sensitivity_files/figure-html/plot-scan-1.png" class="r-plt" alt="The package's own diagnostic: first-order HSIC-Sensitivity Index per parameter, bars coloured by significance after Benjamini-Hochberg adjustment at alpha = 0.05." width="1050"><p class="caption">
+The package’s own diagnostic: first-order HSIC-Sensitivity Index per
+parameter, bars coloured by significance after Benjamini-Hochberg
+adjustment at alpha = 0.05.
 </p>
 </div>
-<p>Bars colour-coded by significance at the default
-<code>alpha = 0.05</code> after Benjamini-Hochberg adjustment.
-<code>mean_effect</code> clears the threshold on central tendency alone,
-but <code>var_effect</code> and <code>tail_effect</code> also come back
-significant even though they were built to leave the conditional mean
-untouched – the distributional signal a Sobol variance-budget would
-miss.</p>
 </div>
-<div class="section level2">
-<h2 id="side-by-side-with-sensitivitysobol">Side-by-side with <code>sensitivity::sobol</code><a class="anchor" aria-label="anchor" href="#side-by-side-with-sensitivitysobol"></a>
-</h2>
-<p>If you have the <code>sensitivity</code> package installed, you can
-compare HSIC indices to Sobol’s first-order indices on the same
-design:</p>
-<pre><code><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">sensitivity</span><span class="op">)</span></span>
+<div class="section level3">
+<h3 id="the-figure-the-distributions-behind-the-index">The figure: the distributions behind the index<a class="anchor" aria-label="anchor" href="#the-figure-the-distributions-behind-the-index"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">halves</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">design</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">p1</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    parameter <span class="op">=</span> <span class="va">p1</span>,</span>
+<span>    half <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">design</span><span class="op">[</span>, <span class="va">p1</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">design</span><span class="op">[</span>, <span class="va">p1</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>                  <span class="st">"upper half of range"</span>, <span class="st">"lower half of range"</span><span class="op">)</span>,</span>
+<span>    yield <span class="op">=</span> <span class="va">yield</span><span class="op">[</span>, <span class="st">"yield"</span><span class="op">]</span>,</span>
+<span>    stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">halves</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">yield</span>, fill <span class="op">=</span> <span class="va">half</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density.html" class="external-link">geom_density</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.55</span>, colour <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">parameter</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_d</a></span><span class="op">(</span>name <span class="op">=</span> <span class="cn">NULL</span>, end <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="st">"yield (arbitrary units)"</span>, y <span class="op">=</span> <span class="st">"density"</span>,</span>
+<span>    title <span class="op">=</span> <span class="st">"What each parameter does to the output distribution"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
+<div class="figure">
+<img src="kernR-sensitivity_files/figure-html/fig-shapes-1.png" class="r-plt" alt="The yield distribution when each parameter is in the lower half of its range against the upper half, one panel per parameter. Under mean_effect the curve slides sideways, which a variance budget also detects. Under var_effect and tail_effect the curve changes width and weight while staying where it is, which is the effect a variance budget is blind to. Under inert the two curves lie on top of each other." width="1050"><p class="caption">
+The yield distribution when each parameter is in the lower half of its
+range against the upper half, one panel per parameter. Under mean_effect
+the curve slides sideways, which a variance budget also detects. Under
+var_effect and tail_effect the curve changes width and weight while
+staying where it is, which is the effect a variance budget is blind to.
+Under inert the two curves lie on top of each other.
+</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="comparing-against-sobol">Comparing against Sobol<a class="anchor" aria-label="anchor" href="#comparing-against-sobol"></a>
+</h3>
+<p>The <code>sensitivity</code> package is not a dependency of kernR, so
+the comparison below is shown as code rather than run here. The expected
+contrast is that a variance-based index ranks <code>mean_effect</code>
+first and returns small first-order indices for <code>var_effect</code>
+and <code>tail_effect</code>, because neither moves the output variance
+far.</p>
+<pre><code><span><span class="va">half</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">design</span><span class="op">)</span> <span class="op">/</span> <span class="fl">2</span></span>
 <span><span class="va">sobol_fit</span> <span class="op">&lt;-</span> <span class="fu">sensitivity</span><span class="fu">::</span><span class="fu">sobolEff</span><span class="op">(</span></span>
 <span>  model <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">X</span><span class="op">)</span> <span class="fu">stub_apsim</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span><span class="op">)</span><span class="op">[</span>, <span class="fl">1L</span><span class="op">]</span>,</span>
-<span>  X1    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">design</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="op">]</span><span class="op">)</span>,</span>
-<span>  X2    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">design</span><span class="op">[</span><span class="fl">101</span><span class="op">:</span><span class="fl">200</span>, <span class="op">]</span><span class="op">)</span>,</span>
+<span>  X1    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">design</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">half</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span>,</span>
+<span>  X2    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">design</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">half</span><span class="op">)</span> <span class="op">+</span> <span class="va">half</span>, <span class="op">]</span><span class="op">)</span>,</span>
 <span>  nboot <span class="op">=</span> <span class="fl">200</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co"># Compare sobol_fit$S to fit$index</span></span></code></pre>
-<p>The headline observation: Sobol will rank <code>mean_effect</code>
-first and likely flag <code>tail_effect</code> and
-<code>var_effect</code> as small/negligible. HSIC captures the latter
-two as genuine signal – the verdict you want when the decision-relevant
-question is <em>whether the parameter changes the distribution</em>, not
-just the variance.</p>
+<span><span class="co"># compare sobol_fit$S against fit$index</span></span></code></pre>
+<p>The disagreement is the point. When the HSIC index ranks a
+variance-flat parameter highly, that parameter is changing the output
+distribution in a way the variance budget cannot express.</p>
 </div>
-<div class="section level2">
-<h2 id="tabular-form">Tabular form<a class="anchor" aria-label="anchor" href="#tabular-form"></a>
-</h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
-<span><span class="va">df</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">df</span><span class="op">$</span><span class="va">index</span><span class="op">)</span>, <span class="op">]</span></span>
-<span><span class="co">#&gt;     parameter output       index    statistic p_value p_value_adjusted</span></span>
-<span><span class="co">#&gt; 1 mean_effect  yield 0.156179387 0.0135556487   0.005            0.020</span></span>
-<span><span class="co">#&gt; 2  var_effect  yield 0.020423111 0.0017713847   0.070            0.140</span></span>
-<span><span class="co">#&gt; 4       inert  yield 0.012529016 0.0010870367   0.300            0.400</span></span>
-<span><span class="co">#&gt; 3 tail_effect  yield 0.008953081 0.0007768353   0.525            0.525</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="total-order-indices">Total-order indices<a class="anchor" aria-label="anchor" href="#total-order-indices"></a>
-</h2>
-<p>The <strong>first-order</strong> index <code>S_j</code> measures the
-direct contribution of <code>X_j</code> to <code>Y</code>. It misses
-contributions of <code>X_j</code> <em>through interactions</em> with
-other parameters. The <strong>total-order</strong> index, in Da Veiga’s
-complement formulation,</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>T</mi><mi>j</mi><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow></msubsup><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mrow><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>X</mi><mrow><mo>∼</mo><mi>j</mi></mrow></msub><mo>,</mo><mi>Y</mi><mo stretchy="false" form="postfix">)</mo></mrow><msqrt><mrow><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>X</mi><mrow><mo>∼</mo><mi>j</mi></mrow></msub><mo>,</mo><msub><mi>X</mi><mrow><mo>∼</mo><mi>j</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>Y</mi><mo stretchy="false" form="postfix">)</mo></mrow></msqrt></mfrac></mrow><annotation encoding="application/x-tex">
-T_j^{\mathrm{HSIC}}
-  = 1 - \frac{\mathrm{HSIC}(X_{\sim j}, Y)}
-              {\sqrt{\mathrm{HSIC}(X_{\sim j}, X_{\sim j}) \cdot
-                     \mathrm{HSIC}(Y, Y)}}
-</annotation></semantics></math></p>
-<p>captures the total – direct plus all-order interactions –
-contribution of <code>X_j</code>. By construction:</p>
-<ul>
-<li>Purely additive model <code>Y = sum_j f_j(X_j)</code>:
-<code>T_j</code> and <code>S_j</code> are <em>close</em> (both measure a
-dependence driven only by <code>X_j</code>’s own marginal contribution),
-but the two indices are built from different normalisers
-(<code>HSIC(X_j, .)</code> versus <code>1 - HSIC(X_{~j}, .)</code>) and
-are <strong>not identical</strong> even in the additive case – do not
-read <code>T_j - S_j = 0</code> as an exact null.</li>
-<li>Pure interaction <code>Y = X_1 X_2</code>: <code>S_j</code> may be
-near zero (marginal signal averages out) but <code>T_j</code> is
-strong.</li>
-</ul>
-<p>The difference <code>T_j - S_j</code> is an uncalibrated contrast,
-not a variance-budget identity: treat it as a <em>screen</em> for
-interaction (a large gap is evidence of it) rather than a quantity with
-a known null distribution or a guaranteed zero on additive models.</p>
 <div class="section level3">
-<h3 id="a-pure-interaction-example">A pure-interaction example<a class="anchor" aria-label="anchor" href="#a-pure-interaction-example"></a>
+<h3 id="total-order-indices-and-a-pure-interaction">Total-order indices, and a pure interaction<a class="anchor" aria-label="anchor" href="#total-order-indices-and-a-pure-interaction"></a>
 </h3>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<p>The first-order index measures what a parameter does on its own. It
+misses a parameter that acts only through an interaction, and the
+total-order index is built for exactly that case. The synthetic design
+below is the extreme version: the output is the product of two
+parameters, so each has a marginal expectation of zero and neither
+matters alone.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42L</span><span class="op">)</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">400L</span></span>
-<span><span class="va">theta_int</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span> <span class="op">*</span> <span class="fl">2L</span>, min <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>, max <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, <span class="va">n</span>, <span class="fl">2L</span>,</span>
-<span>                    dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x1"</span>, <span class="st">"x2"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">y_int</span> <span class="op">&lt;-</span> <span class="va">theta_int</span><span class="op">[</span>, <span class="st">"x1"</span><span class="op">]</span> <span class="op">*</span> <span class="va">theta_int</span><span class="op">[</span>, <span class="st">"x2"</span><span class="op">]</span> <span class="op">+</span></span>
-<span>         <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span><span class="va">n_int</span> <span class="op">&lt;-</span> <span class="fl">400L</span></span>
+<span><span class="va">theta_int</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n_int</span> <span class="op">*</span> <span class="fl">2L</span>, min <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>, max <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, <span class="va">n_int</span>, <span class="fl">2L</span>,</span>
+<span>  dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x1"</span>, <span class="st">"x2"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">y_int</span> <span class="op">&lt;-</span> <span class="va">theta_int</span><span class="op">[</span>, <span class="st">"x1"</span><span class="op">]</span> <span class="op">*</span> <span class="va">theta_int</span><span class="op">[</span>, <span class="st">"x2"</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_int</span>, sd <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit_int</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_sensitivity.html">hsic_sensitivity</a></span><span class="op">(</span></span>
-<span>  theta          <span class="op">=</span> <span class="va">theta_int</span>,</span>
-<span>  y              <span class="op">=</span> <span class="va">y_int</span>,</span>
-<span>  total_order    <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  p_value        <span class="op">=</span> <span class="cn">FALSE</span>,    <span class="co"># total-order p-values not computed (see Notes)</span></span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">199L</span>,</span>
-<span>  seed           <span class="op">=</span> <span class="fl">42L</span></span>
+<span>  theta <span class="op">=</span> <span class="va">theta_int</span>, y <span class="op">=</span> <span class="va">y_int</span>, total_order <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  p_value <span class="op">=</span> <span class="cn">FALSE</span>, n_permutations <span class="op">=</span> <span class="fl">199L</span>, seed <span class="op">=</span> <span class="fl">42L</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">fit_int</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -285,40 +343,30 @@ a known null distribution or a guaranteed zero on additive models.</p>
 <span><span class="co">#&gt;  parameter S_first_max T_total_max interaction min_p_first</span></span>
 <span><span class="co">#&gt;         x1       0.100       0.906       0.806          --</span></span>
 <span><span class="co">#&gt;         x2       0.094       0.900       0.806          --</span></span></code></pre></div>
-<p>Both <code>x1</code> and <code>x2</code> should have small
-first-order indices (the marginal expectation of <code>X1 X2</code> is
-zero) but large total-order indices. The
-<code>interaction = T - S</code> column makes the gap explicit.</p>
-</div>
-<div class="section level3">
-<h3 id="side-by-side-plot">Side-by-side plot<a class="anchor" aria-label="anchor" href="#side-by-side-plot"></a>
-</h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit_int</span>, which <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
-<img src="kernR-sensitivity_files/figure-html/interaction-plot-1.png" class="r-plt" alt="First-order versus total-order HSIC-Sensitivity Index for x1 and x2 on the pure-interaction model Y = X1 X2, side by side." width="900"><p class="caption">
-First-order versus total-order HSIC-Sensitivity Index for x1 and x2 on
-the pure-interaction model Y = X1 X2, side by side.
+<img src="kernR-sensitivity_files/figure-html/interaction-plot-1.png" class="r-plt" alt="The package's own diagnostic: first-order against total-order HSIC-Sensitivity Index for x1 and x2 on the pure-interaction model, side by side. The gap between the two bars is the interaction screen in graphical form." width="1050"><p class="caption">
+The package’s own diagnostic: first-order against total-order
+HSIC-Sensitivity Index for x1 and x2 on the pure-interaction model, side
+by side. The gap between the two bars is the interaction screen in
+graphical form.
 </p>
 </div>
-<p>Both parameters show a near-zero first-order bar next to a large
-total-order bar: the marginal contribution of <code>x1</code> or
-<code>x2</code> alone averages to nothing, but each parameter’s
-total-order index is large because the pair jointly determines
-<code>Y</code>. The gap between the two bars is the interaction
-diagnostic in graphical form.</p>
 </div>
 <div class="section level3">
-<h3 id="a-near-additive-example-for-contrast">A near-additive example for contrast<a class="anchor" aria-label="anchor" href="#a-near-additive-example-for-contrast"></a>
+<h3 id="a-near-additive-design-for-contrast">A near-additive design for contrast<a class="anchor" aria-label="anchor" href="#a-near-additive-design-for-contrast"></a>
 </h3>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">theta_add</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span> <span class="op">*</span> <span class="fl">2L</span><span class="op">)</span>, <span class="va">n</span>, <span class="fl">2L</span>,</span>
-<span>                    dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x1"</span>, <span class="st">"x2"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">theta_add</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n_int</span> <span class="op">*</span> <span class="fl">2L</span><span class="op">)</span>, <span class="va">n_int</span>, <span class="fl">2L</span>, dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x1"</span>, <span class="st">"x2"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span><span class="va">y_add</span> <span class="op">&lt;-</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">theta_add</span><span class="op">[</span>, <span class="st">"x1"</span><span class="op">]</span> <span class="op">+</span> <span class="va">theta_add</span><span class="op">[</span>, <span class="st">"x2"</span><span class="op">]</span> <span class="op">+</span></span>
-<span>         <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_int</span>, sd <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fit_add</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_sensitivity.html">hsic_sensitivity</a></span><span class="op">(</span><span class="va">theta_add</span>, <span class="va">y_add</span>, total_order <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                            p_value <span class="op">=</span> <span class="cn">FALSE</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="va">fit_add</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_sensitivity.html">hsic_sensitivity</a></span><span class="op">(</span></span>
+<span>  <span class="va">theta_add</span>, <span class="va">y_add</span>, total_order <span class="op">=</span> <span class="cn">TRUE</span>, p_value <span class="op">=</span> <span class="cn">FALSE</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
+<span><span class="op">)</span></span>
 <span><span class="va">fit_add</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   HSIC-Sensitivity Indices</span></span>
@@ -335,154 +383,259 @@ diagnostic in graphical form.</p>
 <span><span class="co">#&gt;  parameter S_first_max T_total_max interaction min_p_first</span></span>
 <span><span class="co">#&gt;         x1       0.721       0.884       0.163          --</span></span>
 <span><span class="co">#&gt;         x2       0.116       0.279       0.163          --</span></span></code></pre></div>
-<p>On this additive model <code>T_j - S_j</code> is small for both
-parameters relative to the pure-interaction case above, but it is not
-exactly zero – the gap is a relative screen, useful for ranking
-parameters by interaction, not an exact diagnostic with a zero point
-under additivity.</p>
+<table class="table">
+<caption>First-order and total-order indices on the pure-interaction and
+near-additive designs, both with 400 design rows.</caption>
+<colgroup>
+<col width="33%">
+<col width="13%">
+<col width="19%">
+<col width="19%">
+<col width="13%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Design</th>
+<th align="left">Parameter</th>
+<th align="right">First-order S</th>
+<th align="right">Total-order T</th>
+<th align="right">T minus S</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">interaction, Y = X1 X2</td>
+<td align="left">x1</td>
+<td align="right">0.100</td>
+<td align="right">0.906</td>
+<td align="right">0.806</td>
+</tr>
+<tr class="even">
+<td align="left">interaction, Y = X1 X2</td>
+<td align="left">x2</td>
+<td align="right">0.094</td>
+<td align="right">0.900</td>
+<td align="right">0.806</td>
+</tr>
+<tr class="odd">
+<td align="left">additive, Y = 2 X1 + X2</td>
+<td align="left">x1</td>
+<td align="right">0.721</td>
+<td align="right">0.884</td>
+<td align="right">0.163</td>
+</tr>
+<tr class="even">
+<td align="left">additive, Y = 2 X1 + X2</td>
+<td align="left">x2</td>
+<td align="right">0.116</td>
+<td align="right">0.279</td>
+<td align="right">0.163</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level3">
-<h3 id="pair-bootstrap-ci-for-total-order-indices">Pair-bootstrap CI for total-order indices<a class="anchor" aria-label="anchor" href="#pair-bootstrap-ci-for-total-order-indices"></a>
+<h3 id="an-interval-on-the-total-order-index">An interval on the total-order index<a class="anchor" aria-label="anchor" href="#an-interval-on-the-total-order-index"></a>
 </h3>
-<p><code>total_order_ci = TRUE</code> (since 0.0.0.9013) activates a
-pair-bootstrap percentile CI on each total-order index
-<code>T_j</code>:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_pf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_sensitivity.html">hsic_sensitivity</a></span><span class="op">(</span></span>
-<span>  <span class="va">theta_add</span>, <span class="va">y_add</span>,</span>
-<span>  total_order         <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  total_order_ci      <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  n_permutations      <span class="op">=</span> <span class="fl">199L</span>,</span>
-<span>  n_bootstrap         <span class="op">=</span> <span class="fl">100L</span>,</span>
-<span>  ci_level            <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span>  seed                <span class="op">=</span> <span class="fl">7L</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">fit_pf</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   HSIC-Sensitivity Indices</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Parameters:   2 </span></span>
-<span><span class="co">#&gt; Outputs:      1 </span></span>
-<span><span class="co">#&gt; N:            400 </span></span>
-<span><span class="co">#&gt; Permutations: 199 </span></span>
-<span><span class="co">#&gt; P-adjust:     BH </span></span>
-<span><span class="co">#&gt; Total-order: yes</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Per-parameter ranking (descending S, max across outputs):</span></span>
-<span><span class="co">#&gt;   S = first-order index   T = total-order index   interaction = T - S</span></span>
-<span><span class="co">#&gt;   T_CI = pair-bootstrap 95% percentile CI on T (B = 100 resamples). NOT a significance test for T = 0; see ?hsic_sensitivity Details.</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;  parameter S_first_max T_total_max interaction min_p_first           T_CI</span></span>
-<span><span class="co">#&gt;         x1       0.721       0.884       0.163      0.0050 [0.836, 0.920]</span></span>
-<span><span class="co">#&gt;         x2       0.116       0.279       0.163      0.0050 [0.242, 0.322]</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">fit_pf</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"parameter"</span>, <span class="st">"output"</span>,</span>
-<span>                          <span class="st">"index_total_order"</span>,</span>
-<span>                          <span class="st">"ci_total_order_lower"</span>,</span>
-<span>                          <span class="st">"ci_total_order_upper"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;   parameter output index_total_order ci_total_order_lower ci_total_order_upper</span></span>
-<span><span class="co">#&gt; 1        x1     y1         0.8838120            0.8362184            0.9201480</span></span>
-<span><span class="co">#&gt; 2        x2     y1         0.2788908            0.2422700            0.3218026</span></span></code></pre></div>
-<p>The CI is uncertainty quantification on the <em>index magnitude</em>,
-not a hypothesis test. An earlier (0.0.0.9012)
-<code>total_order_p_value</code> field claimed to test
-<code>H_0: T_j = 0</code> – that was found in critical review on
-2026-05-16 to be mis-calibrated under pure-noise <code>Y</code> (all
-parameters were assigned <code>p ~ 1 / (1 + B)</code> because the
-bootstrap samples the empirical joint, not a null-of-no-effect) and was
-removed in 0.0.0.9013.</p>
-</div>
-<div class="section level3">
-<h3 id="conditional-permutation-significance-test">Conditional-permutation significance test<a class="anchor" aria-label="anchor" href="#conditional-permutation-significance-test"></a>
-</h3>
-<p>The properly null-calibrated replacement is the
-conditional-permutation test,
-<code>total_order_test = "cond_perm"</code> (since 0.0.0.9014): it tests
-<code>H_0: X_j</code> independent of <code>Y</code> given
-<code>X_{~j}</code> by k-means-clustering the design on
-<code>X_{~j}</code> similarity, permuting <code>Y</code> within each
-cluster, and recomputing <code>T_j</code> on every permuted design.</p>
+<p><code>total_order_ci = TRUE</code> attaches a pair-bootstrap
+percentile interval to each total-order index. It quantifies uncertainty
+in the <em>magnitude</em> of the index; it is not a hypothesis test.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_cp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_sensitivity.html">hsic_sensitivity</a></span><span class="op">(</span></span>
-<span>  <span class="va">theta_add</span>, <span class="va">y_add</span>,</span>
-<span>  total_order      <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  total_order_test <span class="op">=</span> <span class="st">"cond_perm"</span>,</span>
-<span>  n_permutations   <span class="op">=</span> <span class="fl">199L</span>,</span>
-<span>  seed             <span class="op">=</span> <span class="fl">21L</span></span>
+<code class="sourceCode R"><span><span class="va">fit_ci</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_sensitivity.html">hsic_sensitivity</a></span><span class="op">(</span></span>
+<span>  <span class="va">theta_add</span>, <span class="va">y_add</span>, total_order <span class="op">=</span> <span class="cn">TRUE</span>, total_order_ci <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">199L</span>, n_bootstrap <span class="op">=</span> <span class="fl">100L</span>, ci_level <span class="op">=</span> <span class="fl">0.95</span>, seed <span class="op">=</span> <span class="fl">7L</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">fit_cp</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"parameter"</span>, <span class="st">"output"</span>,</span>
-<span>                          <span class="st">"index_total_order"</span>,</span>
-<span>                          <span class="st">"p_value_total_order"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;   parameter output index_total_order p_value_total_order</span></span>
-<span><span class="co">#&gt; 1        x1     y1         0.8838120                0.51</span></span>
-<span><span class="co">#&gt; 2        x2     y1         0.2788908                0.89</span></span></code></pre></div>
-<p>On this additive design neither parameter’s total-order index
-survives the conditional-permutation null – there is no interaction to
-detect, which is the expected verdict alongside the small
-<code>T_j - S_j</code> gap above. Cost scales as
-<code>n_bootstrap * p * q</code> kernel re-evaluations on resampled
-designs; default <code>n_bootstrap = 200</code> is a workable starting
-point for <code>p, q &lt;= 10</code>, <code>n &lt;= 1000</code>.</p>
+<span><span class="va">ci_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">fit_ci</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"parameter"</span>, <span class="st">"output"</span>, <span class="st">"index_total_order"</span>,</span>
+<span>  <span class="st">"ci_total_order_lower"</span>, <span class="st">"ci_total_order_upper"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
+<table class="table">
+<caption>Pair-bootstrap percentile interval on each total-order index,
+95 per cent level, 100 resamples.</caption>
+<thead><tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Output</th>
+<th align="right">Total-order T</th>
+<th align="right">Lower</th>
+<th align="right">Upper</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">x1</td>
+<td align="left">y1</td>
+<td align="right">0.884</td>
+<td align="right">0.836</td>
+<td align="right">0.920</td>
+</tr>
+<tr class="even">
+<td align="left">x2</td>
+<td align="left">y1</td>
+<td align="right">0.279</td>
+<td align="right">0.242</td>
+<td align="right">0.322</td>
+</tr>
+</tbody>
+</table>
+<p>An earlier release attached a <code>total_order_p_value</code> to
+these bootstrap draws, claiming to test
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub><mo>:</mo><msub><mi>T</mi><mi>j</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">H_0 : T_j = 0</annotation></semantics></math>.
+Critical review on 2026-05-16 found it mis-calibrated under a pure-noise
+output, because the bootstrap resamples the empirical joint distribution
+rather than a null-of-no-effect, and every parameter was assigned a
+p-value of approximately
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1 / (1 + B)</annotation></semantics></math>
+regardless. The field was removed.</p>
+</div>
+<div class="section level3">
+<h3 id="the-properly-calibrated-significance-test">The properly calibrated significance test<a class="anchor" aria-label="anchor" href="#the-properly-calibrated-significance-test"></a>
+</h3>
+<p>The replacement tests
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mn>0</mn></msub><annotation encoding="application/x-tex">H_0</annotation></semantics></math>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>j</mi></msub><annotation encoding="application/x-tex">X_j</annotation></semantics></math>
+is independent of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math>
+given
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mo>∼</mo><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">X_{\sim j}</annotation></semantics></math>,
+by clustering the design on similarity in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mo>∼</mo><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">X_{\sim j}</annotation></semantics></math>,
+permuting the output within each cluster, and recomputing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>T</mi><mi>j</mi></msub><annotation encoding="application/x-tex">T_j</annotation></semantics></math>
+on every permuted design.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_cp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hsic_sensitivity.html">hsic_sensitivity</a></span><span class="op">(</span></span>
+<span>  <span class="va">theta_add</span>, <span class="va">y_add</span>, total_order <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  total_order_test <span class="op">=</span> <span class="st">"cond_perm"</span>, n_permutations <span class="op">=</span> <span class="fl">199L</span>, seed <span class="op">=</span> <span class="fl">21L</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">cp_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">fit_cp</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"parameter"</span>, <span class="st">"output"</span>, <span class="st">"index_total_order"</span>, <span class="st">"p_value_total_order"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
+<table class="table">
+<caption>Conditional-permutation test of the total-order index on the
+near-additive design, 199 permutations.</caption>
+<thead><tr class="header">
+<th align="left">Parameter</th>
+<th align="left">Output</th>
+<th align="right">Total-order T</th>
+<th align="right">Conditional-permutation p-value</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">x1</td>
+<td align="left">y1</td>
+<td align="right">0.884</td>
+<td align="right">0.51</td>
+</tr>
+<tr class="even">
+<td align="left">x2</td>
+<td align="left">y1</td>
+<td align="right">0.279</td>
+<td align="right">0.89</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="section level2">
-<h2 id="notes-on-total-order-indices">Notes on total-order indices<a class="anchor" aria-label="anchor" href="#notes-on-total-order-indices"></a>
+<h2 id="read">Read<a class="anchor" aria-label="anchor" href="#read"></a>
 </h2>
-<ul>
-<li>
-<strong>Cost.</strong> Total-order construction is
-<code>O(p n^2)</code> for kernel matrices on each <code>X_{~j}</code>
-plus <code>O(p q n^2)</code> for HSIC, similar in scale to first-order.
-For ag-scale designs (<code>n</code> in the hundreds-low thousands) both
-are practical. Pick-Freeze bootstrap multiplies this by
-<code>n_bootstrap</code> (default 200) — budget accordingly.</li>
-<li>
-<strong>Nystrom acceleration for total-order</strong> is
-intentionally not exposed in this version. The naive way to fold
-<code><a href="../reference/nystrom_factor.html">nystrom_factor()</a></code> into <code>T_j</code> computation
-(materialising <code>F F^T</code> into a full <code>n x n</code> kernel)
-is slower than the exact path at typical kernR scales, because
-materialisation costs <code>O(n^2 m)</code>. A proper factor-only HSIC
-primitive (Nystrom-on-Nystrom) is the unblocking next step and is on the
-future-work list.</li>
-</ul>
+<p>On the 600-row design the index ranks <code>mean_effect</code> first
+at 0.101, with an adjusted p-value of 0.01; a variance budget would find
+that one too. The parameter that carries the argument is
+<code>var_effect</code>, which returns 0.0671 with an adjusted p-value
+of 0.01, despite being built to leave the conditional mean exactly where
+it was. <code>inert</code> returns 0.00127 with an adjusted p-value of
+0.945, which is the floor the design was built to produce.</p>
+<p><code>tail_effect</code> is the instructive case. Its index is
+0.00897, above <code>inert</code> but well below
+<code>var_effect</code>, and its adjusted p-value is 0.06, which does
+not clear the conventional threshold of 0.05. The effect is real by
+construction, and at this design size the screen does not have the power
+to certify it: a heavy tail scaled by a parameter in the unit interval
+is a weaker signal than a change of spread, and a larger design or a
+longer permutation run is what would settle it. Reporting that is the
+point of the p-value column.</p>
+<p>The figure shows what the index is responding to: the
+<code>var_effect</code> and <code>tail_effect</code> panels have two
+curves of different width and tail weight sitting in the same place,
+which is the signature a variance budget cannot express, while the
+<code>inert</code> panel has two curves lying on top of each other.</p>
+<p>On the pure-interaction design the first-order indices are 0.1 and
+0.0941 – close to nothing, because the marginal effect of either
+parameter averages out over the other – while the total-order indices
+are 0.906 and 0.9. The gap between them is 0.81 on average, against 0.16
+on the near-additive design. That contrast is the interaction screen: a
+large gap is evidence of interaction, a small one is not evidence of its
+absence, and the difference has no null distribution of its own.</p>
+<p>The pair-bootstrap interval on the near-additive design puts the
+total-order index for <code>x1</code> between 0.836 and 0.92, an
+interval on the magnitude and not a test. The conditional-permutation
+test supplies the verdict the interval cannot: on this additive design
+the two total-order p-values are 0.51 and 0.89, so neither total-order
+index survives its own null. That is the expected answer where there is
+no interaction to find, and it agrees with the small <code>T</code>
+minus <code>S</code> gap in the table above.</p>
+</div>
+<div class="section level2">
+<h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
+</h2>
+<p>The simulator here is a stub with independent, uniformly distributed
+parameters, chosen so that each effect is isolated and the right answer
+is known; correlated parameters break the interpretation of both
+indices, because
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mo>∼</mo><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">X_{\sim j}</annotation></semantics></math>
+then carries information about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>j</mi></msub><annotation encoding="application/x-tex">X_j</annotation></semantics></math>.
+The HSIC-Sensitivity Index is not numerically equal to a Sobol index
+even on a linear additive system: the two are bounded comparably, both
+lying in the unit interval, and typically agree on ranking when only
+mean effects are present, so the disagreement rather than the agreement
+is what carries information. The quantity <code>T</code> minus
+<code>S</code> is an uncalibrated contrast, not a variance-budget
+identity, and is not zero on an additive model, because the two indices
+are built from different normalisers; the conditional-permutation test
+is the calibrated statement about the same question. The Sobol
+comparison in this vignette is stated as code and a claim about the
+direction of the result; it is not run here, and a reader who needs the
+numbers should run it. Finally, every p-value here is a permutation
+p-value bounded below by <code>1 / (n_permutations + 1)</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="notes-on-practice">Notes on practice<a class="anchor" aria-label="anchor" href="#notes-on-practice"></a>
 </h2>
-<ul>
-<li>
-<strong>Design size.</strong> As with B1 identifiability,
-<code>n &gt;= 10p</code> is a reasonable starting point.</li>
-<li>
-<strong>Permutations.</strong> When the goal is ranking only, set
-<code>p_value = FALSE</code> to skip the permutation null entirely – the
-per-column kernel cache is reused, so the index calculation is cheap.
-Use <code>p_value = TRUE</code> (default) when you also want a
-significance verdict on first-order indices.</li>
-</ul>
+<p><strong>Design size.</strong> As for the identifiability screen, a
+design with at least ten rows per parameter is a workable starting
+point.</p>
+<p><strong>Permutations.</strong> When the goal is ranking only,
+<code>p_value = FALSE</code> skips the permutation null entirely; the
+per-column kernel cache is reused, so the indices themselves are cheap.
+Use the default <code>p_value = TRUE</code> when a significance verdict
+on the first-order indices is also wanted.</p>
+<p><strong>Cost.</strong> Total-order construction costs order
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><msup><mi>n</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">p n^2</annotation></semantics></math>
+for the kernel matrices on each
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mo>∼</mo><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">X_{\sim j}</annotation></semantics></math>
+plus order
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mi>q</mi><msup><mi>n</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">p q n^2</annotation></semantics></math>
+for the HSIC evaluations, similar in scale to first-order. The pair
+bootstrap multiplies that by <code>n_bootstrap</code>, which defaults to
+200, and the conditional-permutation test multiplies it by the
+permutation count, so both should be budgeted for.</p>
+<p><strong>Nystrom acceleration for total-order</strong> is deliberately
+not exposed. Folding <code><a href="../reference/nystrom_factor.html">nystrom_factor()</a></code> into the total-order
+computation by materialising the low-rank product into a full kernel
+matrix costs order
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>n</mi><mn>2</mn></msup><mi>m</mi></mrow><annotation encoding="application/x-tex">n^2 m</annotation></semantics></math>
+and is slower than the exact path at the scales kernR runs at; a
+factor-only HSIC primitive is the step that would unblock it.</p>
 </div>
 <div class="section level2">
-<h2 id="notes-on-practice-1">Notes on practice<a class="anchor" aria-label="anchor" href="#notes-on-practice-1"></a>
+<h2 id="what-to-read-next">What to read next<a class="anchor" aria-label="anchor" href="#what-to-read-next"></a>
 </h2>
-<ul>
-<li>
-<strong>Design size.</strong> As with B1 identifiability,
-<code>n &gt;= 10p</code> is a reasonable starting point.</li>
-<li>
-<strong>Permutations.</strong> When the goal is ranking only, set
-<code>p_value = FALSE</code> to skip the permutation null entirely – the
-per-column kernel cache is reused, so the index calculation is cheap.
-Use <code>p_value = TRUE</code> (default) when you also want a
-significance verdict.</li>
-<li>
-<strong>Comparing to Sobol.</strong> HSIC-SI is not numerically
-equal to a Sobol first-order index even on linear additive systems. They
-are <em>bounded comparable</em> (both in <code>[0, 1]</code>) and
-typically agree on ranking when only mean effects are present.
-Disagreement is the point: when HSIC ranks a Sobol-flat parameter
-highly, that parameter is shifting the output distribution in a
-non-variance way.</li>
-</ul>
+<p><em>Which parameters are worth calibrating?</em> is the pass-or-fail
+version of this scan, used before a calibration to decide which
+parameters enter the prior at all. <em>Scaling HSIC to large
+ensembles</em> covers the low-rank approximations that make the
+first-order scan affordable on designs too large for an exact Gram
+matrix. <em>Getting started with kernR</em> introduces the HSIC
+statistic these indices normalise.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
@@ -491,10 +644,60 @@ non-variance way.</li>
 <li>Da Veiga, S. (2015). Global sensitivity analysis with dependence
 measures. <em>Journal of Statistical Computation and Simulation</em>,
 85(7), 1283-1305.</li>
-<li>Gretton, A., Bousquet, O., Smola, A., &amp; Schölkopf, B. (2005).
+<li>Gretton, A., Bousquet, O., Smola, A., &amp; Scholkopf, B. (2005).
 Measuring statistical dependence with Hilbert-Schmidt norms.
-<em>ALT</em>, 63-77.</li>
+<em>Algorithmic Learning Theory</em>, 63-77.</li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="reproduce">Reproduce<a class="anchor" aria-label="anchor" href="#reproduce"></a>
+</h2>
+<p>Seed <code>1</code> for the simulator noise, <code>seed = 11L</code>
+for the Latin-hypercube design and the first-order permutation null,
+<code>42</code> for the pure-interaction design, and <code>seed</code>
+values <code>1</code>, <code>7</code> and <code>21</code> for the
+additive design, the pair bootstrap and the conditional-permutation
+test. Package versions follow.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">#&gt;  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">#&gt; [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: UTC</span></span>
+<span><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt; [1] kernR_0.8.2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.51         </span></span>
+<span><span class="co">#&gt;  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         </span></span>
+<span><span class="co">#&gt;  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  </span></span>
+<span><span class="co">#&gt; [10] data.table_1.18.6.1 jsonlite_2.0.0      labeling_0.4.3     </span></span>
+<span><span class="co">#&gt; [13] glue_1.8.1          htmltools_0.5.9     PESTO_0.10.1       </span></span>
+<span><span class="co">#&gt; [16] ragg_1.5.2          sass_0.4.10         scales_1.4.0       </span></span>
+<span><span class="co">#&gt; [19] rmarkdown_2.32      grid_4.6.1          evaluate_1.0.5     </span></span>
+<span><span class="co">#&gt; [22] jquerylib_0.1.4     fastmap_1.2.0       yaml_2.3.12        </span></span>
+<span><span class="co">#&gt; [25] lifecycle_1.0.5     compiler_4.6.1      RColorBrewer_1.1-3 </span></span>
+<span><span class="co">#&gt; [28] fs_2.1.0            Rcpp_1.1.2          farver_2.1.2       </span></span>
+<span><span class="co">#&gt; [31] systemfonts_1.3.2   digest_0.6.39       viridisLite_0.4.3  </span></span>
+<span><span class="co">#&gt; [34] R6_2.6.1            bslib_0.12.0        withr_3.0.3        </span></span>
+<span><span class="co">#&gt; [37] tools_4.6.1         gtable_0.3.6        pkgdown_2.2.1      </span></span>
+<span><span class="co">#&gt; [40] ggplot2_4.0.3       cachem_1.1.0        desc_1.4.3</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

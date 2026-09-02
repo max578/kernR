@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Hierarchical bd-HSIC for Multi-Site Designs • kernR</title>
+<title>Multi-site trials and the permutation null • kernR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Hierarchical bd-HSIC for Multi-Site Designs">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Multi-site trials and the permutation null">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,10 +33,10 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting Started with kernR</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Causal Association Testing with bd-HSIC</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">Distributional Treatment Effect Tests (DR-DATE / DR-DETT)</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">Hierarchical and Nested Data</a></li>
+<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting started with kernR</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Does the treatment cause the outcome, or do they share a cause?</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">A treatment that changes the spread and not the mean</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">When plots sit inside farms</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -58,11 +58,8 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Hierarchical bd-HSIC for Multi-Site Designs</h1>
-                        <h4 data-toc-skip class="author">Max
-Moldovan</h4>
+      <h1>Multi-site trials and the permutation null</h1>
             
-            <h4 data-toc-skip class="date">2026-08-25</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/max578/kernR/blob/main/vignettes/kernR-hierarchical-bdhsic.Rmd" class="external-link"><code>vignettes/kernR-hierarchical-bdhsic.Rmd</code></a></small>
       <div class="d-none name"><code>kernR-hierarchical-bdhsic.Rmd</code></div>
@@ -70,209 +67,392 @@ Moldovan</h4>
 
     
     
-<div class="section level2">
-<h2 id="why-a-hierarchical-version-of-bd-hsic">Why a hierarchical version of bd-HSIC?<a class="anchor" aria-label="anchor" href="#why-a-hierarchical-version-of-bd-hsic"></a>
-</h2>
-<p>Agricultural trials almost always carry design clustering: paddocks
-within sites, sites within regions, plots within farms, seasons within
-years. Treat such data as i.i.d. and the permutation null breaks: by
-shuffling treatment labels across clusters, the null distribution
-absorbs cluster-level variation as if it were causal signal, inflating
-Type I error.</p>
-<p>The original bd-HSIC test (Hu, Sejdinovic &amp; Evans, 2024) handles
-this by clustering on propensity-score similarity. That works when the
-design has no natural hierarchy. When the <em>design itself</em> tells
-you which observations should be exchangeable – <em>site</em>,
-<em>paddock</em>, <em>season</em> – you should use the design clusters
-directly.</p>
-<p><code><a href="../reference/bd_hsic_test.html">bd_hsic_test()</a></code> accepts an optional
-<code>cluster_id</code> argument exactly for this case. Supplying it
-activates <strong>within-cluster permutation</strong>: indices of
-<code>y</code> are reshuffled only within each cluster, preserving
-cluster-level effects in the null.</p>
-</div>
-<div class="section level2">
-<h2 id="a-multi-site-stub">A multi-site stub<a class="anchor" aria-label="anchor" href="#a-multi-site-stub"></a>
-</h2>
+<!-- Render time: ~1 s under rmarkdown::render(); macOS aarch64, R 4.5.2, one
+     core. Four bd-HSIC tests at 299 permutations on 240 observations in 8
+     sites, each with its own density-ratio fit. -->
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 8 sites x 30 plots/site = 240 observations.</span></span>
-<span><span class="co"># Each site has its own random effect on yield.</span></span>
-<span><span class="va">n_sites</span> <span class="op">&lt;-</span> <span class="fl">8L</span></span>
-<span><span class="va">n_per</span>   <span class="op">&lt;-</span> <span class="fl">30L</span></span>
-<span><span class="va">n</span>       <span class="op">&lt;-</span> <span class="va">n_sites</span> <span class="op">*</span> <span class="va">n_per</span></span>
-<span><span class="va">site</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"site"</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_sites</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n_per</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">site_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">site</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">101L</span><span class="op">)</span></span>
-<span><span class="va">site_effect</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_sites</span>, sd <span class="op">=</span> <span class="fl">1.0</span><span class="op">)</span><span class="op">[</span><span class="va">site_id</span><span class="op">]</span></span>
-<span></span>
-<span><span class="co"># Confounders: rainfall, soil_n</span></span>
-<span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span></span>
-<span>  rainfall <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>,</span>
-<span>  soil_n   <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># Management treatment (e.g. residue retention intensity)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">z</span><span class="op">[</span>, <span class="st">"rainfall"</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">site_effect</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="co"># Yield: causal effect of management + confounders + site random effect</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">z</span><span class="op">[</span>, <span class="st">"soil_n"</span><span class="op">]</span> <span class="op">+</span> <span class="va">site_effect</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span></code></pre></div>
+<div class="section level2">
+<h2 id="why">Why<a class="anchor" aria-label="anchor" href="#why"></a>
+</h2>
+<p>A trial statistician is looking at a panel rather than a field.
+<em>The residue-retention trial ran at eight sites and the sites differ
+in ways the covariates do not capture. When the causal test shuffles the
+outcome to build its null, it shuffles across sites, so the null absorbs
+the between-site variation as though it were signal I could have
+produced by chance. That inflates the null, or deflates it, and either
+way the p-value is answering a question about a design I do not have.
+Can I make the null respect the design?</em> This vignette answers with
+the <code>cluster_id</code> argument of the backdoor-adjusted test, on a
+synthetic eight-site panel with a real effect and on the same panel with
+the effect removed.</p>
 </div>
 <div class="section level2">
-<h2 id="naive-vs-hierarchical-permutation">Naive vs hierarchical permutation<a class="anchor" aria-label="anchor" href="#naive-vs-hierarchical-permutation"></a>
+<h2 id="what">What<a class="anchor" aria-label="anchor" href="#what"></a>
 </h2>
-<p>The same data, two permutation schemes:</p>
+<p><code><a href="../reference/bd_hsic_test.html">bd_hsic_test()</a></code> builds its permutation null by shuffling
+the outcome within clusters of observations that are exchangeable. Which
+observations those are is the whole question, and the function offers
+three answers.</p>
+<p>The default, <code>permutation = "auto"</code> with no
+<code>cluster_id</code>, clusters on similarity in the estimated
+conditional density of treatment given the confounders, following Hu,
+Sejdinovic and Evans (2024); it is the right choice when the design has
+no natural grouping, and the vignette <em>Does the treatment cause the
+outcome, or do they share a cause?</em> uses it throughout.
+<code>permutation = "naive"</code> shuffles across the whole sample,
+which assumes every observation is exchangeable with every other.
+Supplying <code>cluster_id</code> activates within-cluster permutation
+on the design’s own groups, so site-level effects are held fixed in the
+null rather than being shuffled into it.</p>
+<p>Supplying <code>cluster_id</code> also turns on a stratified
+breakdown: <code>per_cluster_statistic</code> carries the weighted
+bd-HSIC computed inside each cluster, which is where a single site
+driving the whole verdict becomes visible.</p>
+</div>
+<div class="section level2">
+<h2 id="do">Do<a class="anchor" aria-label="anchor" href="#do"></a>
+</h2>
+<div class="section level3">
+<h3 id="a-synthetic-eight-site-panel">A synthetic eight-site panel<a class="anchor" aria-label="anchor" href="#a-synthetic-eight-site-panel"></a>
+</h3>
+<p>Eight sites, thirty plots each. Each site carries a random effect on
+yield with standard deviation 1, twice the residual noise. Rainfall and
+soil nitrogen are the measured confounders; the management variable
+depends on rainfall and on the site effect; and yield carries a genuine
+causal effect of 0.6 per unit of management.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span></span>
-<span>  <span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>,</span>
-<span>  permutation    <span class="op">=</span> <span class="st">"naive"</span>,</span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">199L</span>,</span>
-<span>  seed           <span class="op">=</span> <span class="fl">1L</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">101L</span><span class="op">)</span></span>
+<span><span class="va">n_sites</span> <span class="op">&lt;-</span> <span class="fl">8L</span></span>
+<span><span class="va">n_per_site</span> <span class="op">&lt;-</span> <span class="fl">30L</span></span>
+<span><span class="va">n_obs</span> <span class="op">&lt;-</span> <span class="va">n_sites</span> <span class="op">*</span> <span class="va">n_per_site</span></span>
+<span><span class="va">site</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"site"</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_sites</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n_per_site</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">site_effect</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_sites</span>, sd <span class="op">=</span> <span class="fl">1.0</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">site</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
-<span><span class="va">fit_hier</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span></span>
-<span>  <span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>,</span>
-<span>  cluster_id     <span class="op">=</span> <span class="va">site</span>,        <span class="co"># activates within_cluster by default</span></span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">199L</span>,</span>
-<span>  seed           <span class="op">=</span> <span class="fl">1L</span></span>
+<span><span class="va">z_conf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span></span>
+<span>  rainfall <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span><span class="op">)</span>,</span>
+<span>  soil_n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  scheme  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_naive</span><span class="op">$</span><span class="va">permutation_scheme</span>, <span class="va">fit_hier</span><span class="op">$</span><span class="va">permutation_scheme</span><span class="op">)</span>,</span>
-<span>  stat    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_naive</span><span class="op">$</span><span class="va">statistic</span>,   <span class="va">fit_hier</span><span class="op">$</span><span class="va">statistic</span><span class="op">)</span>,</span>
-<span>  p_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_naive</span><span class="op">$</span><span class="va">p_value</span>,     <span class="va">fit_hier</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span>,</span>
-<span>  ess     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_naive</span><span class="op">$</span><span class="va">ess</span>,         <span class="va">fit_hier</span><span class="op">$</span><span class="va">ess</span><span class="op">)</span>,</span>
-<span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt;           scheme       stat p_value      ess</span></span>
-<span><span class="co">#&gt; 1          naive 0.02198144   0.005 119.9986</span></span>
-<span><span class="co">#&gt; 2 within_cluster 0.02198144   0.005 119.9986</span></span></code></pre></div>
-<p>In the presence of a true causal effect, both schemes typically
-reject; under the null, the naive scheme is more prone to false
-positives.</p>
+<span><span class="va">x_manage</span> <span class="op">&lt;-</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">z_conf</span><span class="op">[</span>, <span class="st">"rainfall"</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">site_effect</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span><span class="op">)</span></span>
+<span><span class="va">y_yield</span> <span class="op">&lt;-</span> <span class="fl">0.6</span> <span class="op">*</span> <span class="va">x_manage</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">z_conf</span><span class="op">[</span>, <span class="st">"soil_n"</span><span class="op">]</span> <span class="op">+</span> <span class="va">site_effect</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="stratified-per-cluster-contributions">Stratified per-cluster contributions<a class="anchor" aria-label="anchor" href="#stratified-per-cluster-contributions"></a>
-</h2>
-<p>When <code>cluster_id</code> is supplied, the result carries a
-per-cluster bd-HSIC breakdown:</p>
+<div class="section level3">
+<h3 id="the-same-data-two-permutation-schemes">The same data, two permutation schemes<a class="anchor" aria-label="anchor" href="#the-same-data-two-permutation-schemes"></a>
+</h3>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_hier</span><span class="op">$</span><span class="va">per_cluster_statistic</span></span>
-<span><span class="co">#&gt;       site1       site2       site3       site4       site5       site6 </span></span>
-<span><span class="co">#&gt; 0.026940010 0.040274145 0.027650642 0.041580679 0.005001357 0.009660079 </span></span>
-<span><span class="co">#&gt;       site7       site8 </span></span>
-<span><span class="co">#&gt; 0.015288101 0.017232744</span></span></code></pre></div>
-<p>Plot the per-cluster contributions to look for a single-site dominant
-signal vs. a uniformly distributed effect:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span></span>
-<span>  <span class="va">fit_hier</span><span class="op">$</span><span class="va">per_cluster_statistic</span>,</span>
-<span>  las  <span class="op">=</span> <span class="fl">2L</span>,</span>
-<span>  col  <span class="op">=</span> <span class="st">"#0072B2"</span>,</span>
-<span>  border <span class="op">=</span> <span class="cn">NA</span>,</span>
-<span>  ylab <span class="op">=</span> <span class="st">"weighted bd-HSIC (per site)"</span>,</span>
-<span>  main <span class="op">=</span> <span class="st">"Stratified bd-HSIC contributions"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<div class="figure">
-<img src="kernR-hierarchical-bdhsic_files/figure-html/plot-per-cluster-1.png" class="r-plt" alt="Weighted bd-HSIC contribution per cluster (site), showing whether the causal signal is concentrated at one site or spread across the panel." width="900"><p class="caption">
-Weighted bd-HSIC contribution per cluster (site), showing whether the
-causal signal is concentrated at one site or spread across the panel.
-</p>
-</div>
-<p>A site whose stratified statistic dwarfs the others is a candidate
-for follow-up investigation – either real site-specific effect
-modification or a data-quality issue.</p>
-</div>
-<div class="section level2">
-<h2 id="type-i-behaviour-under-a-true-null-with-cluster-effects">Type-I behaviour under a true null with cluster effects<a class="anchor" aria-label="anchor" href="#type-i-behaviour-under-a-true-null-with-cluster-effects"></a>
-</h2>
-<p>To illustrate why the hierarchical scheme matters, here is the null
-case: cluster effects exist, but <code>x</code> has no causal effect on
-<code>y</code>.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">202L</span><span class="op">)</span></span>
-<span><span class="va">n_sites</span> <span class="op">&lt;-</span> <span class="fl">8L</span>; <span class="va">n_per</span> <span class="op">&lt;-</span> <span class="fl">30L</span>; <span class="va">n</span> <span class="op">&lt;-</span> <span class="va">n_sites</span> <span class="op">*</span> <span class="va">n_per</span></span>
-<span><span class="va">site</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"s"</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_sites</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n_per</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">site_id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">site</span><span class="op">)</span></span>
-<span><span class="va">site_effect</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_sites</span>, sd <span class="op">=</span> <span class="fl">1.0</span><span class="op">)</span><span class="op">[</span><span class="va">site_id</span><span class="op">]</span></span>
-<span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>, <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="va">z</span><span class="op">[</span>, <span class="fl">1L</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">site_effect</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">z</span><span class="op">[</span>, <span class="fl">2L</span><span class="op">]</span> <span class="op">+</span> <span class="va">site_effect</span> <span class="op">+</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>  <span class="co"># no x</span></span>
-<span></span>
-<span><span class="va">fit_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span></span>
-<span>  <span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>,</span>
-<span>  cluster_id     <span class="op">=</span> <span class="va">site</span>,</span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">199L</span>,</span>
-<span>  seed           <span class="op">=</span> <span class="fl">202L</span></span>
+<code class="sourceCode R"><span><span class="va">fit_naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span></span>
+<span>  <span class="va">x_manage</span>, <span class="va">y_yield</span>, <span class="va">z_conf</span>, permutation <span class="op">=</span> <span class="st">"naive"</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">299L</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">fit_null</span><span class="op">$</span><span class="va">p_value</span></span>
-<span><span class="co">#&gt; [1] 0.925</span></span></code></pre></div>
-<p>Under the null, the hierarchical scheme should not reject
-(<code>p &gt; 0.05</code>); the naive scheme on the same data is more
-likely to.</p>
+<span><span class="va">fit_site</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span></span>
+<span>  <span class="va">x_manage</span>, <span class="va">y_yield</span>, <span class="va">z_conf</span>, cluster_id <span class="op">=</span> <span class="va">site</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">299L</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_naive</span><span class="op">$</span><span class="va">permutation_scheme</span>, <span class="va">fit_site</span><span class="op">$</span><span class="va">permutation_scheme</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "naive"          "within_cluster"</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="choosing-the-scheme">Choosing the scheme<a class="anchor" aria-label="anchor" href="#choosing-the-scheme"></a>
-</h2>
+<div class="section level3">
+<h3 id="the-same-panel-with-the-effect-removed">The same panel with the effect removed<a class="anchor" aria-label="anchor" href="#the-same-panel-with-the-effect-removed"></a>
+</h3>
+<p>Identical sites, plots, confounders and management assignment; the
+management term is dropped from the yield, so the only structure left is
+the site effect and the confounders.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">y_null</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">z_conf</span><span class="op">[</span>, <span class="st">"soil_n"</span><span class="op">]</span> <span class="op">+</span> <span class="va">site_effect</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">fit_naive_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span></span>
+<span>  <span class="va">x_manage</span>, <span class="va">y_null</span>, <span class="va">z_conf</span>, permutation <span class="op">=</span> <span class="st">"naive"</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">299L</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">fit_site_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span></span>
+<span>  <span class="va">x_manage</span>, <span class="va">y_null</span>, <span class="va">z_conf</span>, cluster_id <span class="op">=</span> <span class="va">site</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">299L</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <table class="table">
+<caption>The two permutation schemes on the same eight-site panel, with
+and without a causal effect, each against 299 permutations.</caption>
 <colgroup>
-<col width="50%">
-<col width="50%">
+<col width="17%">
+<col width="28%">
+<col width="14%">
+<col width="14%">
+<col width="11%">
+<col width="11%">
 </colgroup>
 <thead><tr class="header">
-<th>Scenario</th>
-<th>Scheme</th>
+<th align="left">Panel</th>
+<th align="left">Permutation scheme</th>
+<th align="right">Statistic</th>
+<th align="right">Null mean</th>
+<th align="right">Null SD</th>
+<th align="right">p-value</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Truly i.i.d. observations, no design clustering</td>
-<td>
-<code>permutation = "auto"</code>, no <code>cluster_id</code>
-</td>
+<td align="left">real effect</td>
+<td align="left">naive</td>
+<td align="right">0.02198</td>
+<td align="right">0.00154</td>
+<td align="right">0.00081</td>
+<td align="right">0.0033</td>
 </tr>
 <tr class="even">
-<td>Multi-site / multi-season ag design</td>
-<td>
-<code>cluster_id = site</code> (default within-cluster)</td>
+<td align="left">real effect</td>
+<td align="left">within_cluster</td>
+<td align="right">0.02198</td>
+<td align="right">0.00270</td>
+<td align="right">0.00136</td>
+<td align="right">0.0033</td>
 </tr>
 <tr class="odd">
-<td>Within-cluster independence is plausible <em>and</em> you want
-maximum power</td>
-<td>
-<code>permutation = "naive"</code> (rare in practice)</td>
+<td align="left">no effect</td>
+<td align="left">naive</td>
+<td align="right">0.00171</td>
+<td align="right">0.00151</td>
+<td align="right">0.00086</td>
+<td align="right">0.3200</td>
+</tr>
+<tr class="even">
+<td align="left">no effect</td>
+<td align="left">within_cluster</td>
+<td align="right">0.00171</td>
+<td align="right">0.00297</td>
+<td align="right">0.00141</td>
+<td align="right">0.8000</td>
 </tr>
 </tbody>
 </table>
 </div>
+<div class="section level3">
+<h3 id="the-stratified-breakdown">The stratified breakdown<a class="anchor" aria-label="anchor" href="#the-stratified-breakdown"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">fit_site</span><span class="op">$</span><span class="va">per_cluster_statistic</span>, <span class="fl">4L</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  site1  site2  site3  site4  site5  site6  site7  site8 </span></span>
+<span><span class="co">#&gt; 0.0269 0.0403 0.0277 0.0416 0.0050 0.0097 0.0153 0.0172</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="the-figure-how-the-two-nulls-differ">The figure: how the two nulls differ<a class="anchor" aria-label="anchor" href="#the-figure-how-the-two-nulls-differ"></a>
+</h3>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">null_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>statistic <span class="op">=</span> <span class="va">fit_naive</span><span class="op">$</span><span class="va">null_distribution</span>,</span>
+<span>             scheme <span class="op">=</span> <span class="st">"naive"</span>, panel <span class="op">=</span> <span class="st">"real effect"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>statistic <span class="op">=</span> <span class="va">fit_site</span><span class="op">$</span><span class="va">null_distribution</span>,</span>
+<span>             scheme <span class="op">=</span> <span class="st">"within site"</span>, panel <span class="op">=</span> <span class="st">"real effect"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>statistic <span class="op">=</span> <span class="va">fit_naive_null</span><span class="op">$</span><span class="va">null_distribution</span>,</span>
+<span>             scheme <span class="op">=</span> <span class="st">"naive"</span>, panel <span class="op">=</span> <span class="st">"no effect"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>statistic <span class="op">=</span> <span class="va">fit_site_null</span><span class="op">$</span><span class="va">null_distribution</span>,</span>
+<span>             scheme <span class="op">=</span> <span class="st">"within site"</span>, panel <span class="op">=</span> <span class="st">"no effect"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">obs_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"naive"</span>, <span class="st">"within site"</span>, <span class="st">"naive"</span>, <span class="st">"within site"</span><span class="op">)</span>,</span>
+<span>  panel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"real effect"</span>, <span class="st">"real effect"</span>, <span class="st">"no effect"</span>, <span class="st">"no effect"</span><span class="op">)</span>,</span>
+<span>  statistic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_naive</span><span class="op">$</span><span class="va">statistic</span>, <span class="va">fit_site</span><span class="op">$</span><span class="va">statistic</span>,</span>
+<span>                <span class="va">fit_naive_null</span><span class="op">$</span><span class="va">statistic</span>, <span class="va">fit_site_null</span><span class="op">$</span><span class="va">statistic</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">null_df</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">statistic</span>, fill <span class="op">=</span> <span class="va">scheme</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html" class="external-link">geom_histogram</a></span><span class="op">(</span>bins <span class="op">=</span> <span class="fl">40L</span>, alpha <span class="op">=</span> <span class="fl">0.65</span>,</span>
+<span>                          position <span class="op">=</span> <span class="st">"identity"</span>, colour <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">obs_df</span>,</span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">statistic</span>, colour <span class="op">=</span> <span class="va">scheme</span><span class="op">)</span>, linewidth <span class="op">=</span> <span class="fl">1</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">panel</span>, scales <span class="op">=</span> <span class="st">"free"</span>, ncol <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_d</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"scheme"</span>, end <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_colour_viridis_d</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"scheme"</span>, end <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="st">"weighted bd-HSIC statistic (unitless)"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"permutation draws"</span>,</span>
+<span>    title <span class="op">=</span> <span class="st">"Two permutation schemes, two panels"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span></code></pre></div>
+<div class="figure">
+<img src="kernR-hierarchical-bdhsic_files/figure-html/fig-nulls-1.png" class="r-plt" alt="Permutation null distributions under the two schemes, on the panel with a real effect and on the panel without one, with the observed statistic marked in each. Shuffling within sites holds the site effects fixed, which changes the shape of the null the observed statistic is scored against; the naive scheme shuffles those effects into the null." width="1050"><p class="caption">
+Permutation null distributions under the two schemes, on the panel with
+a real effect and on the panel without one, with the observed statistic
+marked in each. Shuffling within sites holds the site effects fixed,
+which changes the shape of the null the observed statistic is scored
+against; the naive scheme shuffles those effects into the null.
+</p>
+</div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cluster_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  site <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fit_site</span><span class="op">$</span><span class="va">per_cluster_statistic</span><span class="op">)</span>,</span>
+<span>  statistic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">fit_site</span><span class="op">$</span><span class="va">per_cluster_statistic</span><span class="op">)</span>,</span>
+<span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
+<span>  <span class="va">cluster_df</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">site</span>, y <span class="op">=</span> <span class="va">statistic</span><span class="op">)</span></span>
+<span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"#3b528b"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span></span>
+<span>    yintercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">cluster_df</span><span class="op">$</span><span class="va">statistic</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    colour <span class="op">=</span> <span class="st">"#FDE725"</span>, linewidth <span class="op">=</span> <span class="fl">0.9</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="st">"site"</span>, y <span class="op">=</span> <span class="st">"weighted bd-HSIC within site (unitless)"</span>,</span>
+<span>    title <span class="op">=</span> <span class="st">"Stratified contributions, site by site"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.text.x <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>,</span>
+<span>                                                     hjust <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<div class="figure">
+<img src="kernR-hierarchical-bdhsic_files/figure-html/fig-clusters-1.png" class="r-plt" alt="Weighted bd-HSIC computed inside each site on the panel with a real effect, with the mean across sites marked. A site whose stratified statistic dwarfs the rest is a candidate for follow-up, either as genuine site-specific effect modification or as a data-quality problem." width="1050"><p class="caption">
+Weighted bd-HSIC computed inside each site on the panel with a real
+effect, with the mean across sites marked. A site whose stratified
+statistic dwarfs the rest is a candidate for follow-up, either as
+genuine site-specific effect modification or as a data-quality problem.
+</p>
+</div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="read">Read<a class="anchor" aria-label="anchor" href="#read"></a>
+</h2>
+<p>On the panel with a real effect both schemes reject: the naive scheme
+gives a p-value of 0.0033 and the within-site scheme 0.0033, against the
+same observed statistic of 0.022, because the statistic does not depend
+on the permutation scheme. What differs is the null it is scored
+against, and the figure shows that directly: the naive null has a
+standard deviation of 0.00081 against 0.00136 for the within-site null,
+and a mean of 0.00154 against 0.00270: holding the site effects fixed
+shifts the whole null upward and widens it.</p>
+<p>On the panel with the effect removed the two schemes give p-values of
+0.32 (naive) and 0.8 (within site) against an observed statistic of
+0.00171. Both decline to reject, which is the right answer on a panel
+built with no effect. One draw is not a type-I error rate: what this
+pair of runs shows is the mechanism, that the two schemes construct
+different nulls from identical data, and not a measured false-positive
+rate for either. Establishing that would need the whole panel
+regenerated many times over, which is a simulation study and not a
+vignette.</p>
+<p>The stratified breakdown is the diagnostic worth keeping. Across the
+8 sites with enough test observations to score, the within-site
+statistic runs from 0.005 to 0.0416, a factor of 8 between the quietest
+site and the loudest. The second figure shows the spread. A panel in
+which one site towers over the rest is telling you something the pooled
+verdict does not: either the effect is real only there, or that site’s
+data need looking at.</p>
+</div>
+<div class="section level2">
+<h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
+</h2>
+<p>This is a synthetic panel with balanced sites and one level of
+nesting, and every result above is a single run. The within-site scheme
+needs at least two test observations per cluster, and the test split
+takes only part of the sample, so small clusters are reported as
+<code>NA</code> in <code>per_cluster_statistic</code> and contribute the
+identity permutation to the null; a design of paddocks with three to
+five plots each has little within-cluster permutation power and is
+usually better pooled to the site. The per-cluster statistics are
+reported on the raw scale and are not weighted by cluster size, so an
+unbalanced panel needs a size-weighted summary computed outside the
+function before the sites are compared. The choice of clustering level
+is an assumption about exchangeability, not a fact the data can supply:
+within-site permutation assumes plots inside a site are exchangeable,
+which a systematic within-site layout would break. Finally, everything
+the vignette <em>Does the treatment cause the outcome, or do they share
+a cause?</em> says about the density-ratio step applies unchanged here,
+including the effective-sample-size floor.</p>
+</div>
+<div class="section level2">
+<h2 id="choosing-the-scheme">Choosing the scheme<a class="anchor" aria-label="anchor" href="#choosing-the-scheme"></a>
+</h2>
+<p>Where the observations are genuinely independent and the design has
+no grouping, leave <code>permutation</code> at <code>"auto"</code> and
+supply no <code>cluster_id</code>: the propensity-similarity clustering
+is the intended default. Where the design has sites, seasons or paddocks
+that the covariates do not fully explain, supply <code>cluster_id</code>
+at the level you are willing to call exchangeable, and take the
+within-cluster scheme it activates. <code>permutation = "naive"</code>
+is for the case where within-cluster independence is plausible on other
+grounds and maximum power matters more, which is rare in a field
+trial.</p>
+</div>
 <div class="section level2">
 <h2 id="notes-on-practice">Notes on practice<a class="anchor" aria-label="anchor" href="#notes-on-practice"></a>
 </h2>
+<p><strong>Cluster size.</strong> Within-cluster permutation needs at
+least two test observations per cluster, where the test split is one
+minus <code>split_ratio</code> of the sample. Clusters below that appear
+as <code>NA</code> in the stratified breakdown.</p>
+<p><strong>Many small clusters.</strong> Permutation power falls with
+cluster size. Pooling to a coarser level, site rather than paddock, is
+usually the better trade.</p>
+<p><strong>Imbalanced designs.</strong> Combine the per-cluster
+statistics with the cluster sizes yourself if a size-weighted summary is
+what the report needs.</p>
+</div>
+<div class="section level2">
+<h2 id="what-to-read-next">What to read next<a class="anchor" aria-label="anchor" href="#what-to-read-next"></a>
+</h2>
+<p><em>Does the treatment cause the outcome, or do they share a
+cause?</em> introduces the backdoor-adjusted test and its density-ratio
+step, and is the place to start if bd-HSIC is new. <em>When plots sit
+inside farms</em> applies the same clustering idea to the doubly robust
+distributional tests, with a within-cluster and between-cluster
+decomposition this vignette does not compute. <em>Choosing a
+density-ratio backend</em> covers the adjustment step whose weights also
+determine the default clustering.</p>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
 <ul>
-<li>
-<strong>Cluster size.</strong> Within-cluster permutation needs
-<code>&gt;= 2</code> test observations per cluster (test split =
-<code>1 - split_ratio</code> of <code>n</code>). Smaller clusters are
-reported as <code>NA</code> in <code>per_cluster_statistic</code> and
-contribute the identity permutation.</li>
-<li>
-<strong>Many small clusters.</strong> When clusters are small
-(e.g. paddocks of 3-5 plots), within-cluster permutation has limited
-power; consider pooling at a coarser level (site instead of
-paddock).</li>
-<li>
-<strong>Imbalanced design.</strong> Per-cluster statistics are
-reported on the raw scale, not weighted by cluster size; combine
-externally if you need a size-weighted summary.</li>
+<li>Hu, R., Sejdinovic, D., &amp; Evans, R. J. (2024). A kernel test for
+causal association via noise contrastive backdoor adjustment.
+<em>Journal of Machine Learning Research</em>, 25(160), 1-56.</li>
 </ul>
 </div>
 <div class="section level2">
-<h2 id="reference">Reference<a class="anchor" aria-label="anchor" href="#reference"></a>
+<h2 id="reproduce">Reproduce<a class="anchor" aria-label="anchor" href="#reproduce"></a>
 </h2>
-<ul>
-<li>Hu, R., Sejdinovic, D., &amp; Evans, R. J. (2024). <em>A kernel test
-for causal association via noise contrastive backdoor adjustment.</em>
-Journal of Machine Learning Research, 25(160), 1-56.</li>
-</ul>
+<p>Seed <code>101</code> for the synthetic panel and for the null
+variant; <code>seed = 1L</code> passed to every test so the
+density-ratio fit and the permutation draws are fixed. Package versions
+follow.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">#&gt;  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">#&gt; [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: UTC</span></span>
+<span><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt; [1] kernR_0.8.2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.51         </span></span>
+<span><span class="co">#&gt;  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         </span></span>
+<span><span class="co">#&gt;  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  </span></span>
+<span><span class="co">#&gt; [10] data.table_1.18.6.1 jsonlite_2.0.0      labeling_0.4.3     </span></span>
+<span><span class="co">#&gt; [13] glue_1.8.1          htmltools_0.5.9     PESTO_0.10.1       </span></span>
+<span><span class="co">#&gt; [16] ragg_1.5.2          sass_0.4.10         scales_1.4.0       </span></span>
+<span><span class="co">#&gt; [19] rmarkdown_2.32      grid_4.6.1          evaluate_1.0.5     </span></span>
+<span><span class="co">#&gt; [22] jquerylib_0.1.4     fastmap_1.2.0       yaml_2.3.12        </span></span>
+<span><span class="co">#&gt; [25] lifecycle_1.0.5     compiler_4.6.1      RColorBrewer_1.1-3 </span></span>
+<span><span class="co">#&gt; [28] fs_2.1.0            Rcpp_1.1.2          farver_2.1.2       </span></span>
+<span><span class="co">#&gt; [31] systemfonts_1.3.2   digest_0.6.39       viridisLite_0.4.3  </span></span>
+<span><span class="co">#&gt; [34] R6_2.6.1            bslib_0.12.0        withr_3.0.3        </span></span>
+<span><span class="co">#&gt; [37] tools_4.6.1         gtable_0.3.6        pkgdown_2.2.1      </span></span>
+<span><span class="co">#&gt; [40] ggplot2_4.0.3       cachem_1.1.0        desc_1.4.3</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

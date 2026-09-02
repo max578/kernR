@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Causal Association Testing with bd-HSIC • kernR</title>
+<title>Does the treatment cause the outcome, or do they share a cause? • kernR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Causal Association Testing with bd-HSIC">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Does the treatment cause the outcome, or do they share a cause?">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,10 +33,10 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting Started with kernR</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Causal Association Testing with bd-HSIC</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">Distributional Treatment Effect Tests (DR-DATE / DR-DETT)</a></li>
-    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">Hierarchical and Nested Data</a></li>
+<li><a class="dropdown-item" href="../articles/kernR-quickstart.html">Getting started with kernR</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-bdhsic.html">Does the treatment cause the outcome, or do they share a cause?</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-drtest.html">A treatment that changes the spread and not the mean</a></li>
+    <li><a class="dropdown-item" href="../articles/kernR-hierarchical.html">When plots sit inside farms</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
@@ -58,11 +58,8 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Causal Association Testing with bd-HSIC</h1>
-                        <h4 data-toc-skip class="author">Max
-Moldovan</h4>
+      <h1>Does the treatment cause the outcome, or do they share a cause?</h1>
             
-            <h4 data-toc-skip class="date">2026-08-25</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/max578/kernR/blob/main/vignettes/kernR-bdhsic.Rmd" class="external-link"><code>vignettes/kernR-bdhsic.Rmd</code></a></small>
       <div class="d-none name"><code>kernR-bdhsic.Rmd</code></div>
@@ -70,193 +67,361 @@ Moldovan</h4>
 
     
     
-<div class="section level2">
-<h2 id="the-problem">The Problem<a class="anchor" aria-label="anchor" href="#the-problem"></a>
-</h2>
-<p>Standard independence tests cannot distinguish <em>causal</em>
-association from <em>confounded</em> association. If treatment X and
-outcome Y share a common cause Z, they will appear dependent even if X
-has no causal effect on Y.</p>
-<p>The <strong>bd-HSIC</strong> test (Hu, Sejdinovic &amp; Evans, 2024)
-solves this by testing the <em>do-null</em> hypothesis:</p>
-<blockquote>
-<p>H_0: p(y | do(x)) = p*(y) for all x</p>
-</blockquote>
-<p>This uses Pearl’s do-operator: after intervening on X, is Y still
-associated with X?</p>
-</div>
-<div class="section level2">
-<h2 id="how-it-works">How It Works<a class="anchor" aria-label="anchor" href="#how-it-works"></a>
-</h2>
-<ol style="list-style-type: decimal">
-<li>
-<strong>Density ratio estimation</strong>: Estimate w(x, z) = p*(x)
-/ p(x|z) to reweight observational samples to the interventional
-distribution.</li>
-<li>
-<strong>Weighted HSIC</strong>: Compute HSIC between X and Y under
-the reweighted (interventional) distribution.</li>
-<li>
-<strong>Cluster-based permutation</strong>: Obtain p-values by
-permuting Y within clusters of similar conditional densities
-p(x|z).</li>
-</ol>
-</div>
-<div class="section level2">
-<h2 id="example-linear-causal-effect">Example: Linear Causal Effect<a class="anchor" aria-label="anchor" href="#example-linear-causal-effect"></a>
-</h2>
+<!-- Render time: ~2 s under rmarkdown::render(); macOS aarch64, R 4.5.2, one
+     core. Four bd-HSIC tests at 199 to 299 cluster permutations on 300 to
+     400 observations, plus one density-ratio fit per test. -->
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/max578/kernR" class="external-link">kernR</a></span><span class="op">)</span></span></code></pre></div>
+<div class="section level2">
+<h2 id="why">Why<a class="anchor" aria-label="anchor" href="#why"></a>
+</h2>
+<p>An agronomist has an observational record rather than a randomised
+trial. <em>Paddocks that got the higher residue-retention intensity also
+happen to be the wetter, higher-nitrogen paddocks. Yield and management
+move together in my data, but so would they if management did nothing at
+all and the soil were doing all the work. Can I ask whether management
+moves yield, having subtracted what the soil explains, without first
+assuming the effect is a straight line?</em> This vignette answers that
+with the backdoor-adjusted HSIC test, on three synthetic designs where
+the right answer is known by construction: a linear causal effect, no
+causal effect at all, and a curved causal effect. It closes with the
+case in which the test declines to answer.</p>
+</div>
+<div class="section level2">
+<h2 id="what">What<a class="anchor" aria-label="anchor" href="#what"></a>
+</h2>
+<p><code><a href="../reference/bd_hsic_test.html">bd_hsic_test()</a></code> tests the do-null hypothesis of Hu,
+Sejdinovic and Evans (2024),</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub><mo>:</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>∣</mo><mi>d</mi><mi>o</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>p</mi><mo>*</mo></msup><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">for all </mtext><mspace width="0.333em"></mspace></mrow><mi>x</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">H_0 : p(y \mid do(x)) = p^{*}(y) \quad \text{for all } x,</annotation></semantics></math></p>
+<p>which asks whether the outcome is still associated with the treatment
+<em>after</em> intervening on the treatment, rather than merely in the
+record as observed. It gets there in three steps. First it estimates the
+density ratio
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>p</mi><mo>*</mo></msup><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>∣</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">w(x, z) = p^{*}(x) / p(x \mid z)</annotation></semantics></math>,
+which reweights the observational sample so that it looks like a sample
+in which treatment was assigned independently of the confounders;
+<code><a href="../reference/estimate_density_ratio.html">estimate_density_ratio()</a></code> and
+<code><a href="../reference/fit_density_ratio.html">fit_density_ratio()</a></code> expose that step on its own, with four
+interchangeable backends. Second it computes HSIC between treatment and
+outcome under those weights, so any dependence the kernel can represent
+counts, curved or otherwise. Third it builds the null by permuting the
+outcome <em>within clusters of similar conditional density</em>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>∣</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p(x \mid z)</annotation></semantics></math>,
+so the permutation respects the confounding structure instead of
+destroying it.</p>
+<p><code><a href="../reference/kernel_causal_test.html">kernel_causal_test()</a></code> is the formula front door to the
+same machinery: <code>y ~ x | z1 + z2</code> names outcome, treatment
+and adjustment set in one expression. Every call returns a
+<code>kernel_test_result</code> carrying the statistic, the permutation
+null, the p-value, and the effective sample size (ESS) of the
+density-ratio weights – the diagnostic that decides whether the verdict
+is worth anything, which is the subject of the last section.</p>
+</div>
+<div class="section level2">
+<h2 id="do">Do<a class="anchor" aria-label="anchor" href="#do"></a>
+</h2>
+<div class="section level3">
+<h3 id="a-linear-causal-effect">A linear causal effect<a class="anchor" aria-label="anchor" href="#a-linear-causal-effect"></a>
+</h3>
+<p>A synthetic design of 300 observations. A two-column confounder
+drives both treatment and outcome, and the treatment additionally has a
+genuine linear effect on the outcome of 0.8 per unit.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42L</span><span class="op">)</span></span>
+<span><span class="va">n_obs</span> <span class="op">&lt;-</span> <span class="fl">300L</span></span>
+<span><span class="va">z_conf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span> <span class="op">*</span> <span class="fl">2L</span><span class="op">)</span>, <span class="va">n_obs</span>, <span class="fl">2L</span><span class="op">)</span></span>
+<span><span class="va">x_lin</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">z_conf</span><span class="op">[</span>, <span class="fl">1L</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span><span class="op">)</span></span>
+<span><span class="va">y_lin</span> <span class="op">&lt;-</span> <span class="fl">0.8</span> <span class="op">*</span> <span class="va">x_lin</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">z_conf</span><span class="op">[</span>, <span class="fl">2L</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">300</span></span>
-<span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span> <span class="op">*</span> <span class="fl">2</span><span class="op">)</span>, <span class="va">n</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">z</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>           <span class="co"># X depends on confounder Z</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">0.8</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">z</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="co"># Y depends causally on X and on Z</span></span>
-<span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>,</span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">200</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="va">fit_linear</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span><span class="va">x_lin</span>, <span class="va">y_lin</span>, <span class="va">z_conf</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">299L</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span></span>
+<span><span class="va">fit_linear</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    bd-HSIC Test</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Statistic: 0.0182464 </span></span>
-<span><span class="co">#&gt; P-value:   0.0050 </span></span>
+<span><span class="co">#&gt; P-value:   0.0033 </span></span>
 <span><span class="co">#&gt; N:         150 </span></span>
-<span><span class="co">#&gt; Perms:     200 </span></span>
+<span><span class="co">#&gt; Perms:     299 </span></span>
 <span><span class="co">#&gt; Kernel X:  rbf (bw = 1.062)</span></span>
 <span><span class="co">#&gt; Kernel Y:  rbf (bw = 1.425)</span></span>
 <span><span class="co">#&gt; ESS:       149.7</span></span></code></pre></div>
-<p>The test detects the causal association between X and Y.</p>
 </div>
-<div class="section level2">
-<h2 id="example-no-causal-effect-confounding-only">Example: No Causal Effect (Confounding Only)<a class="anchor" aria-label="anchor" href="#example-no-causal-effect-confounding-only"></a>
-</h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">300</span></span>
-<span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span> <span class="op">*</span> <span class="fl">2</span><span class="op">)</span>, <span class="va">n</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">z</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">z</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="va">z</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="co"># Y depends on Z, not on X</span></span>
+<div class="section level3">
+<h3 id="no-causal-effect-confounding-only">No causal effect, confounding only<a class="anchor" aria-label="anchor" href="#no-causal-effect-confounding-only"></a>
+</h3>
+<p>The same confounder and the same treatment, but the outcome is now
+built from the confounder alone. Treatment and outcome are still
+correlated in the record; nothing flows from one to the other.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42L</span><span class="op">)</span></span>
+<span><span class="va">z_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span> <span class="op">*</span> <span class="fl">2L</span><span class="op">)</span>, <span class="va">n_obs</span>, <span class="fl">2L</span><span class="op">)</span></span>
+<span><span class="va">x_null</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">z_null</span><span class="op">[</span>, <span class="fl">1L</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span><span class="op">)</span></span>
+<span><span class="va">y_null</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">z_null</span><span class="op">[</span>, <span class="fl">1L</span><span class="op">]</span> <span class="op">+</span> <span class="va">z_null</span><span class="op">[</span>, <span class="fl">2L</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_obs</span><span class="op">)</span></span>
+<span><span class="va">marginal_r</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">x_null</span>, <span class="va">y_null</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">marginal_r</span>, <span class="fl">3L</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.128</span></span>
 <span></span>
-<span><span class="va">result_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>,</span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">200</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="va">fit_confounded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span><span class="va">x_null</span>, <span class="va">y_null</span>, <span class="va">z_null</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">299L</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result_null</span></span>
+<span><span class="va">fit_confounded</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    bd-HSIC Test</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Statistic: 0.0022688 </span></span>
-<span><span class="co">#&gt; P-value:   0.4826 </span></span>
+<span><span class="co">#&gt; P-value:   0.5000 </span></span>
 <span><span class="co">#&gt; N:         150 </span></span>
-<span><span class="co">#&gt; Perms:     200 </span></span>
+<span><span class="co">#&gt; Perms:     299 </span></span>
 <span><span class="co">#&gt; Kernel X:  rbf (bw = 1.062)</span></span>
 <span><span class="co">#&gt; Kernel Y:  rbf (bw = 1.553)</span></span>
 <span><span class="co">#&gt; ESS:       149.7</span></span></code></pre></div>
-<p>The large p-value correctly indicates no causal effect.</p>
 </div>
-<div class="section level2">
-<h2 id="example-non-linear-causal-effect">Example: Non-Linear Causal Effect<a class="anchor" aria-label="anchor" href="#example-non-linear-causal-effect"></a>
-</h2>
-<p>A key advantage of bd-HSIC is detecting non-linear effects that
-linear methods (PDS, Double ML) completely miss:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">400</span></span>
-<span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span> <span class="op">*</span> <span class="fl">2</span><span class="op">)</span>, <span class="va">n</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">z</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">z</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="co"># Quadratic causal effect</span></span>
+<div class="section level3">
+<h3 id="a-curved-causal-effect">A curved causal effect<a class="anchor" aria-label="anchor" href="#a-curved-causal-effect"></a>
+</h3>
+<p>The advantage of a kernel statistic over a partialling-out method is
+that it does not have to be told the shape of the effect. Here the
+treatment enters the outcome as its square, so the average slope is
+close to zero.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42L</span><span class="op">)</span></span>
+<span><span class="va">n_quad</span> <span class="op">&lt;-</span> <span class="fl">400L</span></span>
+<span><span class="va">z_quad</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_quad</span> <span class="op">*</span> <span class="fl">2L</span><span class="op">)</span>, <span class="va">n_quad</span>, <span class="fl">2L</span><span class="op">)</span></span>
+<span><span class="va">x_quad</span> <span class="op">&lt;-</span> <span class="va">z_quad</span><span class="op">[</span>, <span class="fl">1L</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_quad</span><span class="op">)</span></span>
+<span><span class="va">y_quad</span> <span class="op">&lt;-</span> <span class="va">x_quad</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">z_quad</span><span class="op">[</span>, <span class="fl">2L</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_quad</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">result_nl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>,</span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">200</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="va">fit_quadratic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span><span class="va">x_quad</span>, <span class="va">y_quad</span>, <span class="va">z_quad</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">299L</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result_nl</span></span>
+<span><span class="va">fit_quadratic</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    bd-HSIC Test</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Statistic: 0.0206771 </span></span>
-<span><span class="co">#&gt; P-value:   0.0050 </span></span>
+<span><span class="co">#&gt; P-value:   0.0033 </span></span>
 <span><span class="co">#&gt; N:         200 </span></span>
-<span><span class="co">#&gt; Perms:     200 </span></span>
+<span><span class="co">#&gt; Perms:     299 </span></span>
 <span><span class="co">#&gt; Kernel X:  rbf (bw = 1.299)</span></span>
 <span><span class="co">#&gt; Kernel Y:  rbf (bw = 2.029)</span></span>
 <span><span class="co">#&gt; ESS:       199.6</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="diagnostic-null-distribution">Diagnostic: Null Distribution<a class="anchor" aria-label="anchor" href="#diagnostic-null-distribution"></a>
-</h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="the-formula-interface">The formula interface<a class="anchor" aria-label="anchor" href="#the-formula-interface"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dat_quad</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  y <span class="op">=</span> <span class="va">y_quad</span>, x <span class="op">=</span> <span class="va">x_quad</span>, z1 <span class="op">=</span> <span class="va">z_quad</span><span class="op">[</span>, <span class="fl">1L</span><span class="op">]</span>, z2 <span class="op">=</span> <span class="va">z_quad</span><span class="op">[</span>, <span class="fl">2L</span><span class="op">]</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">fit_formula</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_causal_test.html">kernel_causal_test</a></span><span class="op">(</span></span>
+<span>  <span class="va">y</span> <span class="op">~</span> <span class="va">x</span> <span class="op">|</span> <span class="va">z1</span> <span class="op">+</span> <span class="va">z2</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">dat_quad</span>, method <span class="op">=</span> <span class="st">"bd-hsic"</span>,</span>
+<span>  n_permutations <span class="op">=</span> <span class="fl">299L</span>, seed <span class="op">=</span> <span class="fl">1L</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">fit_formula</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;    bd-HSIC Test</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Statistic: 0.0206771 </span></span>
+<span><span class="co">#&gt; P-value:   0.0033 </span></span>
+<span><span class="co">#&gt; N:         200 </span></span>
+<span><span class="co">#&gt; Perms:     299 </span></span>
+<span><span class="co">#&gt; Kernel X:  rbf (bw = 1.299)</span></span>
+<span><span class="co">#&gt; Kernel Y:  rbf (bw = 2.029)</span></span>
+<span><span class="co">#&gt; ESS:       199.6</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="the-figure-two-nulls-two-verdicts">The figure: two nulls, two verdicts<a class="anchor" aria-label="anchor" href="#the-figure-two-nulls-two-verdicts"></a>
+</h3>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">null_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    statistic <span class="op">=</span> <span class="va">fit_linear</span><span class="op">$</span><span class="va">null_distribution</span>, design <span class="op">=</span> <span class="st">"linear effect"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    statistic <span class="op">=</span> <span class="va">fit_confounded</span><span class="op">$</span><span class="va">null_distribution</span>,</span>
+<span>    design <span class="op">=</span> <span class="st">"confounding only"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">obs_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  design <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"linear effect"</span>, <span class="st">"confounding only"</span><span class="op">)</span>,</span>
+<span>  statistic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fit_linear</span><span class="op">$</span><span class="va">statistic</span>, <span class="va">fit_confounded</span><span class="op">$</span><span class="va">statistic</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">null_df</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">statistic</span>, fill <span class="op">=</span> <span class="va">design</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html" class="external-link">geom_histogram</a></span><span class="op">(</span>bins <span class="op">=</span> <span class="fl">40L</span>, alpha <span class="op">=</span> <span class="fl">0.65</span>,</span>
+<span>                          position <span class="op">=</span> <span class="st">"identity"</span>, colour <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">obs_df</span>,</span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">statistic</span>, colour <span class="op">=</span> <span class="va">design</span><span class="op">)</span>,</span>
+<span>    linewidth <span class="op">=</span> <span class="fl">1</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_d</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"design"</span>, end <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_colour_viridis_d</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"design"</span>, end <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="st">"weighted HSIC statistic (unitless)"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"cluster permutations"</span>,</span>
+<span>    title <span class="op">=</span> <span class="st">"Where the observed statistic falls in its own null"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div class="figure">
-<img src="kernR-bdhsic_files/figure-html/plot-null-1.png" class="r-plt" alt="bd-HSIC permutation null distribution." width="900"><p class="caption">
-bd-HSIC permutation null distribution.
+<img src="kernR-bdhsic_files/figure-html/fig-nulls-1.png" class="r-plt" alt="Cluster-permutation null distributions of the weighted HSIC statistic for the linear-effect design and the confounding-only design, with each observed statistic marked by a vertical line in the matching colour. The two nulls are nearly the same shape; only the observed statistics separate the two designs." width="1050"><p class="caption">
+Cluster-permutation null distributions of the weighted HSIC statistic
+for the linear-effect design and the confounding-only design, with each
+observed statistic marked by a vertical line in the matching colour. The
+two nulls are nearly the same shape; only the observed statistics
+separate the two designs.
 </p>
 </div>
-</div>
-<div class="section level2">
-<h2 id="using-the-formula-interface">Using the Formula Interface<a class="anchor" aria-label="anchor" href="#using-the-formula-interface"></a>
-</h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">y</span>, x <span class="op">=</span> <span class="va">x</span>, z1 <span class="op">=</span> <span class="va">z</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, z2 <span class="op">=</span> <span class="va">z</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="va">result_f</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/kernel_causal_test.html">kernel_causal_test</a></span><span class="op">(</span></span>
-<span>  <span class="va">y</span> <span class="op">~</span> <span class="va">x</span> <span class="op">|</span> <span class="va">z1</span> <span class="op">+</span> <span class="va">z2</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">dat</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"bd-hsic"</span>,</span>
-<span>  n_permutations <span class="op">=</span> <span class="fl">100</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">1</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">result_f</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;    bd-HSIC Test</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Statistic: 0.0206771 </span></span>
-<span><span class="co">#&gt; P-value:   0.0099 </span></span>
-<span><span class="co">#&gt; N:         200 </span></span>
-<span><span class="co">#&gt; Perms:     100 </span></span>
-<span><span class="co">#&gt; Kernel X:  rbf (bw = 1.299)</span></span>
-<span><span class="co">#&gt; Kernel Y:  rbf (bw = 2.029)</span></span>
-<span><span class="co">#&gt; ESS:       199.6</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="when-to-use-bd-hsic">When to Use bd-HSIC<a class="anchor" aria-label="anchor" href="#when-to-use-bd-hsic"></a>
-</h2>
 <table class="table">
-<colgroup>
-<col width="43%">
-<col width="56%">
-</colgroup>
+<caption>bd-HSIC verdicts on the three synthetic designs, each against a
+299-draw cluster-permutation null.</caption>
 <thead><tr class="header">
-<th>Scenario</th>
-<th>Use bd-HSIC?</th>
+<th align="left">Design</th>
+<th align="right">Statistic</th>
+<th align="right">p-value</th>
+<th align="right">ESS</th>
+<th align="right">Test n</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Testing if X causally affects Y (adjusting for Z)</td>
-<td>Yes</td>
+<td align="left">linear causal effect</td>
+<td align="right">0.0182</td>
+<td align="right">0.0033</td>
+<td align="right">149.7</td>
+<td align="right">150</td>
 </tr>
 <tr class="even">
-<td>Non-linear or non-monotone causal effects</td>
-<td>Yes – key advantage</td>
+<td align="left">confounding only</td>
+<td align="right">0.0023</td>
+<td align="right">0.5000</td>
+<td align="right">149.7</td>
+<td align="right">150</td>
 </tr>
 <tr class="odd">
-<td>Continuous, binary, or mixed treatments</td>
-<td>Yes</td>
+<td align="left">quadratic causal effect</td>
+<td align="right">0.0207</td>
+<td align="right">0.0033</td>
+<td align="right">199.6</td>
+<td align="right">200</td>
 </tr>
 <tr class="even">
-<td>Very high-dimensional confounders</td>
-<td>Consider using <code>density_ratio = "ranger"</code>
-</td>
-</tr>
-<tr class="odd">
-<td>Extremely strong confounding</td>
-<td>Caution: density ratio estimation may fail</td>
+<td align="left">quadratic, formula interface</td>
+<td align="right">0.0207</td>
+<td align="right">0.0033</td>
+<td align="right">199.6</td>
+<td align="right">200</td>
 </tr>
 </tbody>
 </table>
+</div>
+<div class="section level3">
+<h3 id="when-the-test-declines-to-answer">When the test declines to answer<a class="anchor" aria-label="anchor" href="#when-the-test-declines-to-answer"></a>
+</h3>
+<p>The density-ratio weights are the whole adjustment, so a verdict is
+worth exactly as much as they are. <code><a href="../reference/bd_hsic_test.html">bd_hsic_test()</a></code> measures
+that with the effective sample size of the weights and refuses to stand
+behind a p-value computed from a handful of dominant observations. The
+design below is the ordinary way that happens in a field record: too
+many covariates for too few plots. Fifty plots carry a 24-column soil
+and climate block, and the management variable is a function of the
+whole block, so the reweighting has almost no independent information to
+work with.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">9L</span><span class="op">)</span></span>
+<span><span class="va">n_plots</span> <span class="op">&lt;-</span> <span class="fl">50L</span></span>
+<span><span class="va">n_cov</span> <span class="op">&lt;-</span> <span class="fl">24L</span></span>
+<span><span class="va">z_thin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_plots</span> <span class="op">*</span> <span class="va">n_cov</span><span class="op">)</span>, <span class="va">n_plots</span>, <span class="va">n_cov</span><span class="op">)</span></span>
+<span><span class="va">x_thin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">z_thin</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">n_cov</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_plots</span><span class="op">)</span></span>
+<span><span class="va">y_thin</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">x_thin</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_plots</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">gate_message</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
+<span><span class="va">fit_thin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">withCallingHandlers</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/bd_hsic_test.html">bd_hsic_test</a></span><span class="op">(</span><span class="va">x_thin</span>, <span class="va">y_thin</span>, <span class="va">z_thin</span>, n_permutations <span class="op">=</span> <span class="fl">199L</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span>,</span>
+<span>  warning <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">w</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">gate_message</span> <span class="op">&lt;&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">conditionMessage</a></span><span class="op">(</span><span class="va">w</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">invokeRestart</a></span><span class="op">(</span><span class="st">"muffleWarning"</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/is_kernR_abstention.html">is_kernR_abstention</a></span><span class="op">(</span><span class="va">fit_thin</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">fit_thin</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "kernR_abstention"   "kernel_test_result"</span></span></code></pre></div>
+<p>The gate states its own case; the message is captured above rather
+than printed as a condition so that this vignette renders without
+warnings.</p>
+<blockquote>
+<p>bd_hsic_test(): ESS (1.6) is below 10% of n_test (25). The weighted
+test statistic is dominated by a small number of high-weight
+observations; the resulting p-value is not a reliable verdict. Increase
+n, switch density_ratio backend, or tighten the design.</p>
+</blockquote>
+</div>
+</div>
+<div class="section level2">
+<h2 id="read">Read<a class="anchor" aria-label="anchor" href="#read"></a>
+</h2>
+<p>On the linear design the weighted HSIC statistic is 0.0182 against a
+null whose draws reach 0.0172, giving a p-value of 0.0033: the effect
+survives adjustment, which it should, because it was built in. On the
+confounding-only design the raw correlation between treatment and
+outcome is 0.128 – an association any unadjusted test would report – yet
+the adjusted statistic is 0.00227 with a p-value of 0.5. The reweighting
+has removed the association, which is the whole point: what looked like
+an effect was the soil.</p>
+<p>The curved design is where a kernel statistic separates from a linear
+adjustment. The treatment enters the outcome as its square, so the
+average slope over the sample is close to zero and a partialling-out
+method has nothing to find; bd-HSIC returns 0.0207 with a p-value of
+0.0033. The formula interface reaches the same verdict on the same data,
+statistic 0.0207, p-value 0.0033.</p>
+<p>The figure carries the part the table cannot. The two permutation
+nulls are almost the same distribution: the null does not know which
+design produced it, because within-cluster permutation preserves the
+confounding structure in both cases. What differs is where the observed
+statistic lands, and that is what the p-values report.</p>
+<p>The last design is the one an analyst most needs to recognise. The
+effective sample size of the density-ratio weights collapses to 1.6 out
+of 25 test observations, a fraction of 0.065, below the default floor of
+0.1. The test still returns a p-value – 0.145 on this run – and that
+number should not be used. <code><a href="../reference/is_kernR_abstention.html">is_kernR_abstention()</a></code> is TRUE
+and the result carries the class <code>kernR_abstention</code> ahead of
+<code>kernel_test_result</code>, which is how an orchestra consumer
+downstream recognises that kernR declined to stand behind its own
+verdict without having to know kernR’s field names. The remedy is in the
+message: more plots, a different density-ratio backend, or a smaller
+adjustment set.</p>
+</div>
+<div class="section level2">
+<h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a>
+</h2>
+<p>The three designs here are synthetic, with the confounding structure
+known and the adjustment set complete by construction. No test in this
+package can tell you that your adjustment set is complete: bd-HSIC
+assumes the backdoor criterion holds for the covariates you supplied,
+and an omitted confounder produces a confident wrong answer with a
+healthy ESS. The density-ratio step is a fitted model too, so a badly
+specified ratio biases the weighted statistic even when the ESS looks
+acceptable; the ESS floor catches collapse, not misspecification. The
+cluster permutation assumes exchangeability within its
+propensity-similarity clusters, which is a weaker assumption than
+independence but not a free one, and it is the wrong assumption when the
+design has its own hierarchy. Finally the p-values above are permutation
+p-values and cannot fall below
+<code>1 / (n_permutations + 1)</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="what-to-read-next">What to read next<a class="anchor" aria-label="anchor" href="#what-to-read-next"></a>
+</h2>
+<p><em>Choosing a density-ratio backend</em> compares the four backends
+behind the adjustment step on one confounded design, and is the place to
+go when the ESS diagnostic above is unsatisfactory. <em>Multi-site
+trials and the permutation null</em> replaces the propensity-similarity
+clustering used here with the design’s own sites, which is the right
+choice whenever the design tells you who is exchangeable with whom.
+<em>A treatment that changes the spread and not the mean</em> asks the
+distributional version of the same causal question for a binary
+treatment.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
@@ -264,9 +429,17 @@ bd-HSIC permutation null distribution.
 <ul>
 <li>Hu, R., Sejdinovic, D., &amp; Evans, R. J. (2024). A kernel test for
 causal association via noise contrastive backdoor adjustment.
-<em>JMLR</em>, 25(160), 1-56.</li>
+<em>Journal of Machine Learning Research</em>, 25(160), 1-56.</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+</div>
+<div class="section level2">
+<h2 id="reproduce">Reproduce<a class="anchor" aria-label="anchor" href="#reproduce"></a>
+</h2>
+<p>Seed <code>42</code> for the three causal designs and <code>9</code>
+for the collapsed-ESS design; <code>seed = 1L</code> passed to every
+test so the density-ratio fit and the permutation draws are fixed.
+Package versions follow.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -295,16 +468,17 @@ causal association via noise contrastive backdoor adjustment.
 <span><span class="co">#&gt;  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.51         </span></span>
 <span><span class="co">#&gt;  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         </span></span>
 <span><span class="co">#&gt;  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  </span></span>
-<span><span class="co">#&gt; [10] jsonlite_2.0.0      data.table_1.18.6.1 glue_1.8.1         </span></span>
-<span><span class="co">#&gt; [13] htmltools_0.5.9     PESTO_0.10.1        ragg_1.5.2         </span></span>
-<span><span class="co">#&gt; [16] sass_0.4.10         scales_1.4.0        rmarkdown_2.31     </span></span>
-<span><span class="co">#&gt; [19] grid_4.6.1          evaluate_1.0.5      jquerylib_0.1.4    </span></span>
-<span><span class="co">#&gt; [22] fastmap_1.2.0       yaml_2.3.12         lifecycle_1.0.5    </span></span>
-<span><span class="co">#&gt; [25] compiler_4.6.1      RColorBrewer_1.1-3  fs_2.1.0           </span></span>
-<span><span class="co">#&gt; [28] Rcpp_1.1.2          farver_2.1.2        systemfonts_1.3.2  </span></span>
-<span><span class="co">#&gt; [31] digest_0.6.39       R6_2.6.1            bslib_0.12.0       </span></span>
-<span><span class="co">#&gt; [34] gtable_0.3.6        tools_4.6.1         ggplot2_4.0.3      </span></span>
-<span><span class="co">#&gt; [37] pkgdown_2.2.1       cachem_1.1.0        desc_1.4.3</span></span></code></pre></div>
+<span><span class="co">#&gt; [10] data.table_1.18.6.1 jsonlite_2.0.0      labeling_0.4.3     </span></span>
+<span><span class="co">#&gt; [13] glue_1.8.1          htmltools_0.5.9     PESTO_0.10.1       </span></span>
+<span><span class="co">#&gt; [16] ragg_1.5.2          sass_0.4.10         scales_1.4.0       </span></span>
+<span><span class="co">#&gt; [19] rmarkdown_2.32      grid_4.6.1          evaluate_1.0.5     </span></span>
+<span><span class="co">#&gt; [22] jquerylib_0.1.4     fastmap_1.2.0       yaml_2.3.12        </span></span>
+<span><span class="co">#&gt; [25] lifecycle_1.0.5     compiler_4.6.1      RColorBrewer_1.1-3 </span></span>
+<span><span class="co">#&gt; [28] fs_2.1.0            Rcpp_1.1.2          farver_2.1.2       </span></span>
+<span><span class="co">#&gt; [31] systemfonts_1.3.2   digest_0.6.39       viridisLite_0.4.3  </span></span>
+<span><span class="co">#&gt; [34] R6_2.6.1            bslib_0.12.0        withr_3.0.3        </span></span>
+<span><span class="co">#&gt; [37] tools_4.6.1         gtable_0.3.6        pkgdown_2.2.1      </span></span>
+<span><span class="co">#&gt; [40] ggplot2_4.0.3       cachem_1.1.0        desc_1.4.3</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

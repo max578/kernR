@@ -343,48 +343,56 @@ Latin-hypercube design helper.
 - [`lhs_design()`](https://max578.github.io/kernR/reference/lhs_design.md)
   : Latin-Hypercube Design Over Bounded Parameters
 
+## Typed declines
+
+The classed abstention kernR returns instead of a verdict when the
+effective sample size is below the floor.
+
+- [`is_kernR_abstention()`](https://max578.github.io/kernR/reference/is_kernR_abstention.md)
+  : Did a kernR result decline to stand behind its own verdict?
+
 # Articles
 
 ### Get started
 
-- [Getting Started with
+- [Getting started with
   kernR](https://max578.github.io/kernR/articles/kernR-quickstart.md):
-- [Causal Association Testing with
-  bd-HSIC](https://max578.github.io/kernR/articles/kernR-bdhsic.md):
-- [Distributional Treatment Effect Tests (DR-DATE /
-  DR-DETT)](https://max578.github.io/kernR/articles/kernR-drtest.md):
-- [Hierarchical and Nested
-  Data](https://max578.github.io/kernR/articles/kernR-hierarchical.md):
+- [Does the treatment cause the outcome, or do they share a
+  cause?](https://max578.github.io/kernR/articles/kernR-bdhsic.md):
+- [A treatment that changes the spread and not the
+  mean](https://max578.github.io/kernR/articles/kernR-drtest.md):
+- [When plots sit inside
+  farms](https://max578.github.io/kernR/articles/kernR-hierarchical.md):
 
 ### Calibration and validation
 
-- [Calibration and concordance: kernR's validation
-  layer](https://max578.github.io/kernR/articles/kernR-calibration.md):
+- [Are these draws calibrated, and do the engines
+  agree?](https://max578.github.io/kernR/articles/kernR-calibration.md):
 
 ### Sensitivity and identifiability
 
-- [Pre-IES Identifiability Screening with
-  HSIC](https://max578.github.io/kernR/articles/kernR-identifiability.md):
-- [HSIC-Based Distributional
-  Sensitivity](https://max578.github.io/kernR/articles/kernR-sensitivity.md):
+- [Which parameters are worth
+  calibrating?](https://max578.github.io/kernR/articles/kernR-identifiability.md):
+- [Which parameters change the shape of the output
+  distribution?](https://max578.github.io/kernR/articles/kernR-sensitivity.md):
 
 ### Acceleration and scaling
 
-- [Scaling HSIC with Nystrom and Random Fourier
-  Features](https://max578.github.io/kernR/articles/kernR-nystrom.md):
+- [Scaling HSIC to large
+  ensembles](https://max578.github.io/kernR/articles/kernR-nystrom.md):
 
 ### Downscaling
 
-- [Kernel-Based Downscaling: Vector and Distribution
-  Inputs](https://max578.github.io/kernR/articles/kernR-downscaling.md):
+- [From a coarse grid to a
+  paddock](https://max578.github.io/kernR/articles/kernR-downscaling.md):
 
 ### Cross-package integration with PESTO and proxymix
 
-- [Posterior-Predictive Check with
-  MMD](https://max578.github.io/kernR/articles/kernR-ppc.md):
-- [DR-DATE for APSIM Scenario
-  Counterfactuals](https://max578.github.io/kernR/articles/kernR-drdate-scenario.md):
-- [Hierarchical bd-HSIC for Multi-Site
-  Designs](https://max578.github.io/kernR/articles/kernR-hierarchical-bdhsic.md):
-- [Density-Ratio Backends and the proxymix
-  Binding](https://max578.github.io/kernR/articles/kernR-proxymix-binding.md):
+- [Is the calibrated model right about more than the
+  mean?](https://max578.github.io/kernR/articles/kernR-ppc.md):
+- [Did the management change shift the simulated
+  distribution?](https://max578.github.io/kernR/articles/kernR-drdate-scenario.md):
+- [Multi-site trials and the permutation
+  null](https://max578.github.io/kernR/articles/kernR-hierarchical-bdhsic.md):
+- [Choosing a density-ratio
+  backend](https://max578.github.io/kernR/articles/kernR-proxymix-binding.md):

@@ -206,3 +206,11 @@ Latin-hypercube design helper.
 
 - [`lhs_design()`](https://max578.github.io/kernR/reference/lhs_design.md)
   : Latin-Hypercube Design Over Bounded Parameters
+
+## Typed declines
+
+The classed abstention kernR returns instead of a verdict when the
+effective sample size is below the floor.
+
+- [`is_kernR_abstention()`](https://max578.github.io/kernR/reference/is_kernR_abstention.md)
+  : Did a kernR result decline to stand behind its own verdict?
