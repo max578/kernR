@@ -127,7 +127,6 @@ reference:
 - title: Typed declines
   desc: The classed abstention kernR returns instead of a verdict when the effective sample size is below the floor.
   contents:
-  - kernR_abstention
   - is_kernR_abstention
 
 articles:
