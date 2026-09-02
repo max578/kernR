@@ -939,8 +939,8 @@ family of RKHS regression methods.
 * `R CMD check --as-cran` is now **0 errors / 2 WARNINGs / 0 NOTES**;
   the remaining WARNINGs are the toolchain-level non-portable Makevars
   flags (`-Wno-unused-command-line-argument`, `-mcpu=native`), restored
-  at the FLIBS portability release-gate ritual per workspace
-  CLAUDE.md.
+  at the FLIBS portability release-gate ritual, per the workspace's
+  release-gate procedure.
 
 ## kernR 0.0.0.9003
 
