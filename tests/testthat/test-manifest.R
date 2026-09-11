@@ -72,3 +72,18 @@ test_that("verify_manifest() detects a tampered payload", {
   m@summary$metrics$statistic <- m@summary$metrics$statistic + 1
   expect_false(verify_manifest(m)$ok)
 })
+
+# --- added 2026-09-11 --------------------------------------------------------
+# The kernel_test_result emitter hashed over `x$weights` but constructed the
+# manifest without them, so every emitted manifest failed its own
+# verify_manifest() and orchestraManifest::consume_manifest() refused all of
+# them. kernR was absent from the workspace conformance suite, so nothing
+# downstream of this package could see it.
+test_that("an emitted kernel test manifest verifies against its own hash", {
+  set.seed(1)
+  d <- data.frame(z1 = rnorm(50))
+  d$a <- as.integer(0.5 * d$z1 + rnorm(50, sd = 0.5) > 0)
+  d$b <- 0.6 * d$a + 0.3 * d$z1 + rnorm(50, sd = 0.5)
+  m <- as_orchestra_manifest(kernel_causal_test(b ~ a | z1, data = d))
+  expect_true(verify_manifest(m)$ok)
+})

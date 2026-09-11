@@ -386,6 +386,10 @@ as_orchestra_manifest.kernel_test_result <- function(x, ..., run_id = NULL) {
     method             = paste0("kernR:", x$method),
     seed               = NA_integer_,
     params             = data.frame(),
+    # The hash above is taken over `x$weights`; the manifest must therefore
+    # carry them, or verify_manifest() recomputes over a payload the emitter
+    # never stored and every kernR manifest fails its own integrity check.
+    weights            = x$weights,
     summary            = summ,
     consumed_manifests = list(),
     metadata           = meta,
