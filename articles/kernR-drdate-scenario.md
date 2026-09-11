@@ -136,7 +136,7 @@ m_baseline
 #>   ensemble      : 60 realisations x 2 parameters | 4 observations
 #>   failure rate  : 0.00%
 #>   pesto version : 0.10.1  apsim: NA
-#>   timestamp     : 2026-09-02T08:20:50+0000
+#>   timestamp     : 2026-09-11T01:13:34+0000
 #>   data hash     : sha256:vignette_wagga_baseline_2026
 ```
 
@@ -348,7 +348,7 @@ The manifests record PESTO 0.10.1. Package versions follow.
 sessionInfo()
 #> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.4 LTS
+#> Running under: Ubuntu 24.04.5 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -370,7 +370,7 @@ sessionInfo()
 #> [1] PESTO_0.10.1 kernR_0.8.2 
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.51         
+#>  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.52         
 #>  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         
 #>  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  
 #> [10] data.table_1.18.6.1 jsonlite_2.0.0      labeling_0.4.3     

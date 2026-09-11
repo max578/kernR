@@ -245,7 +245,7 @@ approximations, at 4 sample sizes, 49 permutations each.</caption>
 <td align="right">250</td>
 <td align="right">40</td>
 <td align="left">exact</td>
-<td align="right">0.024</td>
+<td align="right">0.025</td>
 <td align="right">0.02</td>
 </tr>
 <tr class="even">
@@ -259,35 +259,35 @@ approximations, at 4 sample sizes, 49 permutations each.</caption>
 <td align="right">250</td>
 <td align="right">40</td>
 <td align="left">rff</td>
-<td align="right">0.006</td>
+<td align="right">0.007</td>
 <td align="right">0.02</td>
 </tr>
 <tr class="even">
 <td align="right">500</td>
 <td align="right">60</td>
 <td align="left">exact</td>
-<td align="right">0.095</td>
+<td align="right">0.102</td>
 <td align="right">0.02</td>
 </tr>
 <tr class="odd">
 <td align="right">500</td>
 <td align="right">60</td>
 <td align="left">nystrom</td>
-<td align="right">0.020</td>
+<td align="right">0.021</td>
 <td align="right">0.02</td>
 </tr>
 <tr class="even">
 <td align="right">500</td>
 <td align="right">60</td>
 <td align="left">rff</td>
-<td align="right">0.016</td>
+<td align="right">0.019</td>
 <td align="right">0.02</td>
 </tr>
 <tr class="odd">
 <td align="right">1000</td>
 <td align="right">80</td>
 <td align="left">exact</td>
-<td align="right">0.501</td>
+<td align="right">0.462</td>
 <td align="right">0.02</td>
 </tr>
 <tr class="even">
@@ -301,28 +301,28 @@ approximations, at 4 sample sizes, 49 permutations each.</caption>
 <td align="right">1000</td>
 <td align="right">80</td>
 <td align="left">rff</td>
-<td align="right">0.079</td>
+<td align="right">0.076</td>
 <td align="right">0.02</td>
 </tr>
 <tr class="even">
 <td align="right">2000</td>
 <td align="right">100</td>
 <td align="left">exact</td>
-<td align="right">2.230</td>
+<td align="right">2.198</td>
 <td align="right">0.02</td>
 </tr>
 <tr class="odd">
 <td align="right">2000</td>
 <td align="right">100</td>
 <td align="left">nystrom</td>
-<td align="right">0.208</td>
+<td align="right">0.211</td>
 <td align="right">0.02</td>
 </tr>
 <tr class="even">
 <td align="right">2000</td>
 <td align="right">100</td>
 <td align="left">rff</td>
-<td align="right">0.196</td>
+<td align="right">0.201</td>
 <td align="right">0.02</td>
 </tr>
 </tbody>
@@ -366,12 +366,12 @@ The two get there differently: Nystrom converges as its rank approaches
 the sample size, Random Fourier Features as the feature count grows, and
 neither is exact.</p>
 <p>The timing grid is the argument. At 250 observations the exact test
-takes 0.024 seconds and the difference hardly matters. At 2000
-observations it takes 2.23 seconds against 0.21 for Nystrom and 0.2 for
-Random Fourier Features, a speed-up of about 11 times. The figure shows
+takes 0.025 seconds and the difference hardly matters. At 2000
+observations it takes 2.2 seconds against 0.21 for Nystrom and 0.2 for
+Random Fourier Features, a speed-up of about 10 times. The figure shows
 the mechanism rather than the numbers. Fitting a straight line to each
-curve on logarithmic axes gives a slope of 2.2 for the exact test
-against 1.62 for Nystrom and 1.74 for Random Fourier Features: the exact
+curve on logarithmic axes gives a slope of 2.16 for the exact test
+against 1.61 for Nystrom and 1.65 for Random Fourier Features: the exact
 test tracks the square law its Gram matrix implies, and the two
 approximations grow substantially more slowly, so the gap is not a
 constant factor but one that widens with every doubling.</p>
@@ -469,7 +469,7 @@ Package versions follow.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.5 LTS</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Matrix products: default</span></span>
 <span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -491,7 +491,7 @@ Package versions follow.</p>
 <span><span class="co">#&gt; [1] kernR_0.8.2</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
-<span><span class="co">#&gt;  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.51         </span></span>
+<span><span class="co">#&gt;  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.52         </span></span>
 <span><span class="co">#&gt;  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         </span></span>
 <span><span class="co">#&gt;  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  </span></span>
 <span><span class="co">#&gt; [10] data.table_1.18.6.1 jsonlite_2.0.0      glue_1.8.1         </span></span>

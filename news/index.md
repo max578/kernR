@@ -2,6 +2,21 @@
 
 ## kernR (development version)
 
+- **Fixed: every manifest emitted from a kernel test failed its own
+  integrity check.**
+  [`as_orchestra_manifest()`](https://max578.github.io/kernR/reference/as_orchestra_manifest.md)
+  for a `kernel_test_result` hashed the payload over `x$weights` but
+  constructed the manifest without them, so
+  [`verify_manifest()`](https://max578.github.io/kernR/reference/verify_manifest.md)
+  recomputed the hash over a payload the emitter had never stored. Both
+  kernR’s own verifier and `orchestraManifest::consume_manifest()`
+  rejected the result, which means no downstream member could consume a
+  kernR manifest at all. The manifest now carries the weights it is
+  hashed over. The sibling `taci_result` emitter was already consistent
+  and is unchanged. kernR was absent from the workspace
+  manifest-conformance suite, which is why nothing caught this; it is
+  now covered there.
+
 - All thirteen vignettes were rewritten to the orchestra vignette
   quality bar: each opens with the question its reader would ask and
   answers it explicitly, carries a human-readable title, follows a fixed
