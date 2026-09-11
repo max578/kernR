@@ -52,14 +52,15 @@ International Conference on Machine Learning}, PMLR 48, 276-284.
 \seealso{
 \code{\link[=ksd_test]{ksd_test()}}
 
-Other goodness-of-fit tests: 
-\code{\link{concordance_test}()},
-\code{\link{concordance_test_nystrom}()},
-\code{\link{coverage_test}()},
-\code{\link{joint_coverage_test}()},
-\code{\link{ksd_test}()},
-\code{\link{ksd_test_nystrom}()},
-\code{\link{numeric_score}()}
+Other goodness-of-fit tests:
+\code{\link[=calibration_suite]{calibration_suite()}},
+\code{\link[=concordance_test]{concordance_test()}},
+\code{\link[=concordance_test_nystrom]{concordance_test_nystrom()}},
+\code{\link[=coverage_test]{coverage_test()}},
+\code{\link[=joint_coverage_test]{joint_coverage_test()}},
+\code{\link[=ksd_test]{ksd_test()}},
+\code{\link[=ksd_test_nystrom]{ksd_test_nystrom()}},
+\code{\link[=numeric_score]{numeric_score()}}
 }
 \author{
 Max Moldovan, \email{max.moldovan@adelaide.edu.au}

@@ -54,8 +54,8 @@ m@summary$abstained  # FALSE: the posterior-adequacy gate passed
 \seealso{
 \code{\link[=verify_manifest]{verify_manifest()}}, \code{\link[=taci_test]{taci_test()}}
 
-Other orchestra manifest: 
-\code{\link{orchestra_manifest}()},
-\code{\link{verify_manifest}()}
+Other orchestra manifest:
+\code{\link[=orchestra_manifest]{orchestra_manifest()}},
+\code{\link[=verify_manifest]{verify_manifest()}}
 }
 \concept{orchestra manifest}

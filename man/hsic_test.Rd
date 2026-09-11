@@ -72,7 +72,7 @@ Smola, A. J. (2008). A kernel statistical test of independence.
 \emph{NeurIPS}, 20.
 }
 \seealso{
-Other independence and two-sample tests: 
-\code{\link{mmd_test}()}
+Other independence and two-sample tests:
+\code{\link[=mmd_test]{mmd_test()}}
 }
 \concept{independence and two-sample tests}

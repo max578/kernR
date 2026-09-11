@@ -165,9 +165,9 @@ Hu, R., Sejdinovic, D., & Evans, R. J. (2024). A kernel test for causal
 association via noise contrastive backdoor adjustment. \emph{JMLR}, 25(160), 1-56.
 }
 \seealso{
-Other causal association tests: 
-\code{\link{bd_hsic_test}()},
-\code{\link{hierarchical_test}()},
-\code{\link{kernel_causal_test}()}
+Other causal association tests:
+\code{\link[=bd_hsic_test]{bd_hsic_test()}},
+\code{\link[=hierarchical_test]{hierarchical_test()}},
+\code{\link[=kernel_causal_test]{kernel_causal_test()}}
 }
 \concept{causal association tests}

@@ -137,14 +137,15 @@ calibration of high-dimensional ensemble forecasts using rank histograms.
 \seealso{
 \code{\link[=coverage_test]{coverage_test()}}, \code{\link[=mmd_ppc]{mmd_ppc()}}, \code{\link[=concordance_test]{concordance_test()}}
 
-Other goodness-of-fit tests: 
-\code{\link{concordance_test}()},
-\code{\link{concordance_test_nystrom}()},
-\code{\link{coverage_test}()},
-\code{\link{gaussian_score}()},
-\code{\link{ksd_test}()},
-\code{\link{ksd_test_nystrom}()},
-\code{\link{numeric_score}()}
+Other goodness-of-fit tests:
+\code{\link[=calibration_suite]{calibration_suite()}},
+\code{\link[=concordance_test]{concordance_test()}},
+\code{\link[=concordance_test_nystrom]{concordance_test_nystrom()}},
+\code{\link[=coverage_test]{coverage_test()}},
+\code{\link[=gaussian_score]{gaussian_score()}},
+\code{\link[=ksd_test]{ksd_test()}},
+\code{\link[=ksd_test_nystrom]{ksd_test_nystrom()}},
+\code{\link[=numeric_score]{numeric_score()}}
 }
 \author{
 Max Moldovan, \email{max.moldovan@adelaide.edu.au}

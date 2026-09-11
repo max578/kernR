@@ -21,12 +21,12 @@ effective_sample_size(w)
 
 }
 \seealso{
-Other density ratio and propensity: 
-\code{\link{assess_overlap}()},
-\code{\link{estimate_density_ratio}()},
-\code{\link{estimate_propensity}()},
-\code{\link{fit_density_ratio}()},
-\code{\link{plot_weights}()},
-\code{\link{predict_density_ratio}()}
+Other density ratio and propensity:
+\code{\link[=assess_overlap]{assess_overlap()}},
+\code{\link[=estimate_density_ratio]{estimate_density_ratio()}},
+\code{\link[=estimate_propensity]{estimate_propensity()}},
+\code{\link[=fit_density_ratio]{fit_density_ratio()}},
+\code{\link[=plot_weights]{plot_weights()}},
+\code{\link[=predict_density_ratio]{predict_density_ratio()}}
 }
 \concept{density ratio and propensity}

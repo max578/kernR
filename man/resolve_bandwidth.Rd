@@ -31,10 +31,10 @@ resolve_bandwidth(kernel_spec(), x)
 \seealso{
 \code{\link[=kernel_spec]{kernel_spec()}}, \code{\link[=kernel_matrix]{kernel_matrix()}}, \code{\link[=weighted_hsic_stat]{weighted_hsic_stat()}}
 
-Other kernel primitives: 
-\code{\link{kernel_matrix}()},
-\code{\link{kernel_spec}()},
-\code{\link{select_bandwidth}()},
-\code{\link{weighted_hsic_stat}()}
+Other kernel primitives:
+\code{\link[=kernel_matrix]{kernel_matrix()}},
+\code{\link[=kernel_spec]{kernel_spec()}},
+\code{\link[=select_bandwidth]{select_bandwidth()}},
+\code{\link[=weighted_hsic_stat]{weighted_hsic_stat()}}
 }
 \concept{kernel primitives}

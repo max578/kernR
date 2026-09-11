@@ -129,8 +129,8 @@ treatment and structural parameters. \emph{The Econometrics Journal},
 21(1), C1-C68.
 }
 \seealso{
-Other distributional treatment effects: 
-\code{\link{dr_date_scenario}()},
-\code{\link{dr_dett_test}()}
+Other distributional treatment effects:
+\code{\link[=dr_date_scenario]{dr_date_scenario()}},
+\code{\link[=dr_dett_test]{dr_dett_test()}}
 }
 \concept{distributional treatment effects}

@@ -183,9 +183,9 @@ causal association via noise contrastive backdoor adjustment. \emph{JMLR},
 25(160), 1-56.
 }
 \seealso{
-Other causal association tests: 
-\code{\link{hierarchical_test}()},
-\code{\link{kernel_causal_test}()},
-\code{\link{taci_test}()}
+Other causal association tests:
+\code{\link[=hierarchical_test]{hierarchical_test()}},
+\code{\link[=kernel_causal_test]{kernel_causal_test()}},
+\code{\link[=taci_test]{taci_test()}}
 }
 \concept{causal association tests}

@@ -65,7 +65,7 @@ Gretton, A., Borgwardt, K. M., Rasch, M. J., Scholkopf, B., & Smola,
 A. (2012). A kernel two-sample test. \emph{JMLR}, 13, 723-773.
 }
 \seealso{
-Other independence and two-sample tests: 
-\code{\link{hsic_test}()}
+Other independence and two-sample tests:
+\code{\link[=hsic_test]{hsic_test()}}
 }
 \concept{independence and two-sample tests}

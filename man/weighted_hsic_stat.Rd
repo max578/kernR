@@ -46,10 +46,10 @@ weighted_hsic_stat(Kx, Ky)
 \code{\link[=bd_hsic_test]{bd_hsic_test()}} for the full causal test that uses this statistic;
 \code{\link[=resolve_bandwidth]{resolve_bandwidth()}} and \code{\link[=kernel_matrix]{kernel_matrix()}} for building the kernel inputs.
 
-Other kernel primitives: 
-\code{\link{kernel_matrix}()},
-\code{\link{kernel_spec}()},
-\code{\link{resolve_bandwidth}()},
-\code{\link{select_bandwidth}()}
+Other kernel primitives:
+\code{\link[=kernel_matrix]{kernel_matrix()}},
+\code{\link[=kernel_spec]{kernel_spec()}},
+\code{\link[=resolve_bandwidth]{resolve_bandwidth()}},
+\code{\link[=select_bandwidth]{select_bandwidth()}}
 }
 \concept{kernel primitives}

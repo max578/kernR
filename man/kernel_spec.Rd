@@ -50,10 +50,10 @@ k <- kernel_spec("linear")
 
 }
 \seealso{
-Other kernel primitives: 
-\code{\link{kernel_matrix}()},
-\code{\link{resolve_bandwidth}()},
-\code{\link{select_bandwidth}()},
-\code{\link{weighted_hsic_stat}()}
+Other kernel primitives:
+\code{\link[=kernel_matrix]{kernel_matrix()}},
+\code{\link[=resolve_bandwidth]{resolve_bandwidth()}},
+\code{\link[=select_bandwidth]{select_bandwidth()}},
+\code{\link[=weighted_hsic_stat]{weighted_hsic_stat()}}
 }
 \concept{kernel primitives}

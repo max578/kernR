@@ -6,6 +6,7 @@ S3method(as.data.frame,hsic_sensitivity)
 S3method(as.data.frame,kernel_downscale)
 S3method(as_orchestra_manifest,kernel_test_result)
 S3method(as_orchestra_manifest,taci_result)
+S3method(calibration_suite,default)
 S3method(coverage_test,default)
 S3method(coverage_test,pesto_ensemble)
 S3method(coverage_test,pesto_ensemble_manifest)
@@ -21,6 +22,7 @@ S3method(plot,kernel_test_result)
 S3method(predict,cme_fit)
 S3method(predict,dist_regression)
 S3method(print,aggregate_downscale)
+S3method(print,calibration_suite)
 S3method(print,cme_fit)
 S3method(print,concordance_test)
 S3method(print,coverage_test)
@@ -49,6 +51,7 @@ export(aggregate_downscale)
 export(as_orchestra_manifest)
 export(assess_overlap)
 export(bd_hsic_test)
+export(calibration_suite)
 export(cir_objective)
 export(concordance_test)
 export(concordance_test_nystrom)
@@ -95,25 +98,33 @@ export(taci_test)
 export(tidy)
 export(verify_manifest)
 export(weighted_hsic_stat)
-importFrom(PESTO,as_manifest)
-importFrom(PESTO,pesto_ensemble_manifest)
+importFrom(PESTO,
+  as_manifest,
+  pesto_ensemble_manifest
+)
 importFrom(Rcpp,sourceCpp)
-importFrom(data.table,.SD)
-importFrom(data.table,as.data.table)
-importFrom(data.table,data.table)
-importFrom(data.table,setDT)
+importFrom(data.table,
+  .SD,
+  as.data.table,
+  data.table,
+  setDT
+)
 importFrom(generics,tidy)
-importFrom(graphics,abline)
-importFrom(graphics,hist)
-importFrom(graphics,legend)
+importFrom(graphics,
+  abline,
+  hist,
+  legend
+)
 importFrom(methods,slot)
-importFrom(stats,binomial)
-importFrom(stats,glm)
-importFrom(stats,median)
-importFrom(stats,pnorm)
-importFrom(stats,predict)
-importFrom(stats,quantile)
-importFrom(stats,sd)
-importFrom(stats,var)
-importFrom(stats,weighted.mean)
+importFrom(stats,
+  binomial,
+  glm,
+  median,
+  pnorm,
+  predict,
+  quantile,
+  sd,
+  var,
+  weighted.mean
+)
 useDynLib(kernR, .registration = TRUE)

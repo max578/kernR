@@ -243,8 +243,8 @@ Measuring statistical dependence with Hilbert-Schmidt norms.
 \seealso{
 \code{\link[=hsic_identifiability]{hsic_identifiability()}}, \code{\link[=hsic_test]{hsic_test()}}
 
-Other sensitivity and identifiability: 
-\code{\link{hsic_identifiability}()},
-\code{\link{lhs_design}()}
+Other sensitivity and identifiability:
+\code{\link[=hsic_identifiability]{hsic_identifiability()}},
+\code{\link[=lhs_design]{lhs_design()}}
 }
 \concept{sensitivity and identifiability}

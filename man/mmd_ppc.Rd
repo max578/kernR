@@ -113,7 +113,7 @@ Sinica}, 6(4), 733-760.
 \seealso{
 \code{\link[=mmd_test]{mmd_test()}}, \code{\link[=pesto_ensemble]{pesto_ensemble()}}
 
-Other posterior predictive checks: 
-\code{\link{pesto_ensemble}()}
+Other posterior predictive checks:
+\code{\link[=pesto_ensemble]{pesto_ensemble()}}
 }
 \concept{posterior predictive checks}

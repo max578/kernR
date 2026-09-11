@@ -146,8 +146,8 @@ robust kernel statistics for testing distributional treatment effects.
 test; \code{\link[PESTO:pesto_ensemble_manifest]{PESTO::pesto_ensemble_manifest}} for the input contract;
 \code{\link[PESTO:pesto_ies_callback]{PESTO::pesto_ies_callback()}} for producing the ensembles upstream.
 
-Other distributional treatment effects: 
-\code{\link{dr_date_test}()},
-\code{\link{dr_dett_test}()}
+Other distributional treatment effects:
+\code{\link[=dr_date_test]{dr_date_test()}},
+\code{\link[=dr_dett_test]{dr_dett_test()}}
 }
 \concept{distributional treatment effects}

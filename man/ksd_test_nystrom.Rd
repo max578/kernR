@@ -110,20 +110,21 @@ up kernel machines. \emph{NeurIPS}, 13.
 \code{\link[=ksd_test]{ksd_test()}}, \code{\link[=nystrom_factor]{nystrom_factor()}}, \code{\link[=hsic_test_nystrom]{hsic_test_nystrom()}},
 \code{\link[=concordance_test_nystrom]{concordance_test_nystrom()}}
 
-Other goodness-of-fit tests: 
-\code{\link{concordance_test}()},
-\code{\link{concordance_test_nystrom}()},
-\code{\link{coverage_test}()},
-\code{\link{gaussian_score}()},
-\code{\link{joint_coverage_test}()},
-\code{\link{ksd_test}()},
-\code{\link{numeric_score}()}
+Other goodness-of-fit tests:
+\code{\link[=calibration_suite]{calibration_suite()}},
+\code{\link[=concordance_test]{concordance_test()}},
+\code{\link[=concordance_test_nystrom]{concordance_test_nystrom()}},
+\code{\link[=coverage_test]{coverage_test()}},
+\code{\link[=gaussian_score]{gaussian_score()}},
+\code{\link[=joint_coverage_test]{joint_coverage_test()}},
+\code{\link[=ksd_test]{ksd_test()}},
+\code{\link[=numeric_score]{numeric_score()}}
 
-Other low-rank acceleration: 
-\code{\link{concordance_test_nystrom}()},
-\code{\link{hsic_test_nystrom}()},
-\code{\link{nystrom_factor}()},
-\code{\link{rff_features}()}
+Other low-rank acceleration:
+\code{\link[=concordance_test_nystrom]{concordance_test_nystrom()}},
+\code{\link[=hsic_test_nystrom]{hsic_test_nystrom()}},
+\code{\link[=nystrom_factor]{nystrom_factor()}},
+\code{\link[=rff_features]{rff_features()}}
 }
 \author{
 Max Moldovan, \email{max.moldovan@adelaide.edu.au}

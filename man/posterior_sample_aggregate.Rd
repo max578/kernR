@@ -36,10 +36,10 @@ colMeans(draws)
 
 }
 \seealso{
-Other downscaling and embeddings: 
-\code{\link{aggregate_downscale}()},
-\code{\link{dist_regression}()},
-\code{\link{fit_cme}()},
-\code{\link{kernel_downscale}()}
+Other downscaling and embeddings:
+\code{\link[=aggregate_downscale]{aggregate_downscale()}},
+\code{\link[=dist_regression]{dist_regression()}},
+\code{\link[=fit_cme]{fit_cme()}},
+\code{\link[=kernel_downscale]{kernel_downscale()}}
 }
 \concept{downscaling and embeddings}

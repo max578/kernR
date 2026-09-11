@@ -1,5 +1,33 @@
 # kernR (development version)
 
+* **New `calibration_suite()`: is a prediction right in LEVEL, not merely in
+  order.** The sibling of `coverage_test()`, which asks whether a predictive
+  *distribution* is the right width. This asks whether the predictive *level*
+  is right -- the quantity a loss-optimal decision prices. Reports the
+  continuous-outcome analogues of the clinical prediction-model suite:
+  calibration slope, intercept, calibration-in-the-large and the integrated
+  calibration index, each with a bootstrap percentile interval, plus a smoothed
+  calibration curve.
+
+* **The verdict is power-aware, which is the part that is not standard
+  practice.** A calibration test on a handful of noisy observations cannot
+  resolve a slope of 0.8 from a slope of 1.0, and a test that answers
+  "calibrated" there is reporting the absence of power, not the presence of
+  calibration. `calibration_suite()` declines instead: when the slope interval
+  is wider than the departure the caller asked to detect, the verdict is
+  `"undetermined"` and the result carries the typed `kernR_abstention` marker
+  the rest of the federation routes on. `detectable` reports the smallest
+  departure from a slope of 1 that the sample could have resolved.
+
+* A constant prediction vector has no slope, and the suite returns `NA` and
+  abstains rather than fitting an artefact.
+
+* Motivated by a cross-estate method transfer: a clinical calibration-
+  transferability study found discrimination surviving a move to an unseen unit
+  while calibration collapsed. The orchestra's decision layer prices absolute
+  magnitudes, so it depends on exactly the half that did not transfer. Method
+  transfer only -- no clinical data is involved.
+
 * **Fixed: every manifest emitted from a kernel test failed its own integrity
   check.** `as_orchestra_manifest()` for a `kernel_test_result` hashed the
   payload over `x$weights` but constructed the manifest without them, so
