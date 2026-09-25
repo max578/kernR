@@ -143,18 +143,18 @@ bench <- rbind(
 
 |    n | Rank m | Method  | Elapsed (s) | p-value |
 |-----:|-------:|:--------|------------:|--------:|
-|  250 |     40 | exact   |       0.025 |    0.02 |
-|  250 |     40 | nystrom |       0.008 |    0.02 |
-|  250 |     40 | rff     |       0.007 |    0.02 |
-|  500 |     60 | exact   |       0.102 |    0.02 |
-|  500 |     60 | nystrom |       0.021 |    0.02 |
-|  500 |     60 | rff     |       0.019 |    0.02 |
-| 1000 |     80 | exact   |       0.462 |    0.02 |
-| 1000 |     80 | nystrom |       0.083 |    0.02 |
-| 1000 |     80 | rff     |       0.076 |    0.02 |
-| 2000 |    100 | exact   |       2.198 |    0.02 |
-| 2000 |    100 | nystrom |       0.211 |    0.02 |
-| 2000 |    100 | rff     |       0.201 |    0.02 |
+|  250 |     40 | exact   |       0.024 |    0.02 |
+|  250 |     40 | nystrom |       0.007 |    0.02 |
+|  250 |     40 | rff     |       0.006 |    0.02 |
+|  500 |     60 | exact   |       0.096 |    0.02 |
+|  500 |     60 | nystrom |       0.020 |    0.02 |
+|  500 |     60 | rff     |       0.017 |    0.02 |
+| 1000 |     80 | exact   |       0.417 |    0.02 |
+| 1000 |     80 | nystrom |       0.080 |    0.02 |
+| 1000 |     80 | rff     |       0.077 |    0.02 |
+| 2000 |    100 | exact   |       2.173 |    0.02 |
+| 2000 |    100 | nystrom |       0.206 |    0.02 |
+| 2000 |    100 | rff     |       0.196 |    0.02 |
 
 Elapsed time and verdict for the exact test and the two approximations,
 at 4 sample sizes, 49 permutations each. {.table}
@@ -200,12 +200,12 @@ sample size, Random Fourier Features as the feature count grows, and
 neither is exact.
 
 The timing grid is the argument. At 250 observations the exact test
-takes 0.025 seconds and the difference hardly matters. At 2000
-observations it takes 2.2 seconds against 0.21 for Nystrom and 0.2 for
-Random Fourier Features, a speed-up of about 10 times. The figure shows
+takes 0.024 seconds and the difference hardly matters. At 2000
+observations it takes 2.17 seconds against 0.21 for Nystrom and 0.2 for
+Random Fourier Features, a speed-up of about 11 times. The figure shows
 the mechanism rather than the numbers. Fitting a straight line to each
 curve on logarithmic axes gives a slope of 2.16 for the exact test
-against 1.61 for Nystrom and 1.65 for Random Fourier Features: the exact
+against 1.66 for Nystrom and 1.73 for Random Fourier Features: the exact
 test tracks the square law its Gram matrix implies, and the two
 approximations grow substantially more slowly, so the gap is not a
 constant factor but one that widens with every doubling.
@@ -327,7 +327,7 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.52         
-#>  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         
+#>  [4] rlang_1.3.0         xfun_0.61           otel_0.2.0         
 #>  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  
 #> [10] data.table_1.18.6.1 jsonlite_2.0.0      glue_1.8.1         
 #> [13] htmltools_0.5.9     PESTO_0.10.1        ragg_1.5.2         

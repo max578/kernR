@@ -139,6 +139,7 @@ speed up kernel machines. *NeurIPS*, 13.
 [`concordance_test_nystrom()`](https://max578.github.io/kernR/reference/concordance_test_nystrom.md)
 
 Other goodness-of-fit tests:
+[`calibration_suite()`](https://max578.github.io/kernR/reference/calibration_suite.md),
 [`concordance_test()`](https://max578.github.io/kernR/reference/concordance_test.md),
 [`concordance_test_nystrom()`](https://max578.github.io/kernR/reference/concordance_test_nystrom.md),
 [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md),

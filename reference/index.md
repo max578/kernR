@@ -49,6 +49,8 @@ acceleration.
 - [`joint_coverage_test()`](https://max578.github.io/kernR/reference/joint_coverage_test.md)
   : Joint (Multivariate) Calibration Diagnostic for a Predictive
   Ensemble
+- [`calibration_suite()`](https://max578.github.io/kernR/reference/calibration_suite.md)
+  : Calibration suite for a continuous prediction
 - [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md)
   : Score function for a multivariate normal target
 - [`numeric_score()`](https://max578.github.io/kernR/reference/numeric_score.md)

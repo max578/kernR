@@ -167,6 +167,7 @@ PMLR 70, 1292-1301.
 [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md)
 
 Other goodness-of-fit tests:
+[`calibration_suite()`](https://max578.github.io/kernR/reference/calibration_suite.md),
 [`concordance_test()`](https://max578.github.io/kernR/reference/concordance_test.md),
 [`concordance_test_nystrom()`](https://max578.github.io/kernR/reference/concordance_test_nystrom.md),
 [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md),

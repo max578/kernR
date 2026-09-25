@@ -136,7 +136,7 @@ m_baseline
 #>   ensemble      : 60 realisations x 2 parameters | 4 observations
 #>   failure rate  : 0.00%
 #>   pesto version : 0.10.1  apsim: NA
-#>   timestamp     : 2026-09-11T01:13:34+0000
+#>   timestamp     : 2026-09-25T05:16:08+0000
 #>   data hash     : sha256:vignette_wagga_baseline_2026
 ```
 
@@ -371,7 +371,7 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.52         
-#>  [4] rlang_1.3.0         xfun_0.60           otel_0.2.0         
+#>  [4] rlang_1.3.0         xfun_0.61           otel_0.2.0         
 #>  [7] generics_0.1.4      S7_0.2.2            textshaping_1.0.5  
 #> [10] data.table_1.18.6.1 jsonlite_2.0.0      labeling_0.4.3     
 #> [13] glue_1.8.1          htmltools_0.5.9     ragg_1.5.2         

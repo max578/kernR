@@ -123,6 +123,7 @@ machines. *NeurIPS*, 20.
 [`hsic_test_nystrom()`](https://max578.github.io/kernR/reference/hsic_test_nystrom.md)
 
 Other goodness-of-fit tests:
+[`calibration_suite()`](https://max578.github.io/kernR/reference/calibration_suite.md),
 [`concordance_test()`](https://max578.github.io/kernR/reference/concordance_test.md),
 [`coverage_test()`](https://max578.github.io/kernR/reference/coverage_test.md),
 [`gaussian_score()`](https://max578.github.io/kernR/reference/gaussian_score.md),
