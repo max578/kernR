@@ -96,6 +96,23 @@ A Python translation is available as [**kernP**](https://github.com/AAGI-AUS/ker
 - `vignette("kernR-drtest")` — Distributional treatment effect tests
 - `vignette("kernR-hierarchical")` — Hierarchical/nested data
 
+## Contributing
+
+Bug reports and suggestions are welcome on the [GitHub issue
+tracker](https://github.com/max578/kernR/issues). See
+[CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+
+## Citation
+
+If you use kernR in published work, please cite it:
+
+```r
+citation("kernR")
+```
+
+Please also cite the papers listed under Methodological Foundation for the
+methods you use.
+
 ## Licence
 
 kernR is released under the MIT licence (sole copyright holder: Max Moldovan).

@@ -30,6 +30,7 @@ reference:
   - concordance_test_nystrom
   - coverage_test
   - joint_coverage_test
+  - calibration_suite
   - gaussian_score
   - numeric_score
 
