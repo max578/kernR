@@ -11,7 +11,7 @@ broom::tidy() and generics::tidy() both dispatch here."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@ Registered against the <code><a href="https://generics.r-lib.org/reference/tidy.
 
 <dt>grounding</dt>
 <dd><p>Character. <code>"grounded"</code> when the mechanism's provenance
-was declared, else <code>"[unverified]"</code> (Independent Oracle Principle).</p></dd>
+was declared, else <code>"ungrounded"</code> (Independent Oracle Principle).</p></dd>
 
 <dt>h1_percentile</dt>
 <dd><p>Numeric. Where the observed statistic sits in the
@@ -105,7 +105,7 @@ model-implied H1 band, in <code>[0, 1]</code>.</p></dd>
     <p>The <code>p.value</code> column carries the broom-canonical dot and reports the H0 tail
 p-value (<code>p_h0</code>). The <code>grounding</code> column threads through the Independent
 Oracle Principle label, so a downstream summary cannot silently drop the
-fact that a verdict built on an un-declared mechanism is <code>"[unverified]"</code>.</p>
+fact that a verdict built on an un-declared mechanism is <code>"ungrounded"</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -128,8 +128,8 @@ fact that a verdict built on an un-declared mechanism is <code>"[unverified]"</c
 <span class="r-in"><span>                 treatment <span class="op">=</span> <span class="va">nrate</span>, outcome <span class="op">=</span> <span class="va">yield</span>,</span></span>
 <span class="r-in"><span>                 n_perm <span class="op">=</span> <span class="fl">80L</span>, seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   term  statistic    p.value                    decision    grounding</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 taci 0.06587821 0.01234568 mechanism_consistent_effect [unverified]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   term  statistic    p.value                    decision  grounding</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 taci 0.06587821 0.01234568 mechanism_consistent_effect ungrounded</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   h1_percentile borderline  n</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1         0.425      FALSE 60</span>
 </code></pre></div>

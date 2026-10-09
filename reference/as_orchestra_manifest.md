@@ -67,7 +67,7 @@ verdict <- taci_test(post, mechanism, X = matrix(1, n, 1),
                      n_perm = 99L, seed = 1L)
 m <- as_orchestra_manifest(verdict)
 m@summary$headline
-#> [1] "mechanism_consistent_effect [unverified]"
+#> [1] "mechanism_consistent_effect [ungrounded]"
 m@summary$abstained  # FALSE: the posterior-adequacy gate passed
 #> [1] FALSE
 ```

@@ -50,7 +50,7 @@ A one-row `data.frame` with columns:
 - grounding:
 
   Character. `"grounded"` when the mechanism's provenance was declared,
-  else `"[unverified]"` (Independent Oracle Principle).
+  else `"ungrounded"` (Independent Oracle Principle).
 
 - h1_percentile:
 
@@ -71,7 +71,7 @@ The `p.value` column carries the broom-canonical dot and reports the H0
 tail p-value (`p_h0`). The `grounding` column threads through the
 Independent Oracle Principle label, so a downstream summary cannot
 silently drop the fact that a verdict built on an un-declared mechanism
-is `"[unverified]"`.
+is `"ungrounded"`.
 
 ## See also
 
@@ -94,8 +94,8 @@ res <- taci_test(post, mitscherlich, X = matrix(1, n, 1L),
                  treatment = nrate, outcome = yield,
                  n_perm = 80L, seed = 1L)
 tidy(res)
-#>   term  statistic    p.value                    decision    grounding
-#> 1 taci 0.06587821 0.01234568 mechanism_consistent_effect [unverified]
+#>   term  statistic    p.value                    decision  grounding
+#> 1 taci 0.06587821 0.01234568 mechanism_consistent_effect ungrounded
 #>   h1_percentile borderline  n
 #> 1         0.425      FALSE 60
 ```

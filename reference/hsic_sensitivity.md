@@ -263,9 +263,8 @@ first-order permutation `p_value` (always computed when
 complementary, not interchangeable.
 
 Total-order CIs cost `B * p * q` kernel re-evaluations on resampled
-designs; set `n_bootstrap` accordingly. Use the CI for honest
-uncertainty bars on the index magnitude; do not interpret it as a
-significance verdict.
+designs; set `n_bootstrap` accordingly. Use the CI for uncertainty bars
+on the index magnitude; do not interpret it as a significance verdict.
 
 ## References
 

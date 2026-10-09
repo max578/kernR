@@ -17,7 +17,7 @@ Useful links:
 
 - <https://github.com/max578/kernR>
 
-- <https://max578.github.io/kernR>
+- <https://max578.github.io/kernR/>
 
 - Report bugs at <https://github.com/max578/kernR/issues>
 

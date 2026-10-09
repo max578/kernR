@@ -120,8 +120,8 @@ taci_test(
   fitted-model handle). TACI builds its entire reference band from the
   `mechanism` and cannot itself verify the calibration corresponds to
   reality; supplying this declares the mechanism grounded. When `NULL`
-  (the default), the result's `grounding` is `"[unverified]"` and the
-  human-facing `verdict` string is suffixed `[unverified]` so a verdict
+  (the default), the result's `grounding` is `"ungrounded"` and the
+  human-facing `verdict` string is suffixed `[ungrounded]` so a verdict
   built on an un-grounded mechanism is never presented as
   unconditionally confident (Independent Oracle Principle). The
   `decision` enum is unchanged.
@@ -204,16 +204,16 @@ print(res)
 #>   H0 tail p-value:  0.010  (in tail: TRUE)
 #>   H1 central [0.05187, 0.07807]  obs at H1 pctile 0.35  consistent: TRUE
 #>   DECISION: MECHANISM_CONSISTENT_EFFECT
-#>   GROUNDING: [unverified] (mechanism provenance not declared -- verdict not grounded)
-res$grounding            # "[unverified]" -- no mechanism provenance declared
-#> [1] "[unverified]"
+#>   GROUNDING: ungrounded (mechanism provenance not declared -- verdict not grounded)
+res$grounding            # "ungrounded" -- no mechanism provenance declared
+#> [1] "ungrounded"
 
 # Declaring mechanism provenance grounds the verdict (Independent Oracle
 # Principle). TACI builds its whole reference band from `mechanism`, which it
 # cannot itself check against reality; naming where the calibration came from
 # -- a citation, a fitted-model handle, or a PESTO manifest's run id and the
 # simulator version it was calibrated with -- moves `grounding` from
-# "[unverified]" to "grounded".
+# "ungrounded" to "grounded".
 res_grounded <- taci_test(
   post, mitscherlich, X = matrix(1, n, 1),
   treatment = nrate, outcome = yield, n_perm = 100, seed = 1,

@@ -19,7 +19,7 @@ show an effect the model does not predict, or there is no detectable effect."></
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -171,8 +171,8 @@ calibration came from (e.g. a PESTO manifest <code>run_id</code> + <code>apsim_v
 citation, a fitted-model handle). TACI builds its entire reference band
 from the <code>mechanism</code> and cannot itself verify the calibration corresponds
 to reality; supplying this declares the mechanism grounded. When <code>NULL</code>
-(the default), the result's <code>grounding</code> is <code>"[unverified]"</code> and the
-human-facing <code>verdict</code> string is suffixed <code>[unverified]</code> so a verdict built
+(the default), the result's <code>grounding</code> is <code>"ungrounded"</code> and the
+human-facing <code>verdict</code> string is suffixed <code>[ungrounded]</code> so a verdict built
 on an un-grounded mechanism is never presented as unconditionally
 confident (Independent Oracle Principle). The <code>decision</code> enum is unchanged.</p></dd>
 
@@ -249,16 +249,16 @@ association via noise contrastive backdoor adjustment. <em>JMLR</em>, 25(160), 1
 <span class="r-out co"><span class="r-pr">#&gt;</span>   H0 tail p-value:  0.010  (in tail: TRUE)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   H1 central [0.05187, 0.07807]  obs at H1 pctile 0.35  consistent: TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   DECISION: MECHANISM_CONSISTENT_EFFECT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   GROUNDING: [unverified] (mechanism provenance not declared -- verdict not grounded)</span>
-<span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">grounding</span>            <span class="co"># "[unverified]" -- no mechanism provenance declared</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "[unverified]"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   GROUNDING: ungrounded (mechanism provenance not declared -- verdict not grounded)</span>
+<span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">grounding</span>            <span class="co"># "ungrounded" -- no mechanism provenance declared</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "ungrounded"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Declaring mechanism provenance grounds the verdict (Independent Oracle</span></span></span>
 <span class="r-in"><span><span class="co"># Principle). TACI builds its whole reference band from `mechanism`, which it</span></span></span>
 <span class="r-in"><span><span class="co"># cannot itself check against reality; naming where the calibration came from</span></span></span>
 <span class="r-in"><span><span class="co"># -- a citation, a fitted-model handle, or a PESTO manifest's run id and the</span></span></span>
 <span class="r-in"><span><span class="co"># simulator version it was calibrated with -- moves `grounding` from</span></span></span>
-<span class="r-in"><span><span class="co"># "[unverified]" to "grounded".</span></span></span>
+<span class="r-in"><span><span class="co"># "ungrounded" to "grounded".</span></span></span>
 <span class="r-in"><span><span class="va">res_grounded</span> <span class="op">&lt;-</span> <span class="fu">taci_test</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">post</span>, <span class="va">mitscherlich</span>, X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">n</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  treatment <span class="op">=</span> <span class="va">nrate</span>, outcome <span class="op">=</span> <span class="va">yield</span>, n_perm <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">1</span>,</span></span>
