@@ -12,7 +12,7 @@ Kernel-based hypothesis tests for causal inference and distributional treatment 
 Useful links:
 \itemize{
   \item \url{https://github.com/max578/kernR}
-  \item \url{https://max578.github.io/kernR}
+  \item \url{https://max578.github.io/kernR/}
   \item Report bugs at \url{https://github.com/max578/kernR/issues}
 }
 
