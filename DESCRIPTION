@@ -18,7 +18,7 @@ Description: Kernel-based hypothesis tests for causal inference and
     'PESTO' is a combined work subject to the terms of the GPL (>= 3).
 License: MIT + file LICENSE
 URL: https://github.com/max578/kernR,
-    https://max578.github.io/kernR
+    https://max578.github.io/kernR/
 BugReports: https://github.com/max578/kernR/issues
 Depends:
     R (>= 4.1.0)
