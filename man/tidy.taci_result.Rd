@@ -21,7 +21,7 @@ A one-row \code{data.frame} with columns:
 (\code{"no_effect"}, \code{"mechanism_consistent_effect"},
 \code{"mechanism_inconsistent_effect"}).}
 \item{grounding}{Character. \code{"grounded"} when the mechanism's provenance
-was declared, else \code{"[unverified]"} (Independent Oracle Principle).}
+was declared, else \code{"ungrounded"} (Independent Oracle Principle).}
 \item{h1_percentile}{Numeric. Where the observed statistic sits in the
 model-implied H1 band, in \verb{[0, 1]}.}
 \item{borderline}{Logical. Whether the consistency label is fragile.}
@@ -37,7 +37,7 @@ Registered against the \code{tidy()} generic (re-exported by \code{broom}), so
 The \code{p.value} column carries the broom-canonical dot and reports the H0 tail
 p-value (\code{p_h0}). The \code{grounding} column threads through the Independent
 Oracle Principle label, so a downstream summary cannot silently drop the
-fact that a verdict built on an un-declared mechanism is \code{"[unverified]"}.
+fact that a verdict built on an un-declared mechanism is \code{"ungrounded"}.
 }
 \examples{
 set.seed(1)

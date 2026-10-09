@@ -98,7 +98,7 @@
 #' complementary, not interchangeable.
 #'
 #' Total-order CIs cost `B * p * q` kernel re-evaluations on resampled
-#' designs; set `n_bootstrap` accordingly. Use the CI for honest
+#' designs; set `n_bootstrap` accordingly. Use the CI for
 #' uncertainty bars on the index magnitude; do not interpret it as a
 #' significance verdict.
 #'

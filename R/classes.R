@@ -127,7 +127,7 @@ print.taci_result <- function(x, ...) {
               if (isTRUE(x$borderline)) " (borderline -- label is fragile)" else ""))
   if (!is.null(x$grounding)) {
     cat(sprintf("  GROUNDING: %s%s\n", x$grounding,
-                if (identical(x$grounding, "[unverified]"))
+                if (x$grounding %in% c("ungrounded", "[unverified]"))
                   " (mechanism provenance not declared -- verdict not grounded)"
                 else ""))
   }

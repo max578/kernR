@@ -197,7 +197,7 @@ bd_hsic_test <- function(x, y, z,
 
   if (verbose) message("Training density ratio estimator on ", n_train, " obs...")
 
-  # Honest train/test split (kernR 0.0.0.9014): fit the density-ratio
+  # Train/test split (kernR 0.0.0.9014): fit the density-ratio
   # estimator on the training split, predict on the held-out test
   # split. Closes the P0 #2 sample-split leak surfaced by the
   # 2026-05-16 critical review.

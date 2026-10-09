@@ -85,7 +85,7 @@ tidy.kernel_test_result <- function(x, ...) {
 #' The `p.value` column carries the broom-canonical dot and reports the H0 tail
 #' p-value (`p_h0`). The `grounding` column threads through the Independent
 #' Oracle Principle label, so a downstream summary cannot silently drop the
-#' fact that a verdict built on an un-declared mechanism is `"[unverified]"`.
+#' fact that a verdict built on an un-declared mechanism is `"ungrounded"`.
 #'
 #' @param x A `taci_result` object from [taci_test()].
 #' @param ... Currently unused; present for generic compatibility.
@@ -99,7 +99,7 @@ tidy.kernel_test_result <- function(x, ...) {
 #'       (`"no_effect"`, `"mechanism_consistent_effect"`,
 #'       `"mechanism_inconsistent_effect"`).}
 #'     \item{grounding}{Character. `"grounded"` when the mechanism's provenance
-#'       was declared, else `"[unverified]"` (Independent Oracle Principle).}
+#'       was declared, else `"ungrounded"` (Independent Oracle Principle).}
 #'     \item{h1_percentile}{Numeric. Where the observed statistic sits in the
 #'       model-implied H1 band, in `[0, 1]`.}
 #'     \item{borderline}{Logical. Whether the consistency label is fragile.}

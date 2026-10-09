@@ -52,13 +52,13 @@ test_that("tidy() on a taci_result threads decision and grounding", {
     theta[3] + theta[1] * (1 - exp(-theta[2] * t))
   }
 
-  # No provenance declared -> grounding is "[unverified]".
+  # No provenance declared -> grounding is "ungrounded".
   res_ung <- taci_test(post, mitscherlich, X = matrix(1, n, 1),
                        treatment = nrate, outcome = yield,
                        n_perm = 80, seed = 1)
   td_ung <- tidy(res_ung)
   expect_identical(td_ung$term, "taci")
-  expect_identical(td_ung$grounding, "[unverified]")
+  expect_identical(td_ung$grounding, "ungrounded")
   expect_identical(td_ung$decision, res_ung$decision)
   expect_identical(td_ung$p.value, res_ung$p_h0)
 

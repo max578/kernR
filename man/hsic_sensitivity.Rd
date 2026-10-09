@@ -211,7 +211,7 @@ use the first-order permutation \code{p_value} (always computed when
 complementary, not interchangeable.
 
 Total-order CIs cost \code{B * p * q} kernel re-evaluations on resampled
-designs; set \code{n_bootstrap} accordingly. Use the CI for honest
+designs; set \code{n_bootstrap} accordingly. Use the CI for
 uncertainty bars on the index magnitude; do not interpret it as a
 significance verdict.
 }

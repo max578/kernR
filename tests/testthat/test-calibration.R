@@ -65,7 +65,7 @@ test_that("a small noisy sample yields 'undetermined', not a pass", {
   expect_gt(r$detectable, r$tolerance)
 })
 
-test_that("the same data certifies once the tolerance is honest about n", {
+test_that("the same data certifies once the tolerance accounts for n", {
   set.seed(20260912)
   pred <- rnorm(6L, mean = 5, sd = 2)
   truth <- pred + rnorm(6L, sd = 3)

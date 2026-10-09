@@ -113,8 +113,8 @@
 #'   citation, a fitted-model handle). TACI builds its entire reference band
 #'   from the `mechanism` and cannot itself verify the calibration corresponds
 #'   to reality; supplying this declares the mechanism grounded. When `NULL`
-#'   (the default), the result's `grounding` is `"[unverified]"` and the
-#'   human-facing `verdict` string is suffixed `[unverified]` so a verdict built
+#'   (the default), the result's `grounding` is `"ungrounded"` and the
+#'   human-facing `verdict` string is suffixed `[ungrounded]` so a verdict built
 #'   on an un-grounded mechanism is never presented as unconditionally
 #'   confident (Independent Oracle Principle). The `decision` enum is unchanged.
 #' @param posterior_provenance Optional. The analogous record for the
@@ -176,14 +176,14 @@
 #' res <- taci_test(post, mitscherlich, X = matrix(1, n, 1),
 #'                  treatment = nrate, outcome = yield, n_perm = 100, seed = 1)
 #' print(res)
-#' res$grounding            # "[unverified]" -- no mechanism provenance declared
+#' res$grounding            # "ungrounded" -- no mechanism provenance declared
 #'
 #' # Declaring mechanism provenance grounds the verdict (Independent Oracle
 #' # Principle). TACI builds its whole reference band from `mechanism`, which it
 #' # cannot itself check against reality; naming where the calibration came from
 #' # -- a citation, a fitted-model handle, or a PESTO manifest's run id and the
 #' # simulator version it was calibrated with -- moves `grounding` from
-#' # "[unverified]" to "grounded".
+#' # "ungrounded" to "grounded".
 #' res_grounded <- taci_test(
 #'   post, mitscherlich, X = matrix(1, n, 1),
 #'   treatment = nrate, outcome = yield, n_perm = 100, seed = 1,
@@ -349,14 +349,14 @@ taci_test <- function(posterior, mechanism, X, treatment, outcome,
   # confidently wrong. We therefore LABEL the verdict's grounding rather than
   # emit it as unconditionally confident: `grounding` is "grounded" only when
   # the caller declares where the mechanism came from (`mechanism_provenance`),
-  # else "[unverified]" (orchestra provenance vocabulary). The `decision` enum
-  # is left intact for downstream consumers; the honesty rides in `grounding`
+  # else "ungrounded" (orchestra provenance vocabulary). The `decision` enum
+  # is left intact for downstream consumers; the label rides in `grounding`
   # and the human-facing `verdict` string. Pure metadata -- nil statistical risk.
-  grounding <- if (is.null(mechanism_provenance)) "[unverified]" else "grounded"
-  verdict <- if (identical(grounding, "[unverified]") &&
+  grounding <- if (is.null(mechanism_provenance)) "ungrounded" else "grounded"
+  verdict <- if (identical(grounding, "ungrounded") &&
                  decision %in% c("mechanism_consistent_effect",
                                  "mechanism_inconsistent_effect")) {
-    paste0(decision, " [unverified]")
+    paste0(decision, " [ungrounded]")
   } else {
     decision
   }

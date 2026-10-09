@@ -104,7 +104,7 @@ test_that("print.taci_result returns its input invisibly", {
 
 # --- FX-9: mechanism-provenance grounding label (Independent Oracle Principle) -
 
-test_that("TACI labels an un-grounded verdict [unverified] by default", {
+test_that("TACI labels an un-grounded verdict as ungrounded by default", {
   set.seed(1)
   n <- 120
   nrate <- runif(n, 0, 200)
@@ -117,9 +117,13 @@ test_that("TACI labels an un-grounded verdict [unverified] by default", {
   res <- taci_test(post, .taci_mitscherlich, X = matrix(1, n, 1),
                    treatment = nrate, outcome = yield, n_perm = 150, seed = 1)
   expect_identical(res$decision, "mechanism_consistent_effect")  # enum intact
-  expect_identical(res$grounding, "[unverified]")
-  expect_identical(res$verdict, "mechanism_consistent_effect [unverified]")
+  expect_identical(res$grounding, "ungrounded")
+  expect_identical(res$verdict, "mechanism_consistent_effect [ungrounded]")
   expect_true(is.na(res$mechanism_provenance))
+  expect_output(print(res), "verdict not grounded")
+  res_old <- res
+  res_old$grounding <- "[unverified]"
+  expect_output(print(res_old), "verdict not grounded")
 
   # Declaring provenance grounds the verdict; the verdict string drops the tag.
   res2 <- taci_test(post, .taci_mitscherlich, X = matrix(1, n, 1),
