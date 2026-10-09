@@ -1,5 +1,8 @@
-# kernR (development version)
+# kernR 0.9.0
 
+* `taci_test()` now writes `"ungrounded"` (verdict suffix `[ungrounded]`) for a
+  verdict without declared mechanism provenance; `print()` still reads the
+  bracketed token of 0.8.2 and earlier.
 * **New `calibration_suite()`: is a prediction right in LEVEL, not merely in
   order.** The sibling of `coverage_test()`, which asks whether a predictive
   *distribution* is the right width. This asks whether the predictive *level*
@@ -204,8 +207,8 @@
   Principle): TACI builds its entire reference band from the caller-supplied
   `mechanism`, which it cannot itself verify against reality, so the result
   carries a `grounding` token (`"grounded"` only when `mechanism_provenance` is
-  declared, else `"[unverified]"`) and a human-facing `verdict` string suffixed
-  `[unverified]` when un-grounded. The three-way `decision` enum is unchanged
+  declared, else an ungrounded token) and a human-facing `verdict` string
+  marked as ungrounded when un-grounded. The three-way `decision` enum is unchanged
   (consumers unaffected); the grounding is pure metadata.
 
 * `dr_date_scenario()` now grounds a scenario comparison against the
@@ -273,7 +276,7 @@
 
 * Added a "declare mechanism provenance" worked example to `?taci_test`,
   showing how naming where the mechanism's calibration came from
-  (`mechanism_provenance`) moves a verdict's `grounding` from `"[unverified]"`
+  (`mechanism_provenance`) moves a verdict's `grounding` from ungrounded
   to `"grounded"` (Independent Oracle Principle).
 
 ## Dependencies
@@ -647,7 +650,7 @@ properly null-calibrated total-order significance test.
   `p_value_total_order_adjusted` under the new mode. The grid-wide
   `p_adjust` applies as for first-order p-values.
 * `print()` surfaces a `min_p_total` column when `total_order_test
-  = "cond_perm"`, with an honest annotation naming the null tested.
+  = "cond_perm"`, with an annotation naming the null tested.
 * Regression test asserts that under pure-noise `Y`, the new method
   does **not** systematically reject — at least one parameter's raw
   p-value remains ≥ 0.05 (the 0.0.0.9012 failure mode is pinned).
@@ -1021,8 +1024,7 @@ family of RKHS regression methods.
   removed from `Authors@R`; paper citations to Hu/Sejdinovic/Evans (JMLR
   2024) and Fawkes/Hu/Evans/Sejdinovic (TMLR 2024) retained throughout
   vignettes, man pages, and source comments as scientific attribution.
-* Maintainer email corrected to `max.moldovan@adelaide.edu.au` (was
-  placeholder).
+* Maintainer email corrected to `max.moldovan@adelaide.edu.au`.
 * Vignette `author:` YAML headers updated.
 
 ## kernR 0.0.0.9000
