@@ -5,8 +5,8 @@
 #' \deqn{\frac{1}{W^2} \sum_{i,j} w_i w_j (K_x^c)_{ij} (K_y^c)_{ij},}
 #' where `K_x^c` and `K_y^c` are weight-centred and \eqn{W = \sum_i w_i}. This is
 #' the exact statistic [bd_hsic_test()] accumulates over its permutation null,
-#' exposed so that downstream methods -- for example theory-anchored causal
-#' inference -- can build a bd-HSIC-compatible statistic against a custom
+#' exposed so that downstream methods -- for example the mechanism-consistency
+#' test -- can build a bd-HSIC-compatible statistic against a custom
 #' reference distribution without re-implementing the engine.
 #'
 #' With uniform weights this reduces to the (biased) HSIC estimator; supplying

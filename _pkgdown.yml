@@ -39,10 +39,10 @@ reference:
   contents:
   - bd_hsic_test
 
-- title: Theory-anchored causal inference (TACI)
+- title: Mechanism-consistency test
   desc: Mechanism-consistency testing against a calibrated process model, with grounding labelled per the Independent Oracle Principle.
   contents:
-  - taci_test
+  - mechanism_consistency_test
 
 - title: Assimilative causal inference (ACI)
   desc: The relative-entropy causal metric and the threshold-free causal influence range; consumed by kalmix.
@@ -118,7 +118,7 @@ reference:
   desc: broom-style one-row-per-term summaries of kernR verdict objects.
   contents:
   - tidy.kernel_test_result
-  - tidy.taci_result
+  - tidy.mechanism_consistency_result
 
 - title: Design
   desc: Latin-hypercube design helper.

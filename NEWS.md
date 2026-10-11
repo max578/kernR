@@ -1,6 +1,10 @@
+# kernR 0.10.0
+
+* `taci_test()` is renamed `mechanism_consistency_test()`, and its result class is now `mechanism_consistency_result`. The old name still works and gives a deprecation warning.
+
 # kernR 0.9.0
 
-* `taci_test()` now writes `"ungrounded"` (verdict suffix `[ungrounded]`) for a
+* `mechanism_consistency_test()` now writes `"ungrounded"` (verdict suffix `[ungrounded]`) for a
   verdict without declared mechanism provenance; `print()` still reads the
   bracketed token of 0.8.2 and earlier.
 * **New `calibration_suite()`: is a prediction right in LEVEL, not merely in
@@ -38,7 +42,7 @@
   stored. Both kernR's own verifier and
   `orchestraManifest::consume_manifest()` rejected the result, which means no
   downstream member could consume a kernR manifest at all. The manifest now
-  carries the weights it is hashed over. The sibling `taci_result` emitter was
+  carries the weights it is hashed over. The sibling `mechanism_consistency_result` emitter was
   already consistent and is unchanged. kernR was absent from the workspace
   manifest-conformance suite, which is why nothing caught this; it is now
   covered there.
@@ -79,14 +83,14 @@
 
 ## New features
 
-* `as_orchestra_manifest()` (S3 generic, methods for `taci_result` and
+* `as_orchestra_manifest()` (S3 generic, methods for `mechanism_consistency_result` and
   `kernel_test_result`) emits a kernR verdict as an `orchestra_manifest`
   S7 object, closing the previously-missing emit side of the C2 contract:
-  a TACI mechanism-consistency decision or a kernel hypothesis test can
+  a mechanism-consistency decision or a kernel hypothesis test can
   now enter `decideR` through the shared manifest, not just be consumed
   by hand. `inferential_target` is `"treatment_effects"`; the typed
   `summary` carries `abstained` set from the result's own reliability
-  flags (`posterior_adequacy$ok` for TACI, `ess_warning` /
+  flags (`posterior_adequacy$ok` for the mechanism-consistency test, `ess_warning` /
   `density_ratio_warning` for a kernel test). `verify_manifest()`
   recomputes the payload hash for tamper detection. The emitted object is
   the federation's shared contract class, not a kernR-namespaced
@@ -98,10 +102,10 @@
   before hashing, so the digest is reproducible across R versions and
   recomputable by a consumer.
 
-* `bd_hsic_test()` and `taci_test()` now stamp a typed `kernR_abstention`
+* `bd_hsic_test()` and `mechanism_consistency_test()` now stamp a typed `kernR_abstention`
   marker on their result when a reliability gate fails (the ESS floor and
   the proxymix density-ratio fit-quality gate for `bd_hsic_test()`; the
-  TACI posterior-adequacy guard for `taci_test()`). This is recognised by
+  mechanism-consistency posterior-adequacy guard for `mechanism_consistency_test()`). This is recognised by
   the orchestra's `is_orchestra_decline()` predicate via the
   `_(refusal|abstention)$` class-name convention, and by the new
   `is_kernR_abstention()` predicate exported here -- previously these
@@ -193,18 +197,18 @@
   statistic.
 
 * New `tidy()` methods for kernR verdict objects (`tidy.kernel_test_result()`,
-  `tidy.taci_result()`), registered against the `broom`-style `tidy()` generic
+  `tidy.mechanism_consistency_result()`), registered against the `broom`-style `tidy()` generic
   (re-exported from `generics`). They return a stable one-row-per-term
   `data.frame` so downstream code stops reaching into result fields by name.
   The summary uses the `broom`-canonical `p.value` column (with a dot),
   distinct from the result's native `p_value` field (with an underscore) -- the
   exact mismatch that previously tripped two consuming scripts. An `mmd_ppc`
-  result additionally tidies its `surprise_bits` and `reject`; a `taci_result`
+  result additionally tidies its `surprise_bits` and `reject`; a `mechanism_consistency_result`
   threads its `decision` and `grounding` (Independent Oracle Principle).
 
-* `taci_test()` gained `mechanism_provenance` / `posterior_provenance`
+* `mechanism_consistency_test()` gained `mechanism_provenance` / `posterior_provenance`
   arguments and now labels its verdict's grounding (Independent Oracle
-  Principle): TACI builds its entire reference band from the caller-supplied
+  Principle): The test builds its entire reference band from the caller-supplied
   `mechanism`, which it cannot itself verify against reality, so the result
   carries a `grounding` token (`"grounded"` only when `mechanism_provenance` is
   declared, else an ungrounded token) and a human-facing `verdict` string
@@ -219,7 +223,7 @@
   shared output column disagrees on unit or quantity. Opt-in-by-presence: a
   pre-1.1.0 manifest with no `obs_schema` skips the unit check gracefully.
 
-* New exported `taci_test()` implements theory-anchored causal inference: a
+* New exported `mechanism_consistency_test()` implements a
   mechanism-consistency test that asks whether an observed treatment effect
   agrees with the effect a calibrated mechanistic model predicts. The reference
   distribution is built from the model's own posterior-predictive draws rather
@@ -235,7 +239,7 @@
   `weighted_hsic_stat()` is a validated R wrapper over the internal compiled
   engine; `resolve_bandwidth()` fills a `kernel_spec`'s median-heuristic
   bandwidth from data. Together they let downstream methods (for example
-  theory-anchored causal inference) assemble a bd-HSIC-compatible statistic
+  the mechanism-consistency test) assemble a bd-HSIC-compatible statistic
   against a custom reference distribution without reaching into kernR internals.
 
 * `bd_hsic_test()` now gates its verdict on the `proxymix` density-ratio
@@ -274,7 +278,7 @@
   **not** `p.value`; the `?mmd_test` and `?mmd_ppc` Value sections now say so
   and point at `tidy()` for the dotted `p.value` column.
 
-* Added a "declare mechanism provenance" worked example to `?taci_test`,
+* Added a "declare mechanism provenance" worked example to `?mechanism_consistency_test`,
   showing how naming where the mechanism's calibration came from
   (`mechanism_provenance`) moves a verdict's `grounding` from ungrounded
   to `"grounded"` (Independent Oracle Principle).

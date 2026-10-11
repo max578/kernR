@@ -1,8 +1,8 @@
 # test-manifest.R -- as_orchestra_manifest() emits kernR's verdicts as
-# orchestra_manifest S7 objects (K8): a taci_result or a kernel_test_result
+# orchestra_manifest S7 objects (K8): a mechanism_consistency_result or a kernel_test_result
 # can now enter decideR through the C2-symmetric emit contract.
 
-test_that("a TACI verdict emits a treatment_effects manifest, reliable case", {
+test_that("a mechanism-consistency verdict emits a treatment_effects manifest, reliable case", {
   set.seed(1L)
   n <- 60L
   X <- matrix(stats::rnorm(n), ncol = 1L)
@@ -11,7 +11,7 @@ test_that("a TACI verdict emits a treatment_effects manifest, reliable case", {
   Y <- mech(c(1, 2), X, Tt) + stats::rnorm(n, sd = 0.3)
   Theta <- cbind(rnorm(200L, 1, 0.05), rnorm(200L, 2, 0.3))
 
-  fit <- taci_test(posterior = Theta, mechanism = mech, X = X,
+  fit <- mechanism_consistency_test(posterior = Theta, mechanism = mech, X = X,
                    treatment = Tt, outcome = Y,
                    treatment_type = "binary", n_perm = 100L, seed = 1L)
 
@@ -25,7 +25,7 @@ test_that("a TACI verdict emits a treatment_effects manifest, reliable case", {
   expect_true(verify_manifest(m)$ok)
 })
 
-test_that("an unreliable TACI verdict (posterior over-determined) abstains in the manifest", {
+test_that("an unreliable mechanism-consistency verdict (posterior over-determined) abstains in the manifest", {
   set.seed(2L)
   n <- 40L
   X <- matrix(stats::rnorm(n), ncol = 1L)
@@ -37,7 +37,7 @@ test_that("an unreliable TACI verdict (posterior over-determined) abstains in th
   Theta <- cbind(rnorm(200L, 1, 1e-6), rnorm(200L, 2, 1e-6))
 
   fit <- suppressWarnings(
-    taci_test(posterior = Theta, mechanism = mech, X = X,
+    mechanism_consistency_test(posterior = Theta, mechanism = mech, X = X,
              treatment = Tt, outcome = Y,
              treatment_type = "binary", n_perm = 50L, seed = 2L)
   )

@@ -1,6 +1,6 @@
 # tidy.R -- broom-style tidiers for kernR test-result objects.
 #
-# kernR's verdict objects (kernel_test_result and its subclasses, taci_result)
+# kernR's verdict objects (kernel_test_result and its subclasses, mechanism_consistency_result)
 # are S3 lists with hand-named fields. Downstream scripts that wanted a flat
 # one-row-per-term summary had to reach into those fields by name, which is
 # fragile -- the field is `p_value`, not the broom-canonical `p.value`, so two
@@ -76,9 +76,9 @@ tidy.kernel_test_result <- function(x, ...) {
   out
 }
 
-#' Tidy a TACI Mechanism-Consistency Result
+#' Tidy a Mechanism-Consistency Result
 #'
-#' Turns a [taci_test()] verdict into a flat, `broom`-style one-row summary.
+#' Turns a [mechanism_consistency_test()] verdict into a flat, `broom`-style one-row summary.
 #' Registered against the `tidy()` generic (re-exported by `broom`), so
 #' `broom::tidy()` and `generics::tidy()` both dispatch here.
 #'
@@ -87,12 +87,12 @@ tidy.kernel_test_result <- function(x, ...) {
 #' Oracle Principle label, so a downstream summary cannot silently drop the
 #' fact that a verdict built on an un-declared mechanism is `"ungrounded"`.
 #'
-#' @param x A `taci_result` object from [taci_test()].
+#' @param x A `mechanism_consistency_result` object from [mechanism_consistency_test()].
 #' @param ... Currently unused; present for generic compatibility.
 #'
 #' @returns A one-row `data.frame` with columns:
 #'   \describe{
-#'     \item{term}{Character. Always `"taci"`.}
+#'     \item{term}{Character. Always `"mechanism_consistency"`.}
 #'     \item{statistic}{Numeric. The observed bd-HSIC statistic.}
 #'     \item{p.value}{Numeric. The H0 tail p-value (`p_h0`).}
 #'     \item{decision}{Character. The three-way decision enum
@@ -106,7 +106,7 @@ tidy.kernel_test_result <- function(x, ...) {
 #'     \item{n}{Integer. The sample size.}
 #'   }
 #'
-#' @seealso [taci_test()]
+#' @seealso [mechanism_consistency_test()]
 #' @examples
 #' set.seed(1)
 #' n <- 60L
@@ -118,14 +118,14 @@ tidy.kernel_test_result <- function(x, ...) {
 #' mitscherlich <- function(theta, X, t) {
 #'   theta[3L] + theta[1L] * (1 - exp(-theta[2L] * t))
 #' }
-#' res <- taci_test(post, mitscherlich, X = matrix(1, n, 1L),
+#' res <- mechanism_consistency_test(post, mitscherlich, X = matrix(1, n, 1L),
 #'                  treatment = nrate, outcome = yield,
 #'                  n_perm = 80L, seed = 1L)
 #' tidy(res)
 #' @export
-tidy.taci_result <- function(x, ...) {
+tidy.mechanism_consistency_result <- function(x, ...) {
   data.frame(
-    term = "taci",
+    term = "mechanism_consistency",
     statistic = as.numeric(x$observed_statistic),
     p.value = as.numeric(x$p_h0),
     decision = as.character(x$decision),

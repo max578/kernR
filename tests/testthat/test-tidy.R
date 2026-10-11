@@ -40,7 +40,7 @@ test_that("tidy() on an mmd_ppc carries the PPC-specific columns", {
   expect_equal(td$surprise_bits, res$surprise_bits)
 })
 
-test_that("tidy() on a taci_result threads decision and grounding", {
+test_that("tidy() on a mechanism_consistency_result threads decision and grounding", {
   set.seed(1)
   n <- 60
   nrate <- runif(n, 0, 200)
@@ -53,17 +53,17 @@ test_that("tidy() on a taci_result threads decision and grounding", {
   }
 
   # No provenance declared -> grounding is "ungrounded".
-  res_ung <- taci_test(post, mitscherlich, X = matrix(1, n, 1),
+  res_ung <- mechanism_consistency_test(post, mitscherlich, X = matrix(1, n, 1),
                        treatment = nrate, outcome = yield,
                        n_perm = 80, seed = 1)
   td_ung <- tidy(res_ung)
-  expect_identical(td_ung$term, "taci")
+  expect_identical(td_ung$term, "mechanism_consistency")
   expect_identical(td_ung$grounding, "ungrounded")
   expect_identical(td_ung$decision, res_ung$decision)
   expect_identical(td_ung$p.value, res_ung$p_h0)
 
   # Declaring provenance grounds the verdict.
-  res_grd <- taci_test(post, mitscherlich, X = matrix(1, n, 1),
+  res_grd <- mechanism_consistency_test(post, mitscherlich, X = matrix(1, n, 1),
                        treatment = nrate, outcome = yield,
                        n_perm = 80, seed = 1,
                        mechanism_provenance = list(source = "test fixture"))

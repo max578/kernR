@@ -3,8 +3,8 @@
 #
 # kernR's three reliability gates -- the ESS floor (`bd_hsic_test()`,
 # `dr_date_test()`, `dr_dett_test()`, `aggregate_downscale()`), the proxymix
-# density-ratio fit-quality gate (`bd_hsic_test()`), and the TACI
-# posterior-adequacy guard (`taci_test()`) -- already computed a reliability
+# density-ratio fit-quality gate (`bd_hsic_test()`), and the mechanism-consistency
+# posterior-adequacy guard (`mechanism_consistency_test()`) -- already computed a reliability
 # flag (`ess_warning`, `density_ratio_warning`, `posterior_adequacy$ok`) and
 # an ordinary `warning()`, but attached nothing a cross-member gate could
 # recognise without knowing kernR's field names. The leader-node
@@ -31,7 +31,7 @@
 #' from (`ess_warning`, `density_ratio_warning`,
 #' `posterior_adequacy$ok`) remain exactly as computed.
 #'
-#' @param x A `kernel_test_result` or `taci_result` whose reliability gate
+#' @param x A `kernel_test_result` or `mechanism_consistency_result` whose reliability gate
 #'   has already failed.
 #'
 #' @returns `x` with `"kernR_abstention"` prepended to its class.
@@ -47,7 +47,7 @@
 #' Did a kernR result decline to stand behind its own verdict?
 #'
 #' `TRUE` when a reliability gate failed (the ESS floor, the proxymix
-#' density-ratio fit-quality gate, or the TACI posterior-adequacy guard) and
+#' density-ratio fit-quality gate, or the mechanism-consistency posterior-adequacy guard) and
 #' the result was stamped with the typed `kernR_abstention` marker. This is
 #' kernR's local mirror of the federation's `is_orchestra_decline()`
 #' predicate (`ORCHESTRA_dev/integration/refusal_contract.R`), scoped to the

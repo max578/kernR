@@ -2,7 +2,7 @@
 #
 # kernR consumes the C2 manifest contract (`mmd_ppc()` / `coverage_test()` /
 # `joint_coverage_test()` on a `pesto_ensemble_manifest`) but, until now,
-# emitted nothing: a TACI mechanism-consistency verdict or a kernel hypothesis
+# emitted nothing: a mechanism-consistency verdict or a kernel hypothesis
 # test had no typed edge into `decideR`. This file carries a stand-in
 # `orchestra_manifest` class whose property names and integrity hash match the
 # federation's reference implementation
@@ -13,7 +13,7 @@
 # choice `gpfield` and `optimix` made.
 #
 # kernR's verdicts are causal / distributional-treatment-effect statements
-# (TACI's mechanism-consistency decision; a kernel test's reject/accept call
+# (the mechanism-consistency decision; a kernel test's reject/accept call
 # on an effect), so the emit target is `"treatment_effects"` throughout. The
 # reliability story (K2/K4 elsewhere in this audit pass) rides in the typed
 # `summary`: `abstained` is set from exactly the same reliability flags a
@@ -78,7 +78,7 @@ MANIFEST_VERSION <- "2.0.0-draft"
 #'
 #' Mirrors the reference contract's `manifest_summary()`: the result's
 #' headline decision, an abstain flag (set when a reliability gate --
-#' insufficient ESS, a poor density-ratio fit, an inadequate TACI posterior --
+#' insufficient ESS, a poor density-ratio fit, an inadequate mechanism-consistency posterior --
 #' failed), and a list of key metrics. Integrity-hashed with the rest of the
 #' payload.
 #'
@@ -111,7 +111,7 @@ manifest_summary <- function(headline, abstained = FALSE, metrics = list(),
 #' `orchestra_manifest` -- it is that class: declared with `package = NULL`,
 #' so its S7 identity is the bare name the reference contract dispatches on
 #' rather than a `kernR`-namespaced look-alike a consumer would refuse.
-#' A `taci_result` or a `kernel_test_result` is adapted into one through
+#' A `mechanism_consistency_result` or a `kernel_test_result` is adapted into one through
 #' [as_orchestra_manifest()]: the verdict rides in the typed `summary`
 #' (`inferential_target = "treatment_effects"`), the test provenance rides in
 #' `metadata`, and the payload is integrity-hashed so a tampered verdict is
@@ -200,7 +200,7 @@ orchestra_manifest <- S7::new_class(
 #' post <- cbind(ymax = rnorm(100L, 4.2, 0.30),
 #'              rate = rnorm(100L, 0.018, 0.004),
 #'              y0   = rnorm(100L, 1.1, 0.15))
-#' verdict <- taci_test(post, mechanism, X = matrix(1, n, 1),
+#' verdict <- mechanism_consistency_test(post, mechanism, X = matrix(1, n, 1),
 #'                      treatment = nrate, outcome = yield,
 #'                      n_perm = 99L, seed = 1L)
 #' m <- as_orchestra_manifest(verdict)
@@ -230,12 +230,12 @@ verify_manifest <- function(m) {
 #' hypothesis-test or mechanism-consistency calls about a treatment effect,
 #' never a point estimate or a prediction. `abstained` in the typed `summary`
 #' is set from the result's own reliability flags -- `posterior_adequacy$ok`
-#' for a TACI verdict, `ess_warning` / `density_ratio_warning` for a kernel
+#' for a mechanism-consistency verdict, `ess_warning` / `density_ratio_warning` for a kernel
 #' test -- so a downstream consumer reading only the manifest sees the same
 #' reliability signal the raw result already carried, without having to know
 #' which flag belongs to which verb.
 #'
-#' @param x A `taci_result` or `kernel_test_result` object.
+#' @param x A `mechanism_consistency_result` or `kernel_test_result` object.
 #' @param ... Method-specific arguments.
 #' @param run_id Optional character run identifier; a content hash is derived
 #'   when omitted, so two identical verdicts get the same identifier.
@@ -251,14 +251,14 @@ verify_manifest <- function(m) {
 #' post <- cbind(ymax = rnorm(100L, 4.2, 0.30),
 #'              rate = rnorm(100L, 0.018, 0.004),
 #'              y0   = rnorm(100L, 1.1, 0.15))
-#' verdict <- taci_test(post, mechanism, X = matrix(1, n, 1),
+#' verdict <- mechanism_consistency_test(post, mechanism, X = matrix(1, n, 1),
 #'                      treatment = nrate, outcome = yield,
 #'                      n_perm = 99L, seed = 1L)
 #' m <- as_orchestra_manifest(verdict)
 #' m@summary$headline
 #' m@summary$abstained  # FALSE: the posterior-adequacy gate passed
 #'
-#' @seealso [verify_manifest()], [taci_test()]
+#' @seealso [verify_manifest()], [mechanism_consistency_test()]
 #' @family orchestra manifest
 #' @export
 as_orchestra_manifest <- function(x, ...) {
@@ -267,7 +267,7 @@ as_orchestra_manifest <- function(x, ...) {
 
 #' @rdname as_orchestra_manifest
 #' @export
-as_orchestra_manifest.taci_result <- function(x, ..., run_id = NULL) {
+as_orchestra_manifest.mechanism_consistency_result <- function(x, ..., run_id = NULL) {
   # K8 residual: `abstained` is read off the typed `kernR_abstention` marker
   # (R/abstention.R) -- the same signal `is_orchestra_decline()` reads at a
   # cross-member gate -- rather than re-deriving it from the raw
@@ -307,7 +307,7 @@ as_orchestra_manifest.taci_result <- function(x, ..., run_id = NULL) {
   ev <- as.character(utils::packageVersion("kernR"))
   dh <- .manifest_hash_payload(data.frame(), NULL, NULL, NULL, NA_integer_,
                                summ)
-  rid <- run_id %||% paste0("kernR-taci-",
+  rid <- run_id %||% paste0("kernR-mechanism-consistency-",
                             substr(sub("^sha256:", "", dh), 1L, 12L))
 
   orchestra_manifest(
@@ -316,7 +316,7 @@ as_orchestra_manifest.taci_result <- function(x, ..., run_id = NULL) {
     emitter_version    = ev,
     inferential_target = "treatment_effects",
     run_id             = rid,
-    method             = "kernR:taci",
+    method             = "kernR:mechanism_consistency",
     seed               = NA_integer_,
     params             = data.frame(),
     summary            = summ,

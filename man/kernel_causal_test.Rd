@@ -50,6 +50,6 @@ print(result)
 Other causal association tests:
 \code{\link[=bd_hsic_test]{bd_hsic_test()}},
 \code{\link[=hierarchical_test]{hierarchical_test()}},
-\code{\link[=taci_test]{taci_test()}}
+\code{\link[=mechanism_consistency_test]{mechanism_consistency_test()}}
 }
 \concept{causal association tests}

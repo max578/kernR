@@ -1,12 +1,12 @@
-# test-taci.R -- Theory-Anchored Causal Inference (TACI) mechanism-consistency test.
+# mechanism-consistency.R -- the mechanism-consistency test.
 #
-# TACI asks a question the model-free tests cannot: does an observed treatment
+# The test asks a question the model-free tests cannot: does an observed treatment
 # effect agree with the effect a calibrated mechanistic model predicts? The
 # reference distribution is built from the model's own posterior-predictive
 # draws, so the null and the alternative are both mechanism-implied. The test
 # statistic is kernR's weighted bd-HSIC, assembled here against that custom
 # reference via the exported `weighted_hsic_stat()` / `resolve_bandwidth()`
-# primitives -- TACI's statistic IS kernR's bd-HSIC, scored against a model band
+# primitives -- the statistic IS kernR's bd-HSIC, scored against a model band
 # rather than a permutation band. Backdoor adjustment reuses kernR's
 # density-ratio machinery so an observational, confounded treatment is handled
 # correctly.
@@ -19,7 +19,7 @@
 #' @returns A square kernel matrix, the RBF gram at the data-resolved bandwidth.
 #' @noRd
 #' @keywords internal
-.taci_kgram <- function(v) {
+.mc_kgram <- function(v) {
   v <- as.matrix(v)
   kernel_matrix(v, kernel = resolve_bandwidth(kernel_spec(), v))
 }
@@ -37,7 +37,7 @@
 #' @returns A numeric weight vector with a `fit_quality` attribute.
 #' @noRd
 #' @keywords internal
-.taci_backdoor_weights <- function(treatment, z, method) {
+.mc_backdoor_weights <- function(treatment, z, method) {
   if (is.null(z)) {
     return(rep(1, length(treatment)))
   }
@@ -56,7 +56,7 @@
 #' @returns A numeric matrix of draws.
 #' @noRd
 #' @keywords internal
-.taci_posterior <- function(posterior) {
+.mc_posterior <- function(posterior) {
   if (!is.matrix(posterior) && !is.data.frame(posterior)) {
     stop("`posterior` must be a matrix or data.frame of parameter draws ",
          "(one row per draw).", call. = FALSE)
@@ -64,18 +64,18 @@
   m <- as.matrix(posterior)
   if (!is.numeric(m)) {
     stop("`posterior` must contain only numeric parameter columns; drop any ",
-         "label column before calling `taci_test()`.", call. = FALSE)
+         "label column before calling `mechanism_consistency_test()`.", call. = FALSE)
   }
   m
 }
 
-# --- the TACI test -----------------------------------------------------------
+# --- the mechanism-consistency test ---------------------------------------
 
-#' Theory-anchored causal inference (TACI) mechanism-consistency test
+#' Mechanism-consistency test
 #'
 #' Tests whether an observed treatment effect is consistent with the effect a
 #' calibrated mechanistic model predicts. Unlike a model-free causal test, which
-#' asks only whether treatment and outcome are associated, TACI anchors both the
+#' asks only whether treatment and outcome are associated, it anchors both the
 #' null and the alternative in a process model: the reference distribution is
 #' built from the model's own posterior-predictive draws. The verdict is
 #' three-way -- the data are consistent with the model-implied effect, the data
@@ -110,7 +110,7 @@
 #'   observed dose range.
 #' @param mechanism_provenance Optional. A record of where the `mechanism`'s
 #'   calibration came from (e.g. a PESTO manifest `run_id` + `apsim_version`, a
-#'   citation, a fitted-model handle). TACI builds its entire reference band
+#'   citation, a fitted-model handle). The test builds its entire reference band
 #'   from the `mechanism` and cannot itself verify the calibration corresponds
 #'   to reality; supplying this declares the mechanism grounded. When `NULL`
 #'   (the default), the result's `grounding` is `"ungrounded"` and the
@@ -133,7 +133,7 @@
 #' @param seed Integer random seed, or `NULL`. Set it for a reproducible
 #'   reference distribution.
 #'
-#' @returns An object of class `"taci_result"`: a list carrying the observed
+#' @returns An object of class `"mechanism_consistency_result"`: a list carrying the observed
 #'   bd-HSIC statistic, the H0 tail p-value and in-tail flag, the H1 central
 #'   interval, the H1 consistency flag and percentile, a `borderline` flag, the
 #'   three-way `decision`, a `posterior_adequacy` diagnostic, and the reference
@@ -141,7 +141,7 @@
 #'
 #' @details
 #' The statistic is a weighted bd-HSIC between treatment and outcome, identical
-#' to the engine [bd_hsic_test()] uses. TACI differs in the reference: rather
+#' to the engine [bd_hsic_test()] uses. It differs in the reference: rather
 #' than a permutation null, it draws `n_perm` model-implied replicates, sampling
 #' a posterior draw with replacement each time so the band integrates over the
 #' posterior. The alternative band H1 is the model's prediction at the observed
@@ -173,18 +173,18 @@
 #' mitscherlich <- function(theta, X, t) {
 #'   theta[3] + theta[1] * (1 - exp(-theta[2] * t))
 #' }
-#' res <- taci_test(post, mitscherlich, X = matrix(1, n, 1),
+#' res <- mechanism_consistency_test(post, mitscherlich, X = matrix(1, n, 1),
 #'                  treatment = nrate, outcome = yield, n_perm = 100, seed = 1)
 #' print(res)
 #' res$grounding            # "ungrounded" -- no mechanism provenance declared
 #'
 #' # Declaring mechanism provenance grounds the verdict (Independent Oracle
-#' # Principle). TACI builds its whole reference band from `mechanism`, which it
+#' # Principle). The test builds its whole reference band from `mechanism`, which it
 #' # cannot itself check against reality; naming where the calibration came from
 #' # -- a citation, a fitted-model handle, or a PESTO manifest's run id and the
 #' # simulator version it was calibrated with -- moves `grounding` from
 #' # "ungrounded" to "grounded".
-#' res_grounded <- taci_test(
+#' res_grounded <- mechanism_consistency_test(
 #'   post, mitscherlich, X = matrix(1, n, 1),
 #'   treatment = nrate, outcome = yield, n_perm = 100, seed = 1,
 #'   mechanism_provenance = list(
@@ -197,7 +197,7 @@
 #'
 #' @family causal association tests
 #' @export
-taci_test <- function(posterior, mechanism, X, treatment, outcome,
+mechanism_consistency_test <- function(posterior, mechanism, X, treatment, outcome,
                       confounders = NULL,
                       density_ratio = "logistic",
                       h0_mode = c("permute_within_model",
@@ -218,7 +218,7 @@ taci_test <- function(posterior, mechanism, X, treatment, outcome,
   }
   if (!is.null(seed)) set.seed(seed)
 
-  Theta <- .taci_posterior(posterior)
+  Theta <- .mc_posterior(posterior)
   X  <- as.matrix(X)
   Tt <- as.numeric(treatment)
   Y  <- as.numeric(outcome)
@@ -244,7 +244,7 @@ taci_test <- function(posterior, mechanism, X, treatment, outcome,
   }
 
   # Noise scale for the model-implied draws -------------------------------
-  # TACI is conditional on the calibrated mechanism, so the natural noise scale
+  # The test is conditional on the calibrated mechanism, so the natural noise scale
   # is the model residual at the posterior mean -- Y minus the model's own
   # prediction at the observed treatment. A treatment-only detrend of a
   # saturating dose-response leaves curvature in the residual and over-noises
@@ -288,7 +288,7 @@ taci_test <- function(posterior, mechanism, X, treatment, outcome,
       "mechanism-consistency verdict is unreliable -- widen the posterior ",
       "(for example with ensemble inflation) at its source first"))
   if (!post_ok) {
-    warning("taci_test(): ", adequacy$reason, call. = FALSE)
+    warning("mechanism_consistency_test(): ", adequacy$reason, call. = FALSE)
   }
 
   # Backdoor-adjusted weighted bd-HSIC ------------------------------------
@@ -298,9 +298,9 @@ taci_test <- function(posterior, mechanism, X, treatment, outcome,
   # null permutes the outcome with the weighting held -- matching
   # bd_hsic_test()'s permute-Y null.
   adjusted <- !is.null(confounders)
-  w   <- .taci_backdoor_weights(Tt, confounders, density_ratio)
-  Kt  <- .taci_kgram(Tt)
-  whsic <- function(yv) weighted_hsic_stat(Kt, .taci_kgram(yv), w)
+  w   <- .mc_backdoor_weights(Tt, confounders, density_ratio)
+  Kt  <- .mc_kgram(Tt)
+  whsic <- function(yv) weighted_hsic_stat(Kt, .mc_kgram(yv), w)
   obs_stat <- whsic(Y)
 
   # Model-implied reference draws -----------------------------------------
@@ -342,7 +342,7 @@ taci_test <- function(posterior, mechanism, X, treatment, outcome,
     "mechanism_inconsistent_effect"
   }
 
-  # FX-9 (Independent Oracle Principle): TACI's null + alternative bands are
+  # FX-9 (Independent Oracle Principle): The null + alternative bands are
   # built entirely from the caller-supplied `mechanism` (+ `posterior`), and
   # nothing here verifies that the mechanism's calibration corresponds to
   # reality. If the mechanism encodes a hallucinated APSIM fact, the verdict is
@@ -379,7 +379,7 @@ taci_test <- function(posterior, mechanism, X, treatment, outcome,
          dr_fit_quality = attr(w, "fit_quality"),
          h0_ref = h0, h1_ref = h1,
          n = n, n_posterior = S, alpha = alpha, noise_sd = noise_sd),
-    class = "taci_result"
+    class = "mechanism_consistency_result"
   )
 
   # K4 residual: stamp the typed abstention marker when the

@@ -81,7 +81,7 @@ test_that("bd_hsic_test() stamps kernR_abstention when the density-ratio fit gat
   expect_true(.is_orchestra_decline_locally(res))
 })
 
-test_that("taci_test() stamps kernR_abstention when the posterior-adequacy guard trips", {
+test_that("mechanism_consistency_test() stamps kernR_abstention when the posterior-adequacy guard trips", {
   mechanism <- function(theta, X, t) theta[3] + theta[1] * (1 - exp(-theta[2] * t))
   set.seed(1L)
   n <- 60L
@@ -96,14 +96,14 @@ test_that("taci_test() stamps kernR_abstention when the posterior-adequacy guard
     y0   = stats::rnorm(100L, 1.1, 0.0001)
   )
 
-  verdict <- suppressWarnings(taci_test(
+  verdict <- suppressWarnings(mechanism_consistency_test(
     post, mechanism, X = matrix(1, n, 1L),
     treatment = nrate, outcome = yield,
     n_perm = 49L, seed = 1L
   ))
 
   expect_false(verdict$posterior_adequacy$ok)
-  expect_s3_class(verdict, "taci_result")
+  expect_s3_class(verdict, "mechanism_consistency_result")
   expect_s3_class(verdict, "kernR_abstention")
   expect_true(.is_orchestra_decline_locally(verdict))
 })

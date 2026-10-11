@@ -101,8 +101,8 @@ plot.kernel_test_result <- function(x, ...) {
 }
 
 #' @export
-print.taci_result <- function(x, ...) {
-  cat("TACI mechanism-consistency test\n")
+print.mechanism_consistency_result <- function(x, ...) {
+  cat("mechanism-consistency test\n")
   if (!is.null(x$treatment_type)) {
     cat(sprintf("  treatment: %s%s\n", x$treatment_type,
                 if (identical(x$treatment_type, "continuous")) {

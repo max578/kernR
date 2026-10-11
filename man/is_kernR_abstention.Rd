@@ -14,7 +14,7 @@ A length-1 logical.
 }
 \description{
 \code{TRUE} when a reliability gate failed (the ESS floor, the proxymix
-density-ratio fit-quality gate, or the TACI posterior-adequacy guard) and
+density-ratio fit-quality gate, or the mechanism-consistency posterior-adequacy guard) and
 the result was stamped with the typed \code{kernR_abstention} marker. This is
 kernR's local mirror of the federation's \code{is_orchestra_decline()}
 predicate (\code{ORCHESTRA_dev/integration/refusal_contract.R}), scoped to the

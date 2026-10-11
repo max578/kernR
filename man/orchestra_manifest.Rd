@@ -12,7 +12,7 @@ merely property-compatible with the federation's reference
 \code{orchestra_manifest} -- it is that class: declared with \code{package = NULL},
 so its S7 identity is the bare name the reference contract dispatches on
 rather than a \code{kernR}-namespaced look-alike a consumer would refuse.
-A \code{taci_result} or a \code{kernel_test_result} is adapted into one through
+A \code{mechanism_consistency_result} or a \code{kernel_test_result} is adapted into one through
 \code{\link[=as_orchestra_manifest]{as_orchestra_manifest()}}: the verdict rides in the typed \code{summary}
 (\code{inferential_target = "treatment_effects"}), the test provenance rides in
 \code{metadata}, and the payload is integrity-hashed so a tampered verdict is

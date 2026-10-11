@@ -78,11 +78,11 @@ test_that("data_hash follows the reference payload-hash recipe", {
   mech <- function(theta, X, t) theta[1] + theta[2] * t
   yy <- mech(c(1, 2), X, tt) + stats::rnorm(n, sd = 0.3)
   theta <- cbind(stats::rnorm(200L, 1, 0.05), stats::rnorm(200L, 2, 0.3))
-  m_taci <- as_orchestra_manifest(
-    taci_test(posterior = theta, mechanism = mech, X = X, treatment = tt,
+  m_mc <- as_orchestra_manifest(
+    mechanism_consistency_test(posterior = theta, mechanism = mech, X = X, treatment = tt,
               outcome = yy, treatment_type = "binary", n_perm = 100L,
               seed = 13L))
-  expect_identical(m_taci@data_hash, reference_hash(m_taci))
+  expect_identical(m_mc@data_hash, reference_hash(m_mc))
 })
 
 # The end-to-end oracle: the reference file itself, sourced and applied.
@@ -103,7 +103,7 @@ test_that("the reference contract accepts a kernR manifest (KERNR_ORCHESTRA_CONT
 
   theta_ok <- cbind(stats::rnorm(200L, 1, 0.05), stats::rnorm(200L, 2, 0.3))
   m_ok <- as_orchestra_manifest(
-    taci_test(posterior = theta_ok, mechanism = mech, X = X, treatment = tt,
+    mechanism_consistency_test(posterior = theta_ok, mechanism = mech, X = X, treatment = tt,
               outcome = yy, treatment_type = "binary", n_perm = 100L,
               seed = 14L))
 
@@ -115,7 +115,7 @@ test_that("the reference contract accepts a kernR manifest (KERNR_ORCHESTRA_CONT
   # an abstention, not as a clean decision.
   theta_bad <- cbind(stats::rnorm(200L, 1, 1e-6), stats::rnorm(200L, 2, 1e-6))
   m_abs <- suppressWarnings(as_orchestra_manifest(
-    taci_test(posterior = theta_bad, mechanism = mech, X = X, treatment = tt,
+    mechanism_consistency_test(posterior = theta_bad, mechanism = mech, X = X, treatment = tt,
               outcome = yy, treatment_type = "binary", n_perm = 50L,
               seed = 14L)))
   expect_no_error(ref$consume_manifest(m_abs))
