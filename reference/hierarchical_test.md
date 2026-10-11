@@ -100,7 +100,7 @@ the hierarchical structure.
 Other causal association tests:
 [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md),
 [`kernel_causal_test()`](https://max578.github.io/kernR/reference/kernel_causal_test.md),
-[`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)
+[`mechanism_consistency_test()`](https://max578.github.io/kernR/reference/mechanism_consistency_test.md)
 
 ## Examples
 

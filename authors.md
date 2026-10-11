@@ -11,13 +11,13 @@ Source:
 [`inst/CITATION`](https://github.com/max578/kernR/blob/main/inst/CITATION)
 
 Moldovan, M. (2026). kernR: Kernel-Based Causal Distributional Testing.
-R package version 0.9.0. https://github.com/max578/kernR
+R package version 0.10.0. https://github.com/max578/kernR
 
     @Manual{,
       title = {{kernR}: Kernel-Based Causal Distributional Testing},
       author = {Max Moldovan},
       year = {2026},
-      note = {R package version 0.9.0},
+      note = {R package version 0.10.0},
       url = {https://github.com/max578/kernR},
     }
 

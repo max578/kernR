@@ -5,7 +5,8 @@ merely property-compatible with the federation's reference
 `orchestra_manifest` – it is that class: declared with `package = NULL`,
 so its S7 identity is the bare name the reference contract dispatches on
 rather than a `kernR`-namespaced look-alike a consumer would refuse. A
-`taci_result` or a `kernel_test_result` is adapted into one through
+`mechanism_consistency_result` or a `kernel_test_result` is adapted into
+one through
 [`as_orchestra_manifest()`](https://max578.github.io/kernR/reference/as_orchestra_manifest.md):
 the verdict rides in the typed `summary`
 (`inferential_target = "treatment_effects"`), the test provenance rides

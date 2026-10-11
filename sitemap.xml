@@ -74,6 +74,7 @@
 <url><loc>https://max578.github.io/kernR/reference/lhs_design.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/linear_kernel_matrix_cpp.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/matern_kernel_matrix_cpp.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/mechanism_consistency_test.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/median_bandwidth_cpp.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/mmd2_biased_cpp.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/mmd2_unbiased_cpp.html</loc></url>
@@ -112,7 +113,7 @@
 <url><loc>https://max578.github.io/kernR/reference/stratified_permute_cpp.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/taci_test.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/tidy.kernel_test_result.html</loc></url>
-<url><loc>https://max578.github.io/kernR/reference/tidy.taci_result.html</loc></url>
+<url><loc>https://max578.github.io/kernR/reference/tidy.mechanism_consistency_result.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/validate_input.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/verify_manifest.html</loc></url>
 <url><loc>https://max578.github.io/kernR/reference/weighted_hsic_stat.html</loc></url>

@@ -64,13 +64,13 @@ adjustment.
 - [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
   : Backdoor-HSIC Test for Causal Association
 
-## Theory-anchored causal inference (TACI)
+## Mechanism-consistency test
 
 Mechanism-consistency testing against a calibrated process model, with
 grounding labelled per the Independent Oracle Principle.
 
-- [`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)
-  : Theory-anchored causal inference (TACI) mechanism-consistency test
+- [`mechanism_consistency_test()`](https://max578.github.io/kernR/reference/mechanism_consistency_test.md)
+  : Mechanism-consistency test
 
 ## Assimilative causal inference (ACI)
 
@@ -199,8 +199,8 @@ broom-style one-row-per-term summaries of kernR verdict objects.
 
 - [`tidy(`*`<kernel_test_result>`*`)`](https://max578.github.io/kernR/reference/tidy.kernel_test_result.md)
   : Tidy a kernR Test Result Into a One-Row-Per-Term Data Frame
-- [`tidy(`*`<taci_result>`*`)`](https://max578.github.io/kernR/reference/tidy.taci_result.md)
-  : Tidy a TACI Mechanism-Consistency Result
+- [`tidy(`*`<mechanism_consistency_result>`*`)`](https://max578.github.io/kernR/reference/tidy.mechanism_consistency_result.md)
+  : Tidy a Mechanism-Consistency Result
 
 ## Design
 

@@ -221,7 +221,7 @@ association via noise contrastive backdoor adjustment. *JMLR*, 25(160),
 Other causal association tests:
 [`hierarchical_test()`](https://max578.github.io/kernR/reference/hierarchical_test.md),
 [`kernel_causal_test()`](https://max578.github.io/kernR/reference/kernel_causal_test.md),
-[`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)
+[`mechanism_consistency_test()`](https://max578.github.io/kernR/reference/mechanism_consistency_test.md)
 
 ## Examples
 

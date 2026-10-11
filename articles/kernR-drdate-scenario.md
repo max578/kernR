@@ -135,8 +135,8 @@ m_baseline
 #>   method        : ies_callback  (noptmax=3)
 #>   ensemble      : 60 realisations x 2 parameters | 4 observations
 #>   failure rate  : 0.00%
-#>   pesto version : 0.11.0  apsim: NA
-#>   timestamp     : 2026-10-09T22:58:49+0000
+#>   pesto version : 0.11.1  apsim: NA
+#>   timestamp     : 2026-10-11T03:50:31+0000
 #>   data hash     : sha256:vignette_wagga_baseline_2026
 ```
 
@@ -170,7 +170,7 @@ res_shift
 #>   baseline      : wagga_baseline_2026 (n=60)
 #>   intervention  : wagga_stubble_2026 (n=60)
 #>   outputs tested: o1, o2, o3, o4
-#>   PESTO versions: baseline=0.11.0, intervention=0.11.0
+#>   PESTO versions: baseline=0.11.1, intervention=0.11.1
 #>   fidelity      : baseline=single, intervention=single
 #>   Verdict:        REJECT (distributions differ; intervention has effect)
 ```
@@ -341,7 +341,7 @@ place.
 
 Seed `20260516` for the synthetic forward model, observations and prior
 ensemble; `seed` values `1`, `2` and `3` for the three scenario tests.
-The manifests record PESTO 0.11.0. Package versions follow.
+The manifests record PESTO 0.11.1. Package versions follow.
 
 ``` r
 
@@ -367,7 +367,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] PESTO_0.11.0 kernR_0.9.0 
+#> [1] PESTO_0.11.1 kernR_0.10.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.52         

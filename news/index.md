@@ -1,8 +1,16 @@
 # Changelog
 
-## kernR 0.9.0
+## kernR 0.10.0
 
 - [`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)
+  is renamed
+  [`mechanism_consistency_test()`](https://max578.github.io/kernR/reference/mechanism_consistency_test.md),
+  and its result class is now `mechanism_consistency_result`. The old
+  name still works and gives a deprecation warning.
+
+## kernR 0.9.0
+
+- [`mechanism_consistency_test()`](https://max578.github.io/kernR/reference/mechanism_consistency_test.md)
   now writes `"ungrounded"` (verdict suffix `[ungrounded]`) for a
   verdict without declared mechanism provenance;
   [`print()`](https://rdrr.io/r/base/print.html) still reads the
@@ -52,10 +60,10 @@
   kernR’s own verifier and `orchestraManifest::consume_manifest()`
   rejected the result, which means no downstream member could consume a
   kernR manifest at all. The manifest now carries the weights it is
-  hashed over. The sibling `taci_result` emitter was already consistent
-  and is unchanged. kernR was absent from the workspace
-  manifest-conformance suite, which is why nothing caught this; it is
-  now covered there.
+  hashed over. The sibling `mechanism_consistency_result` emitter was
+  already consistent and is unchanged. kernR was absent from the
+  workspace manifest-conformance suite, which is why nothing caught
+  this; it is now covered there.
 
 - All thirteen vignettes were rewritten to the orchestra vignette
   quality bar: each opens with the question its reader would ask and
@@ -107,15 +115,16 @@
 ### New features
 
 - [`as_orchestra_manifest()`](https://max578.github.io/kernR/reference/as_orchestra_manifest.md)
-  (S3 generic, methods for `taci_result` and `kernel_test_result`) emits
-  a kernR verdict as an `orchestra_manifest` S7 object, closing the
-  previously-missing emit side of the C2 contract: a TACI
-  mechanism-consistency decision or a kernel hypothesis test can now
-  enter `decideR` through the shared manifest, not just be consumed by
-  hand. `inferential_target` is `"treatment_effects"`; the typed
-  `summary` carries `abstained` set from the result’s own reliability
-  flags (`posterior_adequacy$ok` for TACI, `ess_warning` /
-  `density_ratio_warning` for a kernel test).
+  (S3 generic, methods for `mechanism_consistency_result` and
+  `kernel_test_result`) emits a kernR verdict as an `orchestra_manifest`
+  S7 object, closing the previously-missing emit side of the C2
+  contract: a mechanism-consistency decision or a kernel hypothesis test
+  can now enter `decideR` through the shared manifest, not just be
+  consumed by hand. `inferential_target` is `"treatment_effects"`; the
+  typed `summary` carries `abstained` set from the result’s own
+  reliability flags (`posterior_adequacy$ok` for the
+  mechanism-consistency test, `ess_warning` / `density_ratio_warning`
+  for a kernel test).
   [`verify_manifest()`](https://max578.github.io/kernR/reference/verify_manifest.md)
   recomputes the payload hash for tamper detection. The emitted object
   is the federation’s shared contract class, not a kernR-namespaced
@@ -131,13 +140,13 @@
 
 - [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
   and
-  [`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)
+  [`mechanism_consistency_test()`](https://max578.github.io/kernR/reference/mechanism_consistency_test.md)
   now stamp a typed `kernR_abstention` marker on their result when a
   reliability gate fails (the ESS floor and the proxymix density-ratio
   fit-quality gate for
   [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md);
-  the TACI posterior-adequacy guard for
-  [`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)).
+  the mechanism-consistency posterior-adequacy guard for
+  [`mechanism_consistency_test()`](https://max578.github.io/kernR/reference/mechanism_consistency_test.md)).
   This is recognised by the orchestra’s `is_orchestra_decline()`
   predicate via the `_(refusal|abstention)$` class-name convention, and
   by the new
@@ -250,7 +259,7 @@
 - New [`tidy()`](https://generics.r-lib.org/reference/tidy.html) methods
   for kernR verdict objects
   ([`tidy.kernel_test_result()`](https://max578.github.io/kernR/reference/tidy.kernel_test_result.md),
-  [`tidy.taci_result()`](https://max578.github.io/kernR/reference/tidy.taci_result.md)),
+  [`tidy.mechanism_consistency_result()`](https://max578.github.io/kernR/reference/tidy.mechanism_consistency_result.md)),
   registered against the `broom`-style
   [`tidy()`](https://generics.r-lib.org/reference/tidy.html) generic
   (re-exported from `generics`). They return a stable one-row-per-term
@@ -259,13 +268,13 @@
   dot), distinct from the result’s native `p_value` field (with an
   underscore) – the exact mismatch that previously tripped two consuming
   scripts. An `mmd_ppc` result additionally tidies its `surprise_bits`
-  and `reject`; a `taci_result` threads its `decision` and `grounding`
-  (Independent Oracle Principle).
+  and `reject`; a `mechanism_consistency_result` threads its `decision`
+  and `grounding` (Independent Oracle Principle).
 
-- [`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)
+- [`mechanism_consistency_test()`](https://max578.github.io/kernR/reference/mechanism_consistency_test.md)
   gained `mechanism_provenance` / `posterior_provenance` arguments and
-  now labels its verdict’s grounding (Independent Oracle Principle):
-  TACI builds its entire reference band from the caller-supplied
+  now labels its verdict’s grounding (Independent Oracle Principle): The
+  test builds its entire reference band from the caller-supplied
   `mechanism`, which it cannot itself verify against reality, so the
   result carries a `grounding` token (`"grounded"` only when
   `mechanism_provenance` is declared, else an ungrounded token) and a
@@ -284,13 +293,12 @@
   the unit check gracefully.
 
 - New exported
-  [`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)
-  implements theory-anchored causal inference: a mechanism-consistency
-  test that asks whether an observed treatment effect agrees with the
-  effect a calibrated mechanistic model predicts. The reference
-  distribution is built from the model’s own posterior-predictive draws
-  rather than a permutation null, and the statistic is the same weighted
-  bd-HSIC the
+  [`mechanism_consistency_test()`](https://max578.github.io/kernR/reference/mechanism_consistency_test.md)
+  implements a mechanism-consistency test that asks whether an observed
+  treatment effect agrees with the effect a calibrated mechanistic model
+  predicts. The reference distribution is built from the model’s own
+  posterior-predictive draws rather than a permutation null, and the
+  statistic is the same weighted bd-HSIC the
   [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
   engine uses, so the verdict is three-way – consistent with the
   model-implied effect, an effect the model does not predict, or no
@@ -309,8 +317,8 @@
   is a validated R wrapper over the internal compiled engine;
   [`resolve_bandwidth()`](https://max578.github.io/kernR/reference/resolve_bandwidth.md)
   fills a `kernel_spec`’s median-heuristic bandwidth from data. Together
-  they let downstream methods (for example theory-anchored causal
-  inference) assemble a bd-HSIC-compatible statistic against a custom
+  they let downstream methods (for example the mechanism-consistency
+  test) assemble a bd-HSIC-compatible statistic against a custom
   reference distribution without reaching into kernR internals.
 
 - [`bd_hsic_test()`](https://max578.github.io/kernR/reference/bd_hsic_test.md)
@@ -364,7 +372,7 @@
   dotted `p.value` column.
 
 - Added a “declare mechanism provenance” worked example to
-  [`?taci_test`](https://max578.github.io/kernR/reference/taci_test.md),
+  [`?mechanism_consistency_test`](https://max578.github.io/kernR/reference/mechanism_consistency_test.md),
   showing how naming where the mechanism’s calibration came from
   (`mechanism_provenance`) moves a verdict’s `grounding` from ungrounded
   to `"grounded"` (Independent Oracle Principle).

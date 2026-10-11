@@ -1,10 +1,10 @@
 # Did a kernR result decline to stand behind its own verdict?
 
 `TRUE` when a reliability gate failed (the ESS floor, the proxymix
-density-ratio fit-quality gate, or the TACI posterior-adequacy guard)
-and the result was stamped with the typed `kernR_abstention` marker.
-This is kernR's local mirror of the federation's
-`is_orchestra_decline()` predicate
+density-ratio fit-quality gate, or the mechanism-consistency
+posterior-adequacy guard) and the result was stamped with the typed
+`kernR_abstention` marker. This is kernR's local mirror of the
+federation's `is_orchestra_decline()` predicate
 (`ORCHESTRA_dev/integration/refusal_contract.R`), scoped to the member's
 own result classes so calling code inside kernR does not need to depend
 on the composition-layer contract file.
