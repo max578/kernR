@@ -1,7 +1,11 @@
-# kernR
+# kernR <img src="man/figures/logo.png" align="right" height="139" alt="kernR logo" />
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![R-CMD-check](https://github.com/max578/kernR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/max578/kernR/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/max578/kernR/graph/badge.svg)](https://app.codecov.io/gh/max578/kernR)
+[![r-universe](https://max578.r-universe.dev/badges/kernR)](https://max578.r-universe.dev/kernR)
+[![pkgdown](https://github.com/max578/kernR/actions/workflows/pkgdown.yaml/badge.svg)](https://max578.github.io/kernR/)
 <!-- badges: end -->
 
 **Kernel-Based Causal Distributional Testing for R**
@@ -17,6 +21,25 @@ kernR implements kernel-based hypothesis tests for causal inference and distribu
 - **Hierarchical/nested data** — within-cluster and between-cluster decomposition for clustered data (farms, hospitals, schools)
 - **Formula interface** — `kernel_causal_test(y ~ treatment | confounders, data = df)`
 - **Fast C++ backend** — RcppArmadillo kernel engine with permutation inference
+
+## Related packages
+
+- [dHSIC](https://CRAN.R-project.org/package=dHSIC) implements the
+  d-variable Hilbert-Schmidt independence criterion and hypothesis tests
+  based on it.
+- [energy](https://CRAN.R-project.org/package=energy) provides energy
+  statistics for multivariate inference, including distance correlation and
+  tests that compare two or more distributions.
+- [DoubleML](https://CRAN.R-project.org/package=DoubleML) implements double
+  (debiased) machine learning for partially linear and interactive
+  regression models, including instrumental-variable versions.
+
+dHSIC and energy test independence and differences between distributions
+without adjusting for confounders. DoubleML estimates an average treatment
+effect. kernR adds tests that adjust for confounders (bd-HSIC) and doubly
+robust tests of whether a treatment changes the whole outcome distribution
+(DR-DATE, DR-DETT), and a test for clustered data that permutes within
+clusters.
 
 ## Installation
 

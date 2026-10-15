@@ -6,6 +6,8 @@
 \alias{kernR-package}
 \title{kernR: Kernel-Based Causal Distributional Testing}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 Kernel-based hypothesis tests for causal inference and distributional treatment effects. Implements backdoor-adjusted HSIC (bd-HSIC) for testing causal association, and doubly robust kernel statistics (DR-DATE, DR-DETT) for testing distributional treatment effects beyond mean shifts. Supports binary, continuous, and mixed treatments, hierarchical/nested data structures, and scales to large datasets via Nystrom approximation and random Fourier features. This package depends on 'PESTO' (GPL (>= 3)); kernR's own sources are released under the MIT licence, but the installed combination with 'PESTO' is a combined work subject to the terms of the GPL (>= 3).
 }
 \seealso{

@@ -1,3 +1,9 @@
+# kernR (development version)
+
+* The package has a logo.
+* README carries status badges and lists related packages.
+* CI runs lintr (report-only) and test coverage.
+
 # kernR 0.10.0
 
 * `taci_test()` is renamed `mechanism_consistency_test()`, and its result class is now `mechanism_consistency_result`. The old name still works and gives a deprecation warning.
