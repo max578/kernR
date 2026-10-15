@@ -13,6 +13,7 @@
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Kernel-Based Causal Distributional Testing">
 <meta name="description" content="Kernel-based hypothesis tests for causal inference and distributional treatment effects. Implements backdoor-adjusted HSIC (bd-HSIC) for testing causal association, and doubly robust kernel statistics (DR-DATE, DR-DETT) for testing distributional treatment effects beyond mean shifts. Supports binary, continuous, and mixed treatments, hierarchical/nested data structures, and scales to large datasets via Nystrom approximation and random Fourier features. This package depends on PESTO (GPL (&gt;= 3)); kernRs own sources are released under the MIT licence, but the installed combination with PESTO' is a combined work subject to the terms of the GPL (&gt;= 3).">
 <meta property="og:description" content="Kernel-based hypothesis tests for causal inference and distributional treatment effects. Implements backdoor-adjusted HSIC (bd-HSIC) for testing causal association, and doubly robust kernel statistics (DR-DATE, DR-DETT) for testing distributional treatment effects beyond mean shifts. Supports binary, continuous, and mixed treatments, hierarchical/nested data structures, and scales to large datasets via Nystrom approximation and random Fourier features. This package depends on PESTO (GPL (&gt;= 3)); kernRs own sources are released under the MIT licence, but the installed combination with PESTO' is a combined work subject to the terms of the GPL (&gt;= 3).">
+<meta property="og:image" content="https://max578.github.io/kernR/logo.png">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,8 +56,10 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="kernr">kernR<a class="anchor" aria-label="anchor" href="#kernr"></a>
-</h1></div>
+<div class="page-header">
+<img src="logo.png" class="logo" alt=""><h1 id="kernr-">kernR <a class="anchor" aria-label="anchor" href="#kernr-"></a>
+</h1>
+</div>
 <!-- badges: start -->
 
 <p><strong>Kernel-Based Causal Distributional Testing for R</strong></p>
@@ -83,6 +86,19 @@
 <li>
 <strong>Fast C++ backend</strong> — RcppArmadillo kernel engine with permutation inference</li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="related-packages">Related packages<a class="anchor" aria-label="anchor" href="#related-packages"></a>
+</h2>
+<ul>
+<li>
+<a href="https://CRAN.R-project.org/package=dHSIC" class="external-link">dHSIC</a> implements the d-variable Hilbert-Schmidt independence criterion and hypothesis tests based on it.</li>
+<li>
+<a href="https://CRAN.R-project.org/package=energy" class="external-link">energy</a> provides energy statistics for multivariate inference, including distance correlation and tests that compare two or more distributions.</li>
+<li>
+<a href="https://CRAN.R-project.org/package=DoubleML" class="external-link">DoubleML</a> implements double (debiased) machine learning for partially linear and interactive regression models, including instrumental-variable versions.</li>
+</ul>
+<p>dHSIC and energy test independence and differences between distributions without adjusting for confounders. DoubleML estimates an average treatment effect. kernR adds tests that adjust for confounders (bd-HSIC) and doubly robust tests of whether a treatment changes the whole outcome distribution (DR-DATE, DR-DETT), and a test for clustered data that permutes within clusters.</p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -271,6 +287,10 @@
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
+<li><a href="https://github.com/max578/kernR/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/max578/kernR/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://app.codecov.io/gh/max578/kernR" class="external-link"><img src="https://codecov.io/gh/max578/kernR/graph/badge.svg" alt="Codecov test coverage"></a></li>
+<li><a href="https://max578.r-universe.dev/kernR" class="external-link"><img src="https://max578.r-universe.dev/badges/kernR" alt="r-universe"></a></li>
+<li><a href="https://max578.github.io/kernR/"><img src="https://github.com/max578/kernR/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a></li>
 </ul>
 </div>
 

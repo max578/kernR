@@ -1,5 +1,11 @@
 # Changelog
 
+## kernR (development version)
+
+- The package has a logo.
+- README carries status badges and lists related packages.
+- CI runs lintr (report-only) and test coverage.
+
 ## kernR 0.10.0
 
 - [`taci_test()`](https://max578.github.io/kernR/reference/taci_test.md)

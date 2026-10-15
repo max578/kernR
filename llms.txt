@@ -27,6 +27,26 @@ distributional changes that leave the mean unchanged.
 - **Fast C++ backend** — RcppArmadillo kernel engine with permutation
   inference
 
+## Related packages
+
+- [dHSIC](https://CRAN.R-project.org/package=dHSIC) implements the
+  d-variable Hilbert-Schmidt independence criterion and hypothesis tests
+  based on it.
+- [energy](https://CRAN.R-project.org/package=energy) provides energy
+  statistics for multivariate inference, including distance correlation
+  and tests that compare two or more distributions.
+- [DoubleML](https://CRAN.R-project.org/package=DoubleML) implements
+  double (debiased) machine learning for partially linear and
+  interactive regression models, including instrumental-variable
+  versions.
+
+dHSIC and energy test independence and differences between distributions
+without adjusting for confounders. DoubleML estimates an average
+treatment effect. kernR adds tests that adjust for confounders (bd-HSIC)
+and doubly robust tests of whether a treatment changes the whole outcome
+distribution (DR-DATE, DR-DETT), and a test for clustered data that
+permutes within clusters.
+
 ## Installation
 
 From GitHub (development version):

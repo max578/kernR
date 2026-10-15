@@ -330,7 +330,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] kernR_0.10.0
+#> [1] kernR_0.10.0.9000
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] mvnfast_0.2.8       Matrix_1.7-5        gtable_0.3.6       
@@ -344,7 +344,7 @@ sessionInfo()
 #> [25] xfun_0.61           fs_2.1.0            sass_0.4.10        
 #> [28] S7_0.2.2            otel_0.2.0          viridisLite_0.4.3  
 #> [31] cli_3.6.6           withr_3.0.3         pkgdown_2.2.1      
-#> [34] PESTO_0.11.1        digest_0.6.39       grid_4.6.1         
+#> [34] PESTO_0.11.1.9000   digest_0.6.39       grid_4.6.1         
 #> [37] xgboost_3.2.1.1     lifecycle_1.0.5     vctrs_0.7.3        
 #> [40] evaluate_1.0.5      glue_1.8.1          data.table_1.18.6.1
 #> [43] farver_2.1.2        ragg_1.5.2          rmarkdown_2.32     

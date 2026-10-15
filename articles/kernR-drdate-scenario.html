@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">kernR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,8 +57,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-
-      <h1>Did the management change shift the simulated distribution?</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Did the management change shift the simulated distribution?</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/max578/kernR/blob/main/vignettes/kernR-drdate-scenario.Rmd" class="external-link"><code>vignettes/kernR-drdate-scenario.Rmd</code></a></small>
@@ -197,8 +196,8 @@ construction.</p>
 <span><span class="co">#&gt;   method        : ies_callback  (noptmax=3)</span></span>
 <span><span class="co">#&gt;   ensemble      : 60 realisations x 2 parameters | 4 observations</span></span>
 <span><span class="co">#&gt;   failure rate  : 0.00%</span></span>
-<span><span class="co">#&gt;   pesto version : 0.11.1  apsim: NA</span></span>
-<span><span class="co">#&gt;   timestamp     : 2026-10-11T03:55:29+0000</span></span>
+<span><span class="co">#&gt;   pesto version : 0.11.1.9000  apsim: NA</span></span>
+<span><span class="co">#&gt;   timestamp     : 2026-10-15T23:11:50+0000</span></span>
 <span><span class="co">#&gt;   data hash     : sha256:vignette_wagga_baseline_2026</span></span></code></pre></div>
 <p>In production the two manifests come from
 <code><a href="https://max578.github.io/PESTO/reference/as_manifest.html" class="external-link">PESTO::as_manifest()</a></code> on two separate calibrations, but only
@@ -229,7 +228,7 @@ the shared-posterior construction above is the right one.</p>
 <span><span class="co">#&gt;   baseline      : wagga_baseline_2026 (n=60)</span></span>
 <span><span class="co">#&gt;   intervention  : wagga_stubble_2026 (n=60)</span></span>
 <span><span class="co">#&gt;   outputs tested: o1, o2, o3, o4</span></span>
-<span><span class="co">#&gt;   PESTO versions: baseline=0.11.1, intervention=0.11.1</span></span>
+<span><span class="co">#&gt;   PESTO versions: baseline=0.11.1.9000, intervention=0.11.1.9000</span></span>
 <span><span class="co">#&gt;   fidelity      : baseline=single, intervention=single</span></span>
 <span><span class="co">#&gt;   Verdict:        REJECT (distributions differ; intervention has effect)</span></span></code></pre></div>
 </div>
@@ -428,7 +427,8 @@ effects. <em>Transactions on Machine Learning Research</em>.</li>
 <p>Seed <code>20260516</code> for the synthetic forward model,
 observations and prior ensemble; <code>seed</code> values
 <code>1</code>, <code>2</code> and <code>3</code> for the three scenario
-tests. The manifests record PESTO 0.11.1. Package versions follow.</p>
+tests. The manifests record PESTO 0.11.1.9000. Package versions
+follow.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
@@ -452,7 +452,7 @@ tests. The manifests record PESTO 0.11.1. Package versions follow.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] PESTO_0.11.1 kernR_0.10.0</span></span>
+<span><span class="co">#&gt; [1] PESTO_0.11.1.9000 kernR_0.10.0.9000</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] vctrs_0.7.3         cli_3.6.6           knitr_1.52         </span></span>
