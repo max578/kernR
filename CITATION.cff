@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use kernR in your research, please cite it as below."
 title: "kernR: Kernel-Based Causal Distributional Testing"
-version: 0.10.0
+version: 0.10.0.9000
 date-released: "2026-10-11"
 authors:
   - family-names: Moldovan

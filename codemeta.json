@@ -3,7 +3,7 @@
   "@type": "SoftwareSourceCode",
   "identifier": "kernR",
   "name": "kernR: Kernel-Based Causal Distributional Testing",
-  "version": "0.10.0",
+  "version": "0.10.0.9000",
   "dateModified": "2026-06-24",
   "description": "Kernel-based hypothesis tests for causal inference and distributional treatment effects, including backdoor-adjusted HSIC and doubly robust kernel statistics (DR-DATE, DR-DETT).",
   "license": "https://spdx.org/licenses/MIT",
