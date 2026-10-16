@@ -136,7 +136,7 @@ m_baseline
 #>   ensemble      : 60 realisations x 2 parameters | 4 observations
 #>   failure rate  : 0.00%
 #>   pesto version : 0.11.1.9000  apsim: NA
-#>   timestamp     : 2026-10-15T23:11:50+0000
+#>   timestamp     : 2026-10-16T01:59:49+0000
 #>   data hash     : sha256:vignette_wagga_baseline_2026
 ```
 
