@@ -29,3 +29,8 @@ src/Makevars.bak
 
 # Box sync
 *.icloud
+
+# local working folders
+_visual_inspection/
+ledger/
+paper/
